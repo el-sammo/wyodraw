@@ -19,11 +19,16 @@ app.config(function($routeProvider) {
 
   $routeProvider.when('/areas/add', {
     controller: 'AreasAddController',
-    templateUrl: '/templates/areas.html'
+    templateUrl: '/templates/areasForm.html'
+  });
+
+  $routeProvider.when('/areas/edit/:id', {
+    controller: 'AreasEditController',
+    templateUrl: '/templates/areasForm.html'
   });
 
   $routeProvider.when('/areas/:id', {
-    controller: 'AreasEditController',
+    controller: 'AreasShowController',
     templateUrl: '/templates/areas.html'
   });
 
@@ -533,6 +538,35 @@ app.controller('AreasListController', function(datatables, $scope) {
     actions: [
       {
         url: '#/areas/',
+        content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+      }
+    ],
+    cols: [
+      {label: 'Actions', data: 'id'},
+      {label: 'Name', data: 'name'},
+      {label: 'Created', data: 'createdAt', type: 'time'},
+      {label: 'Updated', data: 'updatedAt', type: 'time'},
+    ]
+  }); 
+});
+
+app.controller('AreasShowController', function(
+	datatables, navMgr, messenger, pod, areaSchema, $scope, $http, $routeParams
+) {
+  $http.get(
+    '/areas/' + $routeParams.id
+  ).success(function(data, status, headers, config) {
+    $scope.area = areaSchema.populateDefaults(data);
+  });
+
+  $scope.path = 'restaurants';
+
+  datatables.build($scope, {
+    id: 'fms-areas-grid',
+    ajax: '/restaurants/datatables',
+    actions: [
+      {
+        url: '#/restaurants/',
         content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
       }
     ],
