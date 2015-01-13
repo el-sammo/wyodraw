@@ -33,6 +33,30 @@ app.config(function($routeProvider) {
 	});
 
 	///
+	// Restaurants
+	///
+
+	$routeProvider.when('/restaurants', {
+		controller: 'RestaurantsListController',
+		templateUrl: '/templates/list.html'
+	});
+
+	$routeProvider.when('/restaurants/add', {
+		controller: 'RestaurantsAddController',
+		templateUrl: '/templates/restaurantsForm.html'
+	});
+
+	$routeProvider.when('/restaurants/edit/:id', {
+		controller: 'RestaurantsEditController',
+		templateUrl: '/templates/restaurantsForm.html'
+	});
+
+	$routeProvider.when('/restaurants/:id', {
+		controller: 'RestaurantsShowController',
+		templateUrl: '/templates/restaurants.html'
+	});
+
+	///
 	// Other
 	///
 
@@ -527,6 +551,13 @@ app.factory('areaSchema', function() {
 	return service;
 });
 
+// // creating a service to make the area id available to other controllers
+// app.factory('AreaID', function() {
+// 	return {
+// 		areaId: 'init'
+// 	};
+// });
+
 app.controller('AreasListController', function(datatables, $scope) {
 	$scope.name = 'Area';
 	$scope.pluralName = 'Areas';
@@ -560,6 +591,7 @@ app.controller('AreasShowController', function(
 	});
 
 	$scope.path = 'restaurants';
+	areaSchema.defaults.area.id = $routeParams.id;
 
 	datatables.build($scope, {
 		id: 'fms-areas-grid',
@@ -644,6 +676,210 @@ app.controller('AreasEditController', function(
 
 	$scope.cancel = function cancel() {
 		navMgr.cancel('#/areas');
+	};
+});
+
+
+///
+// Controllers: Restaurants
+///
+
+app.config(function(httpInterceptorProvider) {
+	httpInterceptorProvider.register(/^\/restaurants/);
+});
+
+app.factory('restaurantSchema', function() {
+	function nameTransform(restaurant) {
+		if(! restaurant || ! restaurant.name || restaurant.name.length < 1) {
+			return 'restaurant-name';
+		}
+		return (restaurant.name
+			.replace(/[^a-zA-Z ]/g, '')
+			.replace(/ /g, '-')
+			.toLowerCase()
+		);
+	}
+
+	var service = {
+		defaults: {
+			restaurant: {
+				area_id: '',
+				name: '',
+				desc: '',
+				slogan: '',
+				cuisine: ''
+			}
+		},
+
+		links: {
+			website: {
+				placeholder: function(restaurant) {
+					return 'www.' + nameTransform(restaurant) + '.com';
+				},
+				addon: 'http://'
+			},
+			facebook: {
+				placeholder: nameTransform,
+				addon: 'facebook.com/'
+			},
+			twitter: {
+				placeholder: nameTransform,
+				addon: '@'
+			},
+			instagram: {
+				placeholder: nameTransform,
+				addon: 'instagram.com/'
+			},
+			pinterest: {
+				placeholder: nameTransform,
+				addon: 'pinterest.com/'
+			},
+		},
+
+		populateDefaults: function(restaurant) {
+			$.map(service.defaults.restaurant, function(value, key) {
+				if(restaurant[key]) return;
+				if(typeof value === 'object') {
+					restaurant[key] = angular.copy(value);
+					return;
+				}
+				restaurant[key] = value;
+			});
+			return restaurant;
+		}
+	};
+
+	return service;
+});
+
+app.controller('RestaurantsListController', function(datatables, $scope) {
+	$scope.name = 'Restaurant';
+	$scope.pluralName = 'Restaurants';
+	$scope.path = 'restaurants';
+
+	datatables.build($scope, {
+		id: 'fms-restaurants-grid',
+		ajax: '/restaurants/datatables',
+		actions: [
+			{
+				url: '#/restaurants/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('RestaurantsShowController', function(
+	datatables, navMgr, messenger, pod, restaurantSchema, $scope, $http, $routeParams
+) {
+	$http.get(
+		'/restaurants/' + $routeParams.id
+	).success(function(data, status, headers, config) {
+		$scope.restaurant = restaurantSchema.populateDefaults(data);
+	});
+
+	$scope.path = 'restaurants';
+
+	datatables.build($scope, {
+		id: 'fms-restaurants-grid',
+		ajax: '/restaurants/datatables',
+		actions: [
+			{
+				url: '#/restaurants/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('RestaurantsAddController', function(
+	navMgr, messenger, pod, areaSchema, restaurantSchema, $scope, $http, $window
+) {
+	
+	// todo: this is clunky and gives the user an odd experience
+	// if there is no area id to assocaite this restaurant with
+	if(!areaSchema.defaults.area.id) {
+		// send the user back to the areas list page
+		window.location.href = '/';
+	};
+	
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.restaurantSchema = restaurantSchema;
+	$scope.restaurant = restaurantSchema.populateDefaults({});
+
+	$scope.restaurant.area_id = areaSchema.defaults.area.id;
+	console.log($scope.restaurant);
+
+	$scope.save = function save(restaurant, options) {
+		options || (options = {});
+
+		$http.post(
+			'/restaurants/create', restaurant
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The restaurant has been created.', 'Success!');
+
+			if(options.addMore) {
+				$scope.restaurant = {};
+				return;
+			}
+
+			navMgr.protect(false);
+			$window.location.href = '#/restaurants/' + data.id;
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/restaurants');
+	};
+});
+
+app.controller('RestaurantsEditController', function(
+	navMgr, messenger, pod, restaurantSchema, $scope, $http, $routeParams
+) {
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.restaurantSchema = restaurantSchema;
+	$scope.editMode = true;
+
+	$http.get(
+		'/restaurants/' + $routeParams.id
+	).success(function(data, status, headers, config) {
+		$scope.restaurant = restaurantSchema.populateDefaults(data);
+	});
+
+	$scope.save = function save(restaurant, options) {
+		options || (options = {});
+
+		$http.put(
+			'/restaurants/' + restaurant.id, restaurant
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The restaurant has been updated.', 'Success!');
+
+			$scope.form.$setPristine();
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/restaurants');
 	};
 });
 
