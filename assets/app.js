@@ -81,6 +81,54 @@ app.config(function($routeProvider) {
 	});
 
 	///
+	// Items
+	///
+
+	$routeProvider.when('/items', {
+		controller: 'ItemsListController',
+		templateUrl: '/templates/list.html'
+	});
+
+	$routeProvider.when('/items/add', {
+		controller: 'ItemsAddController',
+		templateUrl: '/templates/itemsForm.html'
+	});
+
+	$routeProvider.when('/items/edit/:id', {
+		controller: 'ItemsEditController',
+		templateUrl: '/templates/itemsForm.html'
+	});
+
+	$routeProvider.when('/items/:id', {
+		controller: 'ItemsShowController',
+		templateUrl: '/templates/items.html'
+	});
+
+	///
+	// Options
+	///
+
+	$routeProvider.when('/options', {
+		controller: 'OptionsListController',
+		templateUrl: '/templates/list.html'
+	});
+
+	$routeProvider.when('/options/add', {
+		controller: 'OptionsAddController',
+		templateUrl: '/templates/optionsForm.html'
+	});
+
+	$routeProvider.when('/options/edit/:id', {
+		controller: 'OptionsEditController',
+		templateUrl: '/templates/optionsForm.html'
+	});
+
+	$routeProvider.when('/options/:id', {
+		controller: 'OptionsShowController',
+		templateUrl: '/templates/options.html'
+	});
+
+	///
 	// Other
 	///
 
@@ -833,7 +881,7 @@ app.controller('RestaurantsAddController', function(
 ) {
 	
 	// todo: this is clunky and gives the user an odd experience
-	// if there is no area id to assocaite this restaurant with
+	// if there is no area id to associate this restaurant with
 	if(!areaSchema.defaults.area.id) {
 		// send the user back to the areas list page
 		window.location.href = '/';
@@ -846,7 +894,6 @@ app.controller('RestaurantsAddController', function(
 	$scope.restaurant = restaurantSchema.populateDefaults({});
 
 	$scope.restaurant.areaId = areaSchema.defaults.area.id;
-	console.log($scope.restaurant);
 
 	$scope.save = function save(restaurant, options) {
 		options || (options = {});
@@ -1041,7 +1088,7 @@ app.controller('MenusAddController', function(
 ) {
 
 	// todo: this is clunky and gives the user an odd experience
-	// if there is no area id to assocaite this restaurant with
+	// if there is no restaurant id to associate this menu with
 	if(!restaurantSchema.defaults.restaurant.id) {
 		// send the user back to the areas list page
 		window.location.href = '/';
@@ -1054,7 +1101,6 @@ app.controller('MenusAddController', function(
 	$scope.menu = menuSchema.populateDefaults({});
 
 	$scope.menu.restaurantId = restaurantSchema.defaults.restaurant.id;
-	console.log($scope.menu);
 
 	$scope.save = function save(menu, options) {
 		options || (options = {});
@@ -1112,6 +1158,404 @@ app.controller('MenusEditController', function(
 
 	$scope.cancel = function cancel() {
 		navMgr.cancel('#/menus');
+	};
+});
+
+
+///
+// Controllers: Items
+///
+
+app.config(function(httpInterceptorProvider) {
+	httpInterceptorProvider.register(/^\/items/);
+});
+
+app.factory('itemSchema', function() {
+	function nameTransform(item) {
+		if(! item || ! item.name || item.name.length < 1) {
+			return 'item-name';
+		}
+		return (item.name
+			.replace(/[^a-zA-Z ]/g, '')
+			.replace(/ /g, '-')
+			.toLowerCase()
+		);
+	}
+
+	var service = {
+		defaults: {
+			item: {
+				menuId: '',
+				name: '',
+				desc: ''
+			}
+		},
+
+		links: {
+			website: {
+				placeholder: function(item) {
+					return 'www.' + nameTransform(item) + '.com';
+				},
+				addon: 'http://'
+			},
+			facebook: {
+				placeholder: nameTransform,
+				addon: 'facebook.com/'
+			},
+			twitter: {
+				placeholder: nameTransform,
+				addon: '@'
+			},
+			instagram: {
+				placeholder: nameTransform,
+				addon: 'instagram.com/'
+			},
+			pinterest: {
+				placeholder: nameTransform,
+				addon: 'pinterest.com/'
+			},
+		},
+
+		populateDefaults: function(item) {
+			$.map(service.defaults.item, function(value, key) {
+				if(item[key]) return;
+				if(typeof value === 'object') {
+					item[key] = angular.copy(value);
+					return;
+				}
+				item[key] = value;
+			});
+			return item;
+		}
+	};
+
+	return service;
+});
+
+app.controller('ItemsListController', function(datatables, $scope) {
+	$scope.name = 'Menu';
+	$scope.pluralName = 'Items';
+	$scope.path = 'items';
+
+	datatables.build($scope, {
+		id: 'fms-items-grid',
+		ajax: '/items/datatables',
+		actions: [
+			{
+				url: '#/items/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/items/',
+				content: '<i class="fa fa-2x fa-binoculars"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('ItemsShowController', function(
+	datatables, navMgr, messenger, pod, itemSchema, $scope, $http, $routeParams
+) {
+
+	$scope.path = 'options';
+	itemSchema.defaults.item.id = $routeParams.id;
+
+	datatables.build($scope, {
+		id: 'fms-options-grid',
+		ajax: '/options/datatables',
+		actions: [
+			{
+				url: '#/options/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/options/',
+				content: '<i class="fa fa-2x fa-search"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('ItemsAddController', function(
+	navMgr, messenger, pod, areaSchema, restaurantSchema, menuSchema, itemSchema, $scope, $http, $window
+) {
+
+	// todo: this is clunky and gives the user an odd experience
+	// if there is no menu id to associate this item with
+	if(!menuSchema.defaults.menu.id) {
+		// send the user back to the areas list page
+		window.location.href = '/';
+	};
+	
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.itemSchema = itemSchema;
+	$scope.item = itemSchema.populateDefaults({});
+
+	$scope.item.menuId = menuSchema.defaults.menu.id;
+
+	$scope.save = function save(item, options) {
+		options || (options = {});
+
+		$http.post(
+			'/items/create', item
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The item has been created.', 'Success!');
+
+			if(options.addMore) {
+				$scope.item = {};
+				return;
+			}
+
+			navMgr.protect(false);
+			$window.location.href = '#/items/' + data.id;
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/items');
+	};
+});
+
+app.controller('ItemsEditController', function(
+	navMgr, messenger, pod, itemSchema, $scope, $http, $routeParams
+) {
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.itemSchema = itemSchema;
+	$scope.editMode = true;
+
+	$http.get(
+		'/items/' + $routeParams.id
+	).success(function(data, status, headers, config) {
+		$scope.item = itemSchema.populateDefaults(data);
+	});
+
+	$scope.save = function save(item, options) {
+		options || (options = {});
+
+		$http.put(
+			'/items/' + item.id, item
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The item has been updated.', 'Success!');
+
+			$scope.form.$setPristine();
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/items');
+	};
+});
+
+
+///
+// Controllers: Options
+///
+
+app.config(function(httpInterceptorProvider) {
+	httpInterceptorProvider.register(/^\/options/);
+});
+
+app.factory('optionSchema', function() {
+	function nameTransform(option) {
+		if(! option || ! option.name || option.name.length < 1) {
+			return 'option-name';
+		}
+		return (option.name
+			.replace(/[^a-zA-Z ]/g, '')
+			.replace(/ /g, '-')
+			.toLowerCase()
+		);
+	}
+
+	var service = {
+		defaults: {
+			option: {
+				itemId: '',
+				name: '',
+				price: ''
+			}
+		},
+
+		links: {
+			website: {
+				placeholder: function(option) {
+					return 'www.' + nameTransform(option) + '.com';
+				},
+				addon: 'http://'
+			},
+			facebook: {
+				placeholder: nameTransform,
+				addon: 'facebook.com/'
+			},
+			twitter: {
+				placeholder: nameTransform,
+				addon: '@'
+			},
+			instagram: {
+				placeholder: nameTransform,
+				addon: 'instagram.com/'
+			},
+			pinterest: {
+				placeholder: nameTransform,
+				addon: 'pinterest.com/'
+			},
+		},
+
+		populateDefaults: function(option) {
+			$.map(service.defaults.option, function(value, key) {
+				if(option[key]) return;
+				if(typeof value === 'object') {
+					option[key] = angular.copy(value);
+					return;
+				}
+				option[key] = value;
+			});
+			return option;
+		}
+	};
+
+	return service;
+});
+
+app.controller('OptionsListController', function(datatables, $scope) {
+	$scope.name = 'Item';
+	$scope.pluralName = 'Options';
+	$scope.path = 'options';
+
+	datatables.build($scope, {
+		id: 'fms-options-grid',
+		ajax: '/options/datatables',
+		actions: [
+			{
+				url: '#/options/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/options/',
+				content: '<i class="fa fa-2x fa-binoculars"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('OptionsShowController', function(
+	datatables, navMgr, messenger, pod, optionSchema, $scope, $http, $routeParams
+) {
+
+	$scope.path = '';
+	optionSchema.defaults.option.id = $routeParams.id;
+
+	datatables.build($scope, {
+		id: '',
+		ajax: '',
+		actions: [
+		],
+		cols: [
+		]
+	}); 
+});
+
+app.controller('OptionsAddController', function(
+	navMgr, messenger, pod, areaSchema, restaurantSchema, menuSchema, itemSchema, optionSchema, $scope, $http, $window
+) {
+
+	// todo: this is clunky and gives the user an odd experience
+	// if there is no item id to associate this option with
+	if(!itemSchema.defaults.item.id) {
+		// send the user back to the areas list page
+		window.location.href = '/';
+	};
+	
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.optionSchema = optionSchema;
+	$scope.option = optionSchema.populateDefaults({});
+
+	$scope.option.itemId = itemSchema.defaults.item.id;
+
+	$scope.save = function save(option, options) {
+		options || (options = {});
+
+		$http.post(
+			'/options/create', option
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The option has been created.', 'Success!');
+
+			if(options.addMore) {
+				$scope.option = {};
+				return;
+			}
+
+			navMgr.protect(false);
+			$window.location.href = '#/options/' + data.id;
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/options');
+	};
+});
+
+app.controller('OptionsEditController', function(
+	navMgr, messenger, pod, optionSchema, $scope, $http, $routeParams
+) {
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.optionSchema = optionSchema;
+	$scope.editMode = true;
+
+	$http.get(
+		'/options/' + $routeParams.id
+	).success(function(data, status, headers, config) {
+		$scope.option = optionSchema.populateDefaults(data);
+	});
+
+	$scope.save = function save(option, options) {
+		options || (options = {});
+
+		$http.put(
+			'/options/' + option.id, option
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The option has been updated.', 'Success!');
+
+			$scope.form.$setPristine();
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/options');
 	};
 });
 
