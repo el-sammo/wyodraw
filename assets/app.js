@@ -57,6 +57,30 @@ app.config(function($routeProvider) {
 	});
 
 	///
+	// Menus
+	///
+
+	$routeProvider.when('/menus', {
+		controller: 'MenusListController',
+		templateUrl: '/templates/list.html'
+	});
+
+	$routeProvider.when('/menus/add', {
+		controller: 'MenusAddController',
+		templateUrl: '/templates/menusForm.html'
+	});
+
+	$routeProvider.when('/menus/edit/:id', {
+		controller: 'MenusEditController',
+		templateUrl: '/templates/menusForm.html'
+	});
+
+	$routeProvider.when('/menus/:id', {
+		controller: 'MenusShowController',
+		templateUrl: '/templates/menus.html'
+	});
+
+	///
 	// Other
 	///
 
@@ -551,13 +575,6 @@ app.factory('areaSchema', function() {
 	return service;
 });
 
-// // creating a service to make the area id available to other controllers
-// app.factory('AreaID', function() {
-// 	return {
-// 		areaId: 'init'
-// 	};
-// });
-
 app.controller('AreasListController', function(datatables, $scope) {
 	$scope.name = 'Area';
 	$scope.pluralName = 'Areas';
@@ -568,8 +585,12 @@ app.controller('AreasListController', function(datatables, $scope) {
 		ajax: '/areas/datatables',
 		actions: [
 			{
+				url: '#/areas/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>',
+			},
+			{
 				url: '#/areas/',
-				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+				content: '<i class="fa fa-2x fa-binoculars"></i>',
 			}
 		],
 		cols: [
@@ -584,11 +605,6 @@ app.controller('AreasListController', function(datatables, $scope) {
 app.controller('AreasShowController', function(
 	datatables, navMgr, messenger, pod, areaSchema, $scope, $http, $routeParams
 ) {
-	$http.get(
-		'/areas/' + $routeParams.id
-	).success(function(data, status, headers, config) {
-		$scope.area = areaSchema.populateDefaults(data);
-	});
 
 	$scope.path = 'restaurants';
 	areaSchema.defaults.area.id = $routeParams.id;
@@ -598,8 +614,12 @@ app.controller('AreasShowController', function(
 		ajax: '/restaurants/datatables',
 		actions: [
 			{
+				url: '#/restaurants/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>',
+			},
+			{
 				url: '#/restaurants/',
-				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+				content: '<i class="fa fa-2x fa-search"></i>',
 			}
 		],
 		cols: [
@@ -703,7 +723,7 @@ app.factory('restaurantSchema', function() {
 	var service = {
 		defaults: {
 			restaurant: {
-				area_id: '',
+				areaId: '',
 				name: '',
 				desc: '',
 				slogan: '',
@@ -762,8 +782,12 @@ app.controller('RestaurantsListController', function(datatables, $scope) {
 		ajax: '/restaurants/datatables',
 		actions: [
 			{
-				url: '#/restaurants/',
+				url: '#/restaurants/edit/',
 				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/restaurants/',
+				content: '<i class="fa fa-2x fa-binoculars"></i>'
 			}
 		],
 		cols: [
@@ -778,21 +802,21 @@ app.controller('RestaurantsListController', function(datatables, $scope) {
 app.controller('RestaurantsShowController', function(
 	datatables, navMgr, messenger, pod, restaurantSchema, $scope, $http, $routeParams
 ) {
-	$http.get(
-		'/restaurants/' + $routeParams.id
-	).success(function(data, status, headers, config) {
-		$scope.restaurant = restaurantSchema.populateDefaults(data);
-	});
 
-	$scope.path = 'restaurants';
+	$scope.path = 'menus';
+	restaurantSchema.defaults.restaurant.id = $routeParams.id;
 
 	datatables.build($scope, {
 		id: 'fms-restaurants-grid',
-		ajax: '/restaurants/datatables',
+		ajax: '/menus/datatables',
 		actions: [
 			{
-				url: '#/restaurants/',
+				url: '#/menus/edit/',
 				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/menus/',
+				content: '<i class="fa fa-2x fa-search"></i>'
 			}
 		],
 		cols: [
@@ -821,7 +845,7 @@ app.controller('RestaurantsAddController', function(
 	$scope.restaurantSchema = restaurantSchema;
 	$scope.restaurant = restaurantSchema.populateDefaults({});
 
-	$scope.restaurant.area_id = areaSchema.defaults.area.id;
+	$scope.restaurant.areaId = areaSchema.defaults.area.id;
 	console.log($scope.restaurant);
 
 	$scope.save = function save(restaurant, options) {
@@ -880,6 +904,214 @@ app.controller('RestaurantsEditController', function(
 
 	$scope.cancel = function cancel() {
 		navMgr.cancel('#/restaurants');
+	};
+});
+
+
+///
+// Controllers: Menus
+///
+
+app.config(function(httpInterceptorProvider) {
+	httpInterceptorProvider.register(/^\/menus/);
+});
+
+app.factory('menuSchema', function() {
+	function nameTransform(menu) {
+		if(! menu || ! menu.name || menu.name.length < 1) {
+			return 'menu-name';
+		}
+		return (menu.name
+			.replace(/[^a-zA-Z ]/g, '')
+			.replace(/ /g, '-')
+			.toLowerCase()
+		);
+	}
+
+	var service = {
+		defaults: {
+			menu: {
+				restaurantId: '',
+				name: '',
+				desc: '',
+				availStart: '',
+				availEnd: ''
+			}
+		},
+
+		links: {
+			website: {
+				placeholder: function(menu) {
+					return 'www.' + nameTransform(menu) + '.com';
+				},
+				addon: 'http://'
+			},
+			facebook: {
+				placeholder: nameTransform,
+				addon: 'facebook.com/'
+			},
+			twitter: {
+				placeholder: nameTransform,
+				addon: '@'
+			},
+			instagram: {
+				placeholder: nameTransform,
+				addon: 'instagram.com/'
+			},
+			pinterest: {
+				placeholder: nameTransform,
+				addon: 'pinterest.com/'
+			},
+		},
+
+		populateDefaults: function(menu) {
+			$.map(service.defaults.menu, function(value, key) {
+				if(menu[key]) return;
+				if(typeof value === 'object') {
+					menu[key] = angular.copy(value);
+					return;
+				}
+				menu[key] = value;
+			});
+			return menu;
+		}
+	};
+
+	return service;
+});
+
+app.controller('MenusListController', function(datatables, $scope) {
+	$scope.name = 'Menu';
+	$scope.pluralName = 'Menus';
+	$scope.path = 'menus';
+
+	datatables.build($scope, {
+		id: 'fms-menus-grid',
+		ajax: '/menus/datatables',
+		actions: [
+			{
+				url: '#/menus/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/menus/',
+				content: '<i class="fa fa-2x fa-binoculars"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('MenusShowController', function(
+	datatables, navMgr, messenger, pod, menuSchema, $scope, $http, $routeParams
+) {
+
+	$scope.path = 'items';
+	menuSchema.defaults.menu.id = $routeParams.id;
+
+	datatables.build($scope, {
+		id: 'fms-items-grid',
+		ajax: '/items/datatables',
+		actions: [
+			{
+				url: '#/items/edit/',
+				content: '<i class="fa fa-2x fa-pencil-square-o"></i>'
+			},
+			{
+				url: '#/items/',
+				content: '<i class="fa fa-2x fa-search"></i>'
+			}
+		],
+		cols: [
+			{label: 'Actions', data: 'id'},
+			{label: 'Name', data: 'name'},
+			{label: 'Created', data: 'createdAt', type: 'time'},
+			{label: 'Updated', data: 'updatedAt', type: 'time'},
+		]
+	}); 
+});
+
+app.controller('MenusAddController', function(
+	navMgr, messenger, pod, areaSchema, restaurantSchema, menuSchema, $scope, $http, $window
+) {
+
+	// todo: this is clunky and gives the user an odd experience
+	// if there is no area id to assocaite this restaurant with
+	if(!restaurantSchema.defaults.restaurant.id) {
+		// send the user back to the areas list page
+		window.location.href = '/';
+	};
+	
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.menuSchema = menuSchema;
+	$scope.menu = menuSchema.populateDefaults({});
+
+	$scope.menu.restaurantId = restaurantSchema.defaults.restaurant.id;
+	console.log($scope.menu);
+
+	$scope.save = function save(menu, options) {
+		options || (options = {});
+
+		$http.post(
+			'/menus/create', menu
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The menu has been created.', 'Success!');
+
+			if(options.addMore) {
+				$scope.menu = {};
+				return;
+			}
+
+			navMgr.protect(false);
+			$window.location.href = '#/menus/' + data.id;
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/menus');
+	};
+});
+
+app.controller('MenusEditController', function(
+	navMgr, messenger, pod, menuSchema, $scope, $http, $routeParams
+) {
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.menuSchema = menuSchema;
+	$scope.editMode = true;
+
+	$http.get(
+		'/menus/' + $routeParams.id
+	).success(function(data, status, headers, config) {
+		$scope.menu = menuSchema.populateDefaults(data);
+	});
+
+	$scope.save = function save(menu, options) {
+		options || (options = {});
+
+		$http.put(
+			'/menus/' + menu.id, menu
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The menu has been updated.', 'Success!');
+
+			$scope.form.$setPristine();
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/menus');
 	};
 });
 

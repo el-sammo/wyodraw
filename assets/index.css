@@ -2,53 +2,53 @@
 /** Global **/
 
 html {
-  overflow: -moz-scrollbars-vertical; 
-  overflow-y: scroll;
+	overflow: -moz-scrollbars-vertical; 
+	overflow-y: scroll;
 }
 
 body {
-  font-family: 'Open Sans', sans-serif;
+	font-family: 'Open Sans', sans-serif;
 }
 
 td {
-  vertical-align: middle!important;
+	vertical-align: middle!important;
 }
 
 .divspan {
-  display: inline-block;
-  *display: inline;
-  zoom: 1;
+	display: inline-block;
+	*display: inline;
+	zoom: 1;
 }
 
 .fa-btn-text {
-  position: relative;
-  top: -4px;
-  margin-left: 4px;
+	position: relative;
+	top: -4px;
+	margin-left: 4px;
 }
 
 .fms-time {
-  margin-left: 20px;
+	margin-left: 20px;
 }
 
 /** Bootstrap overrides **/
 
 .page-header {
-  margin-top: 0px;
-  padding-top: 0px;
+	margin-top: 0px;
+	padding-top: 0px;
 }
 .page-header h1, .page-header h2, .page-header h3 {
-  margin-top: 8px;
-  margin-bottom: 8px;
+	margin-top: 8px;
+	margin-bottom: 8px;
 }
 
 .navbar button {
-  margin-left: 5px;
-  margin-right: 5px;
-  margin-top: 8px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 8px;
 }
 
 .modal {
-  background-color: rgba(0, 0, 0, .3);
+	background-color: rgba(0, 0, 0, .3);
 }
 
 /** Angular Bootstrap **/
@@ -61,30 +61,30 @@ td {
 }
 
 .pod-row .pod {
-  padding: 15px;
-  border-radius: 15px;
-  border: 1px solid #ccc;
-  margin-right: 15px;
-  margin-bottom: 15px;
+	padding: 15px;
+	border-radius: 15px;
+	border: 1px solid #ccc;
+	margin-right: 15px;
+	margin-bottom: 15px;
 }
 .pod.col-md-3 {
-  width: calc((100% * 3 / 12) - 15px);
+	width: calc((100% * 3 / 12) - 15px);
 }
 .pod.col-md-4 {
-  width: calc((100% * 4 / 12) - 15px);
+	width: calc((100% * 4 / 12) - 15px);
 }
 .pod.col-md-8 {
-  width: calc((100% * 8 / 12) - 15px);
+	width: calc((100% * 8 / 12) - 15px);
 }
 
 .pod-row .pod .pod-body {
-  width: calc(100% * 11 / 12);
-  float: left;
+	width: calc(100% * 11 / 12);
+	float: left;
 }
 .pod-row .pod .pod-body .row {
-  margin-left: 0;
-  margin-right: 0;
-  margin-bottom: 10px;
+	margin-left: 0;
+	margin-right: 0;
+	margin-bottom: 10px;
 }
 
 .pod-row .pod .pod-body .col-md-1, .pod-row .pod .pod-body .col-md-2,
@@ -93,8 +93,8 @@ td {
 .pod-row .pod .pod-body .col-md-7, .pod-row .pod .pod-body .col-md-8,
 .pod-row .pod .pod-body .col-md-9, .pod-row .pod .pod-body .col-md-10,
 .pod-row .pod .pod-body .col-md-11, .pod-row .pod .pod-body .col-md-12 {
-  padding-left: 0px;
-  padding-right: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
 }
 
 .pod-row .pod .pod-body .col-md-offset-1, .pod-row .pod .pod-body .col-md-offset-2,
@@ -103,107 +103,111 @@ td {
 .pod-row .pod .pod-body .col-md-offset-7, .pod-row .pod .pod-body .col-md-offset-8,
 .pod-row .pod .pod-body .col-md-offset-9, .pod-row .pod .pod-body .col-md-offset-10,
 .pod-row .pod .pod-body .col-md-offset-11, .pod-row .pod .pod-body .col-md-offset-12 {
-  margin-left: 15px;
+	margin-left: 15px;
 }
 
 .pod-row .pod .pod-controls {
-  padding-left: 15px;
-  width: calc(100% * 1 / 12);
-  float: left;
+	padding-left: 15px;
+	width: calc(100% * 1 / 12);
+	float: left;
 }
 .pod-row .pod .pod-controls button {
-  margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 /** Layout **/
 
 .navbar-brand img {
-  height:40px;
-  position: relative;
-  top: -25px;
+	height:40px;
+	position: relative;
+	top: -25px;
 	background-color: #fff;
 	padding: 5px;
 	border-radius: 15px;
 }
 
 #fms-headbar {
-  background-color: #7e8aa2;
-  border: 0;
+	background-color: #7e8aa2;
+	border: 0;
 }
 
 #fms-headbar, #fms-headbar a {
-  color: #fff;
+	color: #fff;
 }
 
 #fms-headbar h1 {
-  font-size: 14pt;
-  position: relative;
-  left: -10px;
-  top: -5px;
-  font-weight: bold;
-  margin-left: 10px;
-  margin-right: 30px;
-  color: #fff;
-  display: inline-block;
-  *display: inline;
-  zoom: 1;
+	font-size: 14pt;
+	position: relative;
+	left: -10px;
+	top: -5px;
+	font-weight: bold;
+	margin-left: 10px;
+	margin-right: 30px;
+	color: #fff;
+	display: inline-block;
+	*display: inline;
+	zoom: 1;
 }
 
 #fms-headbar .nav li a {
-  padding-right: 0;
+	padding-right: 0;
 }
 #fms-headbar .nav li>a.active {
-  background-color: #007581;
+	background-color: #007581;
 }
 
 .fms-headbar-add {
-  padding-right: 15px!important;
-  padding-left: 10px!important;
+	padding-right: 15px!important;
+	padding-left: 10px!important;
 }
 
 .navbar-fixed-fix {
-  height: 60px;
+	height: 60px;
 }
 
 #fms-messenger .alert {
-  /* width: calc(100% - 70em); */
-  width: 40em;
-  height: 40px;
-  position: fixed;
-  text-align: center;
-  top: 4px;
-  /* left: calc(50% - (100% - 70em) / 2); */
-  left: calc(50% - (40em / 2));
-  z-index: 1030;
-  padding-top: 10px;
-  color: #007581;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipses;
+	/* width: calc(100% - 70em); */
+	width: 40em;
+	height: 40px;
+	position: fixed;
+	text-align: center;
+	top: 4px;
+	/* left: calc(50% - (100% - 70em) / 2); */
+	left: calc(50% - (40em / 2));
+	z-index: 1030;
+	padding-top: 10px;
+	color: #007581;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipses;
 }
 
 #fms-main-container {
-  margin-left: 0px;
-  width: 100%;
+	margin-left: 0px;
+	width: 100%;
 }
 
 #fms-modules-grid {
-  position: relative;
-  left: -20px;
+	position: relative;
+	left: -20px;
 }
 
 #fms-nav-away-modal li {
-  margin-top: 14px;
-  line-height: 20pt;
+	margin-top: 14px;
+	line-height: 20pt;
 }
 
 .label.label-custom {
-  background-color: #fff;
-  border: 1px solid #999;
-  color: #000;
+	background-color: #fff;
+	border: 1px solid #999;
+	color: #000;
 }
 
 .label.text-muted {
-  color: #888;
+	color: #888;
+}
+
+table .fms-action {
+	float: left;
 }
 
