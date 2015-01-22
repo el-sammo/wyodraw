@@ -28,6 +28,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Restaurant
+	///
+
+	$routeProvider.when('/restaurant/:id', {
+		controller: 'RestaurantShowController',
+		templateUrl: '/templates/restaurantShow.html'
+	});
+
+
+	///
 	// Other
 	///
 
@@ -510,16 +520,122 @@ app.controller('RestaurantsController', function(
 		var cm = cPcs[1];
 		var cs = cPcs[2];
 
-		var openSecs = ((parseInt(oh) * 360) + (parseInt(om) * 60) + parseInt(os));
-		var closeSecs = ((parseInt(ch) * 360) + (parseInt(cm) * 60) + parseInt(cs));
+		var hSecs = parseInt(h) * 3600;
+		var mSecs = parseInt(m) * 60;
+		var sSecs = parseInt(s);
 
-		var nowSecs = ((parseInt(h) * 360) + (parseInt(m) * 60) + parseInt(s));
+		var ohSecs = parseInt(oh) * 3600;
+		var omSecs = parseInt(om) * 60;
+		var osSecs = parseInt(os);
+
+		var chSecs = parseInt(ch) * 3600;
+		var cmSecs = parseInt(cm) * 60;
+		var csSecs = parseInt(cs);
+
+		var nowSecs = (hSecs + mSecs + sSecs);
+		var openSecs = (ohSecs + omSecs + osSecs);
+		var closeSecs = (chSecs + cmSecs + csSecs);
 
 		if(nowSecs >= openSecs & nowSecs < closeSecs) {
 			return true;
 		}
 
 		return false;
+	};
+
+});
+
+
+///
+// Controllers: Restaurant
+///
+
+app.config(function(httpInterceptorProvider) {
+	httpInterceptorProvider.register(/^\/restaurant/);
+});
+
+app.controller('RestaurantShowController', function(
+	datatables, navMgr, messenger, pod, $scope, $http, $routeParams
+) {
+	
+	var p = $http.get('/restaurants/' + $routeParams.id);
+
+	p.then(function(res) {
+		$scope.restaurant = res.data;
+	});
+
+	p.error(function(err) {
+		console.log(err);
+	});
+
+	var r = $http.get('/menus/byRestaurantId/' + $routeParams.id);
+
+	r.then(function(res) {
+		$scope.menus = res.data;
+		$scope.menuId = res.data[0].id;
+		$scope.menuName = res.data[0].name;
+	});
+
+	r.error(function(err) {
+		console.log(err);
+	});
+
+	$scope.menuOpen = function(menu) {
+		var d = new Date();
+		var n = d.getDay(); 
+		var h = d.getHours(); 
+		var m = d.getMinutes(); 
+		var s = d.getSeconds(); 
+
+		var thisDayHoursOpen = menu.availStart;
+		var thisDayHoursClose = menu.availEnd;
+
+		var oPcs = thisDayHoursOpen.split(':');
+		var cPcs = thisDayHoursClose.split(':');
+
+		var oh = oPcs[0];
+		var om = oPcs[1];
+		var os = oPcs[2];
+
+		var ch = cPcs[0];
+		var cm = cPcs[1];
+		var cs = cPcs[2];
+
+		var hSecs = parseInt(h) * 3600;
+		var mSecs = parseInt(m) * 60;
+		var sSecs = parseInt(s);
+
+		var ohSecs = parseInt(oh) * 3600;
+		var omSecs = parseInt(om) * 60;
+		var osSecs = parseInt(os);
+
+		var chSecs = parseInt(ch) * 3600;
+		var cmSecs = parseInt(cm) * 60;
+		var csSecs = parseInt(cs);
+
+		var nowSecs = (hSecs + mSecs + sSecs);
+		var openSecs = (ohSecs + omSecs + osSecs);
+		var closeSecs = (chSecs + cmSecs + csSecs);
+
+		if(nowSecs >= openSecs & nowSecs < closeSecs) {
+			return true;
+		}
+
+		return false;
+	};
+
+	$scope.showMenu = function(id) {
+		var s = $http.get('/menus/' + id);
+	
+		s.then(function(res) {
+			$scope.menuId = res.data.id;
+			$scope.menuName = res.data.name;
+		});
+	
+		s.error(function(err) {
+			console.log(err);
+		});
+
 	};
 
 });

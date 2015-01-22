@@ -4,7 +4,7 @@
 	</div>
 	<div class="row">
 		<div class="col-md-3" ng-repeat="restaurant in restaurants" ng-if="restaurantOpen(restaurant)">
-			{{restaurant.name}}
+			<a href="#/restaurant/{{restaurant.id}}" class="restaurantLinks">{{restaurant.name}}</a>
     </div>
   </div>
 </div>

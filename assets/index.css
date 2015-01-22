@@ -30,6 +30,10 @@ td {
 	margin-left: 20px;
 }
 
+.menuLink {
+	cursor: pointer;
+}
+
 /** Bootstrap overrides **/
 
 .page-header {
