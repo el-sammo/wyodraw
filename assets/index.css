@@ -120,19 +120,20 @@ td {
 .navbar-brand img {
 	height:40px;
 	position: relative;
-	top: -25px;
+	top: -5px;
 	background-color: #fff;
 	padding: 5px;
 	border-radius: 15px;
 }
 
 #fms-headbar {
-	background-color: #7e8aa2;
+	background-color: #7E8AA2;
 	border: 0;
 }
 
 #fms-headbar, #fms-headbar a {
 	color: #fff;
+	text-decoration: none;
 }
 
 #fms-headbar h1 {
@@ -185,6 +186,8 @@ td {
 #fms-main-container {
 	margin-left: 0px;
 	width: 100%;
+	background-color: #FF9800;
+	background-image: url('/images/bg_icons.png');
 }
 
 #fms-modules-grid {

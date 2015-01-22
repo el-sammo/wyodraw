@@ -39,7 +39,7 @@ module.exports.http = {
       'compress',
       'methodOverride',
       'www',
-      'authenticate',
+//      'authenticate',
       'router',
       // 'favicon',
       '404',

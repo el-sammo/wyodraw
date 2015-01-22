@@ -18,7 +18,7 @@ module.exports = {
     });
   },
 
-	byArea: function(req, res) {
+	byAreaId: function(req, res) {
 		Restaurants.findByAreaId(req.params.id).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
