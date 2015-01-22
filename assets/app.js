@@ -21,7 +21,7 @@ app.config(function($routeProvider) {
 	// Restaurants
 	///
 
-	$routeProvider.when('/restaurants/:id', {
+	$routeProvider.when('/restaurants/', {
 		controller: 'RestaurantsController',
 		templateUrl: '/templates/restaurants.html'
 	});
@@ -453,7 +453,6 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
 
 	p.then(function(res) {
-		console.log(res);
 		$scope.restaurants = res.data;
 	});
 
@@ -475,8 +474,53 @@ app.config(function(httpInterceptorProvider) {
 app.controller('RestaurantsController', function(
 	datatables, navMgr, messenger, pod, $scope, $http, $routeParams
 ) {
+	//TODO
+	//get areaId
+	var areaId = '54b32e4c3756f5d15ad4ca49';
+	
+	var p = $http.get('/restaurants/byAreaId/' + areaId);
 
-	var p = $http.get('/restaurants/byAreaId/' + $routeParams.id);
+	p.then(function(res) {
+		$scope.restaurants = res.data;
+	});
+
+	p.error(function(err) {
+		console.log(err);
+	});
+
+
+	$scope.restaurantOpen = function(restaurant) {
+		var d = new Date();
+		var n = d.getDay(); 
+		var h = d.getHours(); 
+		var m = d.getMinutes(); 
+		var s = d.getSeconds(); 
+
+		var thisDayHoursOpen = restaurant.hours[n].open;
+		var thisDayHoursClose = restaurant.hours[n].close;
+
+		var oPcs = thisDayHoursOpen.split(':');
+		var cPcs = thisDayHoursClose.split(':');
+
+		var oh = oPcs[0];
+		var om = oPcs[1];
+		var os = oPcs[2];
+
+		var ch = cPcs[0];
+		var cm = cPcs[1];
+		var cs = cPcs[2];
+
+		var openSecs = ((parseInt(oh) * 360) + (parseInt(om) * 60) + parseInt(os));
+		var closeSecs = ((parseInt(ch) * 360) + (parseInt(cm) * 60) + parseInt(cs));
+
+		var nowSecs = ((parseInt(h) * 360) + (parseInt(m) * 60) + parseInt(s));
+
+		if(nowSecs >= openSecs & nowSecs < closeSecs) {
+			return true;
+		}
+
+		return false;
+	};
 
 });
 

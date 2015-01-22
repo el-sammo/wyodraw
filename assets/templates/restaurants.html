@@ -1,15 +1,10 @@
-
-<div class="col-md-6 page-header">
-	<h3>{{restaurant.name}} <small>MENUS</small></h3>
-</div>
-<div class="col-md-6 page-header">
-  <a href="#/{{path}}/add" class="pull-right">
-    <button class="btn btn-default">
-      <i class="fa fa-2x fa-plus-square"></i>
-      <div class="fa-btn-text divspan">Add Menu</div>
-    </button>
-  </a>
-</div>
-<div class="col-md-12">
-  <div ng-include="datatables.template"></ng-include>
+<div class="col-md-12" style="width: 90%; left: 5%; top: 5%; background-color: white;">
+	<div class="row">
+		<h1>Restaurants</h1>
+	</div>
+	<div class="row">
+		<div class="col-md-3" ng-repeat="restaurant in restaurants" ng-if="restaurantOpen(restaurant)">
+			{{restaurant.name}}
+    </div>
+  </div>
 </div>
