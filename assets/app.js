@@ -475,9 +475,29 @@ app.config(function(httpInterceptorProvider) {
 app.controller('RestaurantsController', function(
 	datatables, navMgr, messenger, pod, $scope, $http, $routeParams
 ) {
-	//TODO
-	//get areaId
+	// TODO
+	// get areaId
 	var areaId = '54b32e4c3756f5d15ad4ca49';
+
+	// TODO
+	// get customerId
+	var customerId = '54c6644c0517463077a759aa';
+
+	// TODO
+	// put this in a config? or what?
+	// orderStatus map
+	// < 1 = not started
+	// 1   = started (ordering)
+	// 2   = payment initiated
+	// 3   = payment accepted
+	// 4   = payment declined
+	// 5   = order completed
+	// 6   = order ordered (at restaurant)
+	// 7   = order picked up
+	// 8   = order en route
+	// 9   = order delivered
+
+	$scope.imageUrl = '/images';
 
 	// retrieve restaurants
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
@@ -491,6 +511,9 @@ app.controller('RestaurantsController', function(
 	// if restaurants ajax succeeds...
 	p.then(function(res) {
 		var allRestaurants = res.data;
+		var firstRestId = allRestaurants[0].id;
+
+		$scope.showRestaurant(firstRestId);
 
 		allRestaurants.map(function(restaurant) {
 			var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
@@ -557,7 +580,24 @@ app.controller('RestaurantsController', function(
 	$scope.addItem = function(itemId) {
 		console.log('addItem() called with: '+itemId);
 		return true;
-	}
+	};
+
+	$scope.updateOrder = function() {
+		var p = $http.get('/orders/byCustomerId/' + customerId);
+		
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: updateOrder ajax failed');
+			console.log(err);
+		});
+				
+		// if orders ajax succeeds...
+		p.then(function(res) {
+			$scope.orderStatus = parseInt(res.data[0].orderStatus);
+			$scope.things = res.data[0].things;
+			console.log($scope.things);
+		});
+	};
 
 	$scope.restaurantOpen = function(restaurant) {
 		var d = new Date();
@@ -646,6 +686,7 @@ app.controller('RestaurantsController', function(
 	
 	};
 
+	$scope.updateOrder();
 });
 
 

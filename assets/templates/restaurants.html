@@ -20,20 +20,36 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-md-9">
-			<div class="row">
-				<div class="col-md-12">
-					<span class="restaurantLink">{{restaurantName}} - {{menuName}}</span>
-				</div>
-			</div>
+		<div class="col-md-6" >
 			<div class="row">
 				<div class="col-md-12">
 					<div class="row" ng-repeat="item in items">
-						<div class="cold-md-6">
-							<div class="itemLink" ng-init="itemID = item.id" ng-click="addItem(itemId)">{{item.name}} - {{item.desc}}</div>
+						<div class="col-md-6">
+							<span class="itemName">{{item.name}}</span></br>
+							<span class="itemDesc">{{item.desc}}</span></br>
+							<span class="add2Order" ng-init="itemID = item.id" ng-click="addItem(itemId)">Add to Order</span>
 						</div>
 						<div class="col-md-6">
-							<img src="//{{imageUrl}}/{{item.image}}.jpg">
+							<img src="/images/{{item.image}}.jpg" class="img-responsive">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3" >
+			<div class="row">
+				<div class="col-md-8">
+					<div class="row">
+						<div class="col-md-8">
+							<span class="orderHead">My Order</span>
+						</div>
+					</div>
+					<div class="row" ng-repeat"thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
+						<div class="col-md-6">
+							{{thing.name}} ({{thing.option}})
+						</div>
+						<div class="col-md-2">
+							{{thing.price}}
 						</div>
 					</div>
 				</div>
@@ -41,46 +57,3 @@
 		</div>
 	</div>
 </div>
-<!--
-		</div>
-		<div class="col-md-6" ng-show="{{!usable}}">
-			<div class="row">
-				<div class="col-md-6">
-					<h2>{{menuName}}</h2>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<img src="/images/{{menuId}}.jpg">
-				</div>
-			</div>
-			<div class="row" ng-repeat="item in items" ng-if="item.active">
-				<div class="col-md-3">
-					<div class="row">
-						<div class="itemHead">
-							<h3>{{item.name}}</h3>
-						</div>
-					</div>
-					<div class="row">
-						<div class="itemDesc">
-							{{item.desc}}
-						</div>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="row">
-						<div class="itemImage">
-							<img src="/images/{{item.id}}.jpg">
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-6" ng-show="{{usable}}">
-			<div class="row">
-				<h2>No menus currently available - check back later</h2>
-			</div>
-		</div>
-	</div>
-</div>
--->

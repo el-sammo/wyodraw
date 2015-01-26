@@ -30,6 +30,10 @@ td {
 	margin-left: 20px;
 }
 
+.restMenuHead {
+	font-size: 16px;
+}
+
 .restaurantLink {
 	font-size: 16px;
 	cursor: pointer;
@@ -47,6 +51,23 @@ td {
 
 .hideItemList {
 	display: none;
+}
+
+.itemName {
+	font-size: 14px;
+	font-weight: 450;
+}
+
+.itemDesc {
+	font-size: 12px;
+	font-weight: 200;
+}
+
+.add2Order {
+	color: red;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
 }
 
 /** Bootstrap overrides **/
