@@ -18,7 +18,7 @@ module.exports = {
     });
   },
 
-	byMenu: function(req, res) {
+	byMenuId: function(req, res) {
 		Items.findByMenuId(req.params.id).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {

@@ -30,8 +30,23 @@ td {
 	margin-left: 20px;
 }
 
-.menuLink {
+.restaurantLink {
+	font-size: 16px;
 	cursor: pointer;
+}
+
+.menuLink {
+	font-size: 12px;
+	padding-left: 10px;
+	cursor: pointer;
+}
+
+.hideMenuList {
+	display: none;
+}
+
+.hideItemList {
+	display: none;
 }
 
 /** Bootstrap overrides **/

@@ -28,16 +28,6 @@ app.config(function($routeProvider) {
 
 
 	///
-	// Restaurant
-	///
-
-	$routeProvider.when('/restaurant/:id', {
-		controller: 'RestaurantShowController',
-		templateUrl: '/templates/restaurantShow.html'
-	});
-
-
-	///
 	// Other
 	///
 
@@ -467,6 +457,7 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 	});
 
 	p.error(function(err) {
+		console.log('SplashController: restaurants ajax failed');
 		console.log(err);
 	});
 
@@ -487,17 +478,86 @@ app.controller('RestaurantsController', function(
 	//TODO
 	//get areaId
 	var areaId = '54b32e4c3756f5d15ad4ca49';
-	
+
+	// retrieve restaurants
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
 
-	p.then(function(res) {
-		$scope.restaurants = res.data;
-	});
-
+	// if restaurants ajax fails...
 	p.error(function(err) {
+		console.log('RestaurantsController: restaurants ajax failed');
 		console.log(err);
 	});
+	
+	// if restaurants ajax succeeds...
+	p.then(function(res) {
+		var allRestaurants = res.data;
 
+		allRestaurants.map(function(restaurant) {
+			var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
+			
+			// if menus ajax fails...
+			r.error(function(err) {
+				console.log('RestaurantsController: returnMenus ajax failed');
+				console.log(err);
+			});
+		
+			// if menus ajax succeeds...
+			r.then(function(res) {
+				restaurant.menus = res.data;
+			});
+		});
+
+		$scope.restaurantId = allRestaurants[0].id;
+		$scope.restaurantName = allRestaurants[0].name;
+		$scope.restaurantImg = allRestaurants[0].image;
+
+		$scope.restaurants = allRestaurants;
+
+		$scope.getMenus($scope.restaurantId, true);
+	});
+
+	// get menus by restaurant id
+	$scope.getMenus = function(restaurantId, firstMenu) {
+		var p = $http.get('/menus/byRestaurantId/' + restaurantId);
+	
+		// if menus ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: getMenus ajax failed');
+			console.log(err);
+		});
+
+		// if menus ajax succeeds...
+		p.then(function(res) {
+			$scope.menus = res.data;
+			if(firstMenu) {
+				$scope.menuId = res.data[0].id;
+				$scope.menuName = res.data[0].name;
+				$scope.menuImg = res.data[0].image;
+			}
+			$scope.firstMenu = firstMenu;
+		});
+	};
+
+	// retrieve items by menu id
+	$scope.getItems = function(menuId) {
+		var p = $http.get('/items/byMenuId/' + menuId);
+	
+		// if items ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: getItems ajax failed');
+			console.log(err);
+		});
+
+		// if items ajax succeeds...
+		p.then(function(res) {
+			$scope.items = res.data;
+		});
+	};
+
+	$scope.addItem = function(itemId) {
+		console.log('addItem() called with: '+itemId);
+		return true;
+	}
 
 	$scope.restaurantOpen = function(restaurant) {
 		var d = new Date();
@@ -506,35 +566,14 @@ app.controller('RestaurantsController', function(
 		var m = d.getMinutes(); 
 		var s = d.getSeconds(); 
 
-		var thisDayHoursOpen = restaurant.hours[n].open;
-		var thisDayHoursClose = restaurant.hours[n].close;
-
-		var oPcs = thisDayHoursOpen.split(':');
-		var cPcs = thisDayHoursClose.split(':');
-
-		var oh = oPcs[0];
-		var om = oPcs[1];
-		var os = oPcs[2];
-
-		var ch = cPcs[0];
-		var cm = cPcs[1];
-		var cs = cPcs[2];
+		var openSecs = parseInt(restaurant.hours[n].open);
+		var closeSecs = parseInt(restaurant.hours[n].close);
 
 		var hSecs = parseInt(h) * 3600;
 		var mSecs = parseInt(m) * 60;
 		var sSecs = parseInt(s);
 
-		var ohSecs = parseInt(oh) * 3600;
-		var omSecs = parseInt(om) * 60;
-		var osSecs = parseInt(os);
-
-		var chSecs = parseInt(ch) * 3600;
-		var cmSecs = parseInt(cm) * 60;
-		var csSecs = parseInt(cs);
-
 		var nowSecs = (hSecs + mSecs + sSecs);
-		var openSecs = (ohSecs + omSecs + osSecs);
-		var closeSecs = (chSecs + cmSecs + csSecs);
 
 		if(nowSecs >= openSecs & nowSecs < closeSecs) {
 			return true;
@@ -543,79 +582,20 @@ app.controller('RestaurantsController', function(
 		return false;
 	};
 
-});
-
-
-///
-// Controllers: Restaurant
-///
-
-app.config(function(httpInterceptorProvider) {
-	httpInterceptorProvider.register(/^\/restaurant/);
-});
-
-app.controller('RestaurantShowController', function(
-	datatables, navMgr, messenger, pod, $scope, $http, $routeParams
-) {
-	
-	var p = $http.get('/restaurants/' + $routeParams.id);
-
-	p.then(function(res) {
-		$scope.restaurant = res.data;
-	});
-
-	p.error(function(err) {
-		console.log(err);
-	});
-
-	var r = $http.get('/menus/byRestaurantId/' + $routeParams.id);
-
-	r.then(function(res) {
-		$scope.menus = res.data;
-		$scope.menuId = res.data[0].id;
-		$scope.menuName = res.data[0].name;
-	});
-
-	r.error(function(err) {
-		console.log(err);
-	});
-
 	$scope.menuOpen = function(menu) {
 		var d = new Date();
-		var n = d.getDay(); 
 		var h = d.getHours(); 
 		var m = d.getMinutes(); 
 		var s = d.getSeconds(); 
 
-		var thisDayHoursOpen = menu.availStart;
-		var thisDayHoursClose = menu.availEnd;
-
-		var oPcs = thisDayHoursOpen.split(':');
-		var cPcs = thisDayHoursClose.split(':');
-
-		var oh = oPcs[0];
-		var om = oPcs[1];
-		var os = oPcs[2];
-
-		var ch = cPcs[0];
-		var cm = cPcs[1];
-		var cs = cPcs[2];
+		var openSecs = parseInt(menu.availStart);
+		var closeSecs = parseInt(menu.availEnd);
 
 		var hSecs = parseInt(h) * 3600;
 		var mSecs = parseInt(m) * 60;
 		var sSecs = parseInt(s);
 
-		var ohSecs = parseInt(oh) * 3600;
-		var omSecs = parseInt(om) * 60;
-		var osSecs = parseInt(os);
-
-		var chSecs = parseInt(ch) * 3600;
-		var cmSecs = parseInt(cm) * 60;
-		var csSecs = parseInt(cs);
-
 		var nowSecs = (hSecs + mSecs + sSecs);
-		var openSecs = (ohSecs + omSecs + osSecs);
-		var closeSecs = (chSecs + cmSecs + csSecs);
 
 		if(nowSecs >= openSecs & nowSecs < closeSecs) {
 			return true;
@@ -624,18 +604,46 @@ app.controller('RestaurantShowController', function(
 		return false;
 	};
 
-	$scope.showMenu = function(id) {
-		var s = $http.get('/menus/' + id);
+	// retrieve and display restaurant data (including menus)
+	$scope.showRestaurant = function(id) {
+		$('.hideMenuList').hide();
+		$('.hideItemList').hide();
+		$('#'+id).show();
+		var p = $http.get('/restaurants/' + id);
 	
-		s.then(function(res) {
-			$scope.menuId = res.data.id;
-			$scope.menuName = res.data.name;
-		});
-	
-		s.error(function(err) {
+		// if restaurant ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: showRestaurant ajax failed');
 			console.log(err);
 		});
 
+		// if restaurant ajax succeeds...
+		p.then(function(res) {
+			$scope.restaurantId = res.data.id;
+			$scope.restaurantName = res.data.name;
+			$scope.restaurantImage = res.data.image;
+			$scope.getMenus($scope.restaurantId, false);
+		});
+	
+	};
+
+	// retrieve and display menu data (including items)
+	$scope.showMenu = function(id) {
+		var p = $http.get('/menus/' + id);
+	
+		// if menu ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: showMenu ajax failed');
+			console.log(err);
+		});
+
+		// if menu ajax succeeds...
+		p.then(function(res) {
+			$scope.menuId = res.data.id;
+			$scope.menuName = res.data.name;
+			$scope.getItems($scope.menuId);
+		});
+	
 	};
 
 });
