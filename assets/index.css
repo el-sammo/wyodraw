@@ -53,14 +53,19 @@ td {
 	display: none;
 }
 
+#itemRow {
+	padding: 8px;
+	border-bottom: 1px solid #FFCFC2;
+}
+
 .itemName {
-	font-size: 14px;
+	font-size: 18px;
 	font-weight: 450;
 }
 
 .itemDesc {
-	font-size: 12px;
-	font-weight: 200;
+	font-size: 14px;
+	font-weight: 300;
 }
 
 .add2Order {
@@ -68,6 +73,69 @@ td {
 	font-size: 14px;
 	font-weight: 700;
 	cursor: pointer;
+}
+
+.removeFromOrder {
+	color: red;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+#restaurantMenusPanel {
+}
+
+#menuItemsPanel {
+	border-left: 1px dotted grey;
+	border-right: 1px dotted grey;
+}
+
+#orderPanel {
+}
+
+.orderHead {
+	font-size: 16px;
+	font-weight: 600;
+}
+
+#thingRow {
+	border-top: 1px solid #C0C2FF;
+}
+
+#thingPrice {
+	text-align: right;
+}
+
+#subtotalRow {
+	border-top: 1px solid #C0C2FF;
+}
+
+#deliveryFeeRow {
+	border-top: 1px solid #C0C2FF;
+}
+
+#discountRow {
+	border-top: 1px solid #C0C2FF;
+}
+
+#totalRow {
+	border-top: 1px solid #C0C2FF;
+}
+
+.subtotal {
+	text-align: right:
+}
+
+.delivery {
+	text-align: right:
+}
+
+.discount {
+	text-align: right:
+}
+
+.total {
+	text-align: right:
 }
 
 /** Bootstrap overrides **/

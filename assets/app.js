@@ -463,7 +463,6 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 
 });
 
-
 ///
 // Controllers: Restaurants
 ///
@@ -561,7 +560,7 @@ app.controller('RestaurantsController', function(
 		});
 	};
 
-	// retrieve items by menu id
+	// retrieve items by menu id (including options)
 	$scope.getItems = function(menuId) {
 		var p = $http.get('/items/byMenuId/' + menuId);
 	
@@ -573,12 +572,35 @@ app.controller('RestaurantsController', function(
 
 		// if items ajax succeeds...
 		p.then(function(res) {
-			$scope.items = res.data;
+			var allItems = res.data;
+
+			allItems.map(function(item) {
+				var r = $http.get('/options/byItemId/' + item.id);
+			
+				// if options ajax fails...
+				r.error(function(err) {
+					console.log('RestaurantsController: getItems-options ajax failed');
+					console.log(err);
+				});
+		
+				// if options ajax succeeds...
+				r.then(function(res) {
+					item.options = res.data;
+				});
+			});
+
+			$scope.items = allItems;
+
 		});
 	};
 
-	$scope.addItem = function(itemId) {
-		console.log('addItem() called with: '+itemId);
+	$scope.addOption = function(optionId) {
+		console.log('addOption() called with '+optionId);
+		return true;
+	};
+
+	$scope.removeOption = function(optionId) {
+		console.log('removeOption() called with '+optionId);
 		return true;
 	};
 
@@ -593,9 +615,11 @@ app.controller('RestaurantsController', function(
 				
 		// if orders ajax succeeds...
 		p.then(function(res) {
+			// TODO properly get the only order that should be used
+			// here, we're cheating by selecting the first (and only)
 			$scope.orderStatus = parseInt(res.data[0].orderStatus);
 			$scope.things = res.data[0].things;
-			console.log($scope.things);
+			$scope.updateTotals(res.data[0].things);
 		});
 	};
 
@@ -684,6 +708,26 @@ app.controller('RestaurantsController', function(
 			$scope.getItems($scope.menuId);
 		});
 	
+	};
+
+	$scope.updateTotals = function(things) {
+
+		var subtotal = 0;
+		var deliveryFee = 12.95;
+		var discount = 0;
+		var total = 0;
+
+		things.forEach(function(thing) {
+			subtotal = (Math.round((subtotal + parseFloat(thing.price)) * 100)/100);
+		});
+
+		total = (Math.round((subtotal + deliveryFee + discount) * 100)/100);
+
+		$scope.subtotal = subtotal;
+		$scope.deliveryFee = deliveryFee;
+		$scope.discount = discount;
+		$scope.total = total;
+
 	};
 
 	$scope.updateOrder();

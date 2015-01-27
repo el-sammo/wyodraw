@@ -1,6 +1,6 @@
 <div class="col-md-12" style="top: 40px; background-color: white;">
 	<div class="row">
-		<div class="col-md-3">
+		<div class="col-md-3" id="restaurantMenusPanel">
 			<div class="row" ng-repeat="restaurant in restaurants">
 				<div class="col-md-12">
 					<div class="row">
@@ -20,14 +20,16 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-md-6" >
+		<div class="col-md-6" id="menuItemsPanel">
 			<div class="row">
 				<div class="col-md-12">
-					<div class="row" ng-repeat="item in items">
+					<div class="row" id="itemRow" ng-repeat="item in items">
 						<div class="col-md-6">
-							<span class="itemName">{{item.name}}</span></br>
-							<span class="itemDesc">{{item.desc}}</span></br>
-							<span class="add2Order" ng-init="itemID = item.id" ng-click="addItem(itemId)">Add to Order</span>
+							<span class="itemName">{{item.name}}</span>
+							</br>
+							<span class="itemDesc">{{item.desc}}</span>
+							</br>
+							<div class="itemOptions" ng-repeat="option in item.options">{{option.name}} ({{option.price}}) <span class="add2Order" ng-init="optionId = option.id" ng-click="addOption(optionId)">Add to Order<br></span></div>
 						</div>
 						<div class="col-md-6">
 							<img src="/images/{{item.image}}.jpg" class="img-responsive">
@@ -36,20 +38,52 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-md-3" >
+		<div class="col-md-3" id="orderPanel">
 			<div class="row">
-				<div class="col-md-8">
+				<div class="col-md-12">
 					<div class="row">
-						<div class="col-md-8">
+						<div class="col-md-12">
 							<span class="orderHead">My Order</span>
 						</div>
 					</div>
-					<div class="row" ng-repeat"thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
-						<div class="col-md-6">
-							{{thing.name}} ({{thing.option}})
+					<div class="row" id="thingRow" ng-init="thingId = thing.id" ng-repeat="thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
+						<div class="col-md-9">
+							{{thing.name}}<br>({{thing.option}})
 						</div>
-						<div class="col-md-2">
-							{{thing.price}}
+						<div class="col-md-3" id="thingPrice">
+							{{thing.price}}<br><div class="priceOptionRemove"><span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeOption(thingId)">Remove</span></div>
+						</div>
+					</div>
+					<div class="row" id="subtotalRow" ng-show="orderStatus > 0 && orderStatus < 6">
+						<div class="col-md-9">
+							Subtotal
+						</div>
+						<div class="col-md-3" class="subtotal">
+							{{subtotal}}
+						</div>
+					</div>
+					<div class="row" id="deliveryFeeRow" ng-show="orderStatus > 0 && orderStatus < 6">
+						<div class="col-md-9">
+							Delivery Fee
+						</div>
+						<div class="col-md-3" class="deliveryFee">
+							{{deliveryFee}}
+						</div>
+					</div>
+					<div class="row" id="discountRow" ng-show="orderStatus > 0 && orderStatus < 6 && discount < 0">
+						<div class="col-md-9">
+							Discount
+						</div>
+						<div class="col-md-3" class="discount">
+							{{discount}}
+						</div>
+					</div>
+					<div class="row" id="totalRow" ng-show="orderStatus > 0 && orderStatus < 6">
+						<div class="col-md-9">
+							Total
+						</div>
+						<div class="col-md-3" class="total">
+							{{total}}
 						</div>
 					</div>
 				</div>

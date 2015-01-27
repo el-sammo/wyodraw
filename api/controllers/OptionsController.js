@@ -18,7 +18,7 @@ module.exports = {
     });
   },
 
-	byItem: function(req, res) {
+	byItemId: function(req, res) {
 		Options.findByItemId(req.params.id).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
