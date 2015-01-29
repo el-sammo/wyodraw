@@ -480,7 +480,7 @@ app.controller('RestaurantsController', function(
 
 	// TODO
 	// get customerId
-	var customerId = '54c6644c0517463077a759aa';
+	$scope.customerId = '54c6644c0517463077a759aa';
 
 	// TODO
 	// put this in a config? or what?
@@ -594,18 +594,87 @@ app.controller('RestaurantsController', function(
 		});
 	};
 
-	$scope.addOption = function(optionId) {
-		console.log('addOption() called with '+optionId);
-		return true;
+	$scope.addOption = function(optionId, optionName, optionPrice, itemName) {
+
+		var nextThing = {'optionId': optionId, 'option': optionName, 'price': optionPrice, 'name': itemName};
+
+		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
+		
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: addOption-get ajax failed');
+			console.log(err);
+		});
+				
+		// if orders ajax succeeds...
+		p.then(function(res) {
+			res.data[0].things.push(nextThing);
+		
+			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+
+			// if orders ajax fails...
+			r.error(function(err) {
+				console.log('RestaurantsController: addOption-put ajax failed');
+				console.log(err);
+			});
+					
+			// if orders ajax succeeds...
+			r.then(function(res) {
+				$scope.updateOrder();
+			});
+		});
 	};
 
+
 	$scope.removeOption = function(optionId) {
-		console.log('removeOption() called with '+optionId);
-		return true;
+		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
+		
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: removeOption-get ajax failed');
+			console.log(err);
+		});
+				
+		// if orders ajax succeeds...
+		p.then(function(res) {
+			
+			var holdingMap = [];
+			var counter = 0;
+			var things = res.data[0].things;
+			var hmSize = things.length;
+			var cntnu = true;
+
+			while(counter < hmSize & cntnu) {
+				if(things[counter].optionId != optionId) {
+					holdingMap.push({
+					 	'name': res.data[0].things[counter].name,
+					 	'option': res.data[0].things[counter].option,
+					 	'optionId': res.data[0].things[counter].optionId,
+					 	'price': res.data[0].things[counter].price
+					});
+				}
+				counter ++;
+			}
+
+			res.data[0].things = holdingMap;
+
+			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+
+			// if orders ajax fails...
+			r.error(function(err) {
+				console.log('RestaurantsController: removeOption-put ajax failed');
+				console.log(err);
+			});
+					
+			// if orders ajax succeeds...
+			r.then(function(res) {
+				$scope.updateOrder();
+			});
+		});
 	};
 
 	$scope.updateOrder = function() {
-		var p = $http.get('/orders/byCustomerId/' + customerId);
+		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
 		
 		// if orders ajax fails...
 		p.error(function(err) {
@@ -713,6 +782,10 @@ app.controller('RestaurantsController', function(
 	$scope.updateTotals = function(things) {
 
 		var subtotal = 0;
+		var tax = 0;
+		// TODO this should be configged on the area level
+		var taxRate = .05;
+		var multiplier = 100;
 		var deliveryFee = 12.95;
 		var discount = 0;
 		var total = 0;
@@ -721,9 +794,12 @@ app.controller('RestaurantsController', function(
 			subtotal = (Math.round((subtotal + parseFloat(thing.price)) * 100)/100);
 		});
 
-		total = (Math.round((subtotal + deliveryFee + discount) * 100)/100);
+		tax = (Math.round((subtotal * taxRate) * 100) / 100);
+
+		total = (Math.round((subtotal + tax + deliveryFee + discount) * 100)/100);
 
 		$scope.subtotal = subtotal;
+		$scope.tax = tax;
 		$scope.deliveryFee = deliveryFee;
 		$scope.discount = discount;
 		$scope.total = total;
