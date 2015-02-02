@@ -26,6 +26,16 @@ td {
 	margin-left: 4px;
 }
 
+.collageMain {
+	top: 10px;
+	left: 200px;
+	width: 640px;
+	height: 480px;
+	background-color: white;
+	border: 1px solid red;
+	position: relative;
+}
+
 .fms-time {
 	margin-left: 20px;
 }

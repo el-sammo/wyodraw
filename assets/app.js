@@ -452,14 +452,110 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 	
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
 
-	p.then(function(res) {
-		$scope.restaurants = res.data;
-	});
-
 	p.error(function(err) {
 		console.log('SplashController: restaurants ajax failed');
 		console.log(err);
 	});
+
+	p.then(function(res) {
+		$scope.featuredRestaurants = [];
+		$scope.restaurants = res.data;
+		$scope.restaurants.forEach(function(restaurant) {
+			$scope.getItems(restaurant.id, function(err, featuredItems) {
+				var counter = 0;
+				restaurant.itemImage1 = '';
+				restaurant.itemId1 = '';
+				restaurant.itemImage2 = '';
+				restaurant.itemId2 = '';
+				restaurant.itemImage3 = '';
+				restaurant.itemId3 = '';
+				restaurant.itemImage4 = '';
+				restaurant.itemId4 = '';
+				restaurant.itemImage5 = '';
+				restaurant.itemId5 = '';
+				restaurant.itemImage6 = '';
+				restaurant.itemId6 = '';
+				restaurant.itemImage7 = '';
+				restaurant.itemId7 = '';
+				restaurant.itemImage8 = '';
+				restaurant.itemId8 = '';
+				restaurant.itemImage9 = '';
+				restaurant.itemId9 = '';
+				restaurant.itemImage10 = '';
+				restaurant.itemId10 = '';
+				if(featuredItems.length > 9) {
+					featuredItems.forEach(function(item) {
+						counter ++;
+						if(counter < 11) {
+							if(restaurant.itemImage1.length < 1) {
+								restaurant.itemImage1 = item.itemImage;
+								restaurant.itemId1 = item.itemId;
+							} else if(restaurant.itemImage2.length < 1) {
+								restaurant.itemImage2 = item.itemImage;
+								restaurant.itemId2 = item.itemId;
+							} else if(restaurant.itemImage3.length < 1) {
+								restaurant.itemImage3 = item.itemImage;
+								restaurant.itemId3 = item.itemId;
+							} else if(restaurant.itemImage4.length < 1) {
+								restaurant.itemImage4 = item.itemImage;
+								restaurant.itemId4 = item.itemId;
+							} else if(restaurant.itemImage5.length < 1) {
+								restaurant.itemImage5 = item.itemImage;
+								restaurant.itemId5 = item.itemId;
+							} else if(restaurant.itemImage6.length < 1) {
+								restaurant.itemImage6 = item.itemImage;
+								restaurant.itemId6 = item.itemId;
+							} else if(restaurant.itemImage7.length < 1) {
+								restaurant.itemImage7 = item.itemImage;
+								restaurant.itemId7 = item.itemId;
+							} else if(restaurant.itemImage8.length < 1) {
+								restaurant.itemImage8 = item.itemImage;
+								restaurant.itemId8 = item.itemId;
+							} else if(restaurant.itemImage9.length < 1) {
+								restaurant.itemImage9 = item.itemImage;
+								restaurant.itemId9 = item.itemId;
+							} else {
+								restaurant.itemImage10 = item.itemImage;
+								restaurant.itemId10 = item.itemId;
+							}
+						}
+					});
+					restaurant.featuredItems = featuredItems;
+					$scope.featuredRestaurants.push(restaurant);
+				}
+			});
+		});
+	});
+
+	$scope.getItems = function(id, callback) {
+		var frItems = [];
+		var r = $http.get('/menus/byRestaurantId/' + id);
+
+		r.error(function(err) {
+			console.log('SplashController: getItems-menus ajax failed');
+			console.log(err);
+		});
+
+		r.then(function(res) {
+			res.data.map(function(menu) {
+				var s = $http.get('/items/byMenuId/' + menu.id);
+		
+				s.error(function(err) {
+					console.log('SplashController: getItems-menus ajax failed');
+					console.log(err);
+				});
+		
+				s.then(function(res) {
+					res.data.forEach(function(item) {
+						if(item.image) {
+							frItems.push({'itemId': item.id, 'itemImage': item.image});
+						}
+					});
+					callback(null, frItems);
+				});
+			});
+		});
+	};
 
 });
 
