@@ -3,7 +3,7 @@
 		<div class="col-md-12">
 			<div class="collageMain">
 				<div class="row" ng-repeat="restaurant in featuredRestaurants">
-					<div class="col-md-12">
+					<div class="col-md-12" ng-show="restaurant.rotatorPanel < 2">
 						<div class="row">
 							<div class="col-md-6">
 								<img src="/images/{{restaurant.itemImage1}}.jpg" class="img-responsive" style="border: 1px solid white;">
@@ -48,6 +48,86 @@
 							</div>
 							<div class="col-md-6">
 								<img src="/images/{{restaurant.itemImage10}}.jpg" class="img-responsive" style="border: 1px solid white;">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<div class="restInfo" wrap>
+									Click Here to Order <h3>{{restaurant.name}}</h3> {{restaurant.slogan}}
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-12" ng-show="restaurant.rotatorPanel > 0 && restaurant.rotatorPanel < 3">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="row">
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage6}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage7}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage8}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage9}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<img src="/images/{{restaurant.itemImage10}}.jpg" class="img-responsive" style="border: 1px solid white;">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<img src="/images/{{restaurant.itemImage1}}.jpg" class="img-responsive" style="border: 1px solid white;">
+							</div>
+							<div class="col-md-6">
+								<div class="row">
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage2}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage3}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage4}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+									<div class="col-md-6">
+										<img src="/images/{{restaurant.itemImage5}}.jpg" class="img-responsive" style="border: 1px solid white;">
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<div class="restInfo" wrap>
+									Click Here to Order <h3>{{restaurant.name}}</h3> {{restaurant.slogan}}
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-12" ng-show="restaurant.rotatorPanel > 2">
+						<div class="row">
+							<div class="col-md-6">
+								<img src="/images/{{restaurant.itemImage1}}.jpg" class="img-responsive" style="border: 1px solid white;">
+							</div>
+							<div class="col-md-6">
+								<img src="/images/{{restaurant.itemImage2}}.jpg" class="img-responsive" style="border: 1px solid white;">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<img src="/images/{{restaurant.itemImage3}}.jpg" class="img-responsive" style="border: 1px solid white;">
+							</div>
+							<div class="col-md-6">
+								<img src="/images/{{restaurant.itemImage4}}.jpg" class="img-responsive" style="border: 1px solid white;">
 							</div>
 						</div>
 						<div class="row">

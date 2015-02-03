@@ -461,6 +461,10 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 		$scope.featuredRestaurants = [];
 		$scope.restaurants = res.data;
 		$scope.restaurants.forEach(function(restaurant) {
+			// TODO these values need to come from a config
+			var rotatorMin = 1;
+			var rotatorMax = 3;
+			restaurant.rotatorPanel = Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
 			$scope.getItems(restaurant.id, function(err, featuredItems) {
 				var counter = 0;
 				restaurant.itemImage1 = '';
