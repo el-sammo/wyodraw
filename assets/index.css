@@ -41,7 +41,9 @@ td {
 	width: 240px;
 	height: 120px;
 	border: 2px solid white;
-	background-color: white;
+	background-color: rgba(0, 0, 0, 0.5);
+	font-color: white;
+	font-weight: 700;
 	text-align: center;
 	position: relative;
 	z-index: 100;
