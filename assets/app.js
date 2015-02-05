@@ -21,7 +21,7 @@ app.config(function($routeProvider) {
 	// Restaurants
 	///
 
-	$routeProvider.when('/restaurants/', {
+	$routeProvider.when('/restaurants/:id', {
 		controller: 'RestaurantsController',
 		templateUrl: '/templates/restaurants.html'
 	});
@@ -533,6 +533,8 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 
 	$scope.getItems = function(id, callback) {
 		var frItems = [];
+		$scope.menuSlugSet = false;
+		$scope.menuSlugs = [];
 		var r = $http.get('/menus/byRestaurantId/' + id);
 
 		r.error(function(err) {
@@ -542,6 +544,8 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 
 		r.then(function(res) {
 			res.data.map(function(menu) {
+				$scope.menuSlugs.push(menu.slug);
+					
 				var s = $http.get('/items/byMenuId/' + menu.id);
 		
 				s.error(function(err) {
@@ -558,8 +562,19 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 					callback(null, frItems);
 				});
 			});
+			if(!$scope.menuSlugSet && $scope.menuSlugs.length > 9) {
+				$scope.getRandomMenuSlug($scope.menuSlugs);
+			}
 		});
 	};
+
+	$scope.getRandomMenuSlug = function(menus) {
+		var menuMin = 0;
+		var menuMax = menus.length
+		var randomIndex = Math.floor(Math.random() * (menuMax - menuMin + 1)) + menuMin;
+		$scope.randomMenuSlug = menus[randomIndex];
+		$scope.menuSlugSet = true;
+	}
 
 });
 
@@ -595,8 +610,10 @@ app.controller('RestaurantsController', function(
 	// 7   = order picked up
 	// 8   = order en route
 	// 9   = order delivered
+	
+	var uglySlug = $routeParams.id;
 
-	$scope.imageUrl = '/images';
+	$scope.imageUrl = '/images/';
 
 	// retrieve restaurants
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
@@ -615,6 +632,11 @@ app.controller('RestaurantsController', function(
 		$scope.showRestaurant(firstRestId);
 
 		allRestaurants.map(function(restaurant) {
+
+			var thisSlugPcs = uglySlug.split(restaurant.slug);
+			console.log('thisSlugPcs:');
+			console.log(thisSlugPcs);
+
 			var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
 			
 			// if menus ajax fails...
