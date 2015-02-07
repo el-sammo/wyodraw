@@ -627,15 +627,11 @@ app.controller('RestaurantsController', function(
 	// if restaurants ajax succeeds...
 	p.then(function(res) {
 		var allRestaurants = res.data;
-		var firstRestId = allRestaurants[0].id;
-
-		$scope.showRestaurant(firstRestId);
 
 		allRestaurants.map(function(restaurant) {
-
-			var thisSlugPcs = uglySlug.split(restaurant.slug);
-			console.log('thisSlugPcs:');
-			console.log(thisSlugPcs);
+			if(uglySlug.match(restaurant.slug)) {
+				$scope.showRestaurant(restaurant.id);
+			}
 
 			var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
 			
@@ -648,6 +644,12 @@ app.controller('RestaurantsController', function(
 			// if menus ajax succeeds...
 			r.then(function(res) {
 				restaurant.menus = res.data;
+				restaurant.menus.forEach(function(menu) {
+					if(menu.slug == uglySlug) {
+						console.log('match: '+menu.slug+' = '+uglySlug);
+						$scope.showMenu(menu.id);
+					}
+				});
 			});
 		});
 
@@ -861,6 +863,7 @@ app.controller('RestaurantsController', function(
 
 	// retrieve and display restaurant data (including menus)
 	$scope.showRestaurant = function(id) {
+		console.log(id+' = 54b6c11e6ae280250265097b');
 		$('.hideMenuList').hide();
 		$('.hideItemList').hide();
 		$('#'+id).show();
@@ -931,6 +934,14 @@ app.controller('RestaurantsController', function(
 	$scope.updateOrder();
 });
 
+
+///
+// Dummy Controller
+//
+
+app.controller('DummyController', function($scope) {
+	$scope.randomMenuSlug = 'olive-garden-appetizers';
+});
 
 ///
 // Holder
