@@ -4,10 +4,12 @@
 html {
 	overflow: -moz-scrollbars-vertical; 
 	overflow-y: scroll;
+	height: 100%;
 }
 
 body {
 	font-family: 'Open Sans', sans-serif;
+	height: 100%;
 }
 
 td {
@@ -121,6 +123,9 @@ td {
 }
 
 #restaurantMenusPanel {
+	background-color: #fff;
+	position:fixed;
+	top: 120px;
 }
 
 #menuItemsPanel {
@@ -129,6 +134,10 @@ td {
 }
 
 #orderPanel {
+	background-color: #fff;
+	padding-right:50px;
+	position:fixed;
+	top: 120px;
 }
 
 .orderHead {
@@ -334,6 +343,7 @@ td {
 	width: 100%;
 	background-color: #FF9800;
 	background-image: url('/images/bg_icons.png');
+	height: 100%;
 }
 
 #fms-modules-grid {

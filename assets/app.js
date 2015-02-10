@@ -444,8 +444,7 @@ app.controller('PodController', function(args, $scope, $modalInstance) {
 ///
 // Controllers: Splash
 ///
-
-app.controller('SplashController', function($scope, $http, $routeParams) {
+app.controller('SplashController', function($scope, $http, $routeParams, $rootScope) {
 	//TODO
 	//get areaId
 	var areaId = '54b32e4c3756f5d15ad4ca49';
@@ -458,12 +457,23 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 	});
 
 	p.then(function(res) {
+		var setIds = {};
 		$scope.featuredRestaurants = [];
 		$scope.restaurants = res.data;
 		$scope.restaurants.forEach(function(restaurant) {
 			// TODO these values need to come from a config
 			var rotatorMin = 1;
 			var rotatorMax = 3;
+
+			var restaurantActiveAlready = false;
+
+			if(!restaurantActiveAlready) {
+				restaurant.featuredActive = ' active';
+				restaurantActiveAlready = true;
+			} else {
+				restaurant.featuredActive = '';
+			}
+
 			restaurant.rotatorPanel = Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
 			$scope.getItems(restaurant.id, function(err, featuredItems) {
 				var counter = 0;
@@ -525,7 +535,10 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 						}
 					});
 					restaurant.featuredItems = featuredItems;
-					$scope.featuredRestaurants.push(restaurant);
+					if(! setIds[restaurant.id]) {
+						$scope.featuredRestaurants.push(restaurant);
+						setIds[restaurant.id] = true;
+					}
 				}
 			});
 		});
@@ -563,16 +576,16 @@ app.controller('SplashController', function($scope, $http, $routeParams) {
 				});
 			});
 			if(!$scope.menuSlugSet && $scope.menuSlugs.length > 9) {
-				$scope.getRandomMenuSlug($scope.menuSlugs);
+				$scope.getFeaturedMenuSlug($scope.menuSlugs);
 			}
 		});
 	};
 
-	$scope.getRandomMenuSlug = function(menus) {
+	$scope.getFeaturedMenuSlug = function(menus) {
 		var menuMin = 0;
 		var menuMax = menus.length
 		var randomIndex = Math.floor(Math.random() * (menuMax - menuMin + 1)) + menuMin;
-		$scope.randomMenuSlug = menus[randomIndex];
+		$rootScope.featuredMenuSlug = menus[randomIndex];
 		$scope.menuSlugSet = true;
 	}
 
@@ -934,14 +947,6 @@ app.controller('RestaurantsController', function(
 	$scope.updateOrder();
 });
 
-
-///
-// Dummy Controller
-//
-
-app.controller('DummyController', function($scope) {
-	$scope.randomMenuSlug = 'olive-garden-appetizers';
-});
 
 ///
 // Holder

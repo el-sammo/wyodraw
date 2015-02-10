@@ -1,6 +1,6 @@
 <div class="col-md-12" style="top: 40px; background-color: white;">
 	<div class="row">
-		<div class="col-md-3" id="restaurantMenusPanel">
+		<div class="col-md-3" id="restaurantMenusPanel" style="position:fixed; top: 120px;">
 			<div class="row" ng-repeat="restaurant in restaurants">
 				<div class="col-md-12">
 					<div class="row">
@@ -20,7 +20,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-md-6" id="menuItemsPanel">
+		<div class="col-md-6 col-md-offset-3" id="menuItemsPanel">
 			<div class="row">
 				<div class="col-md-12">
 					<div class="row" id="itemRow" ng-init="itemName = item.name" ng-repeat="item in items">
@@ -29,16 +29,27 @@
 							</br>
 							<span class="itemDesc">{{item.desc}}</span>
 							</br>
-							<div class="itemOptions" ng-repeat="option in item.options">{{option.name}} ({{option.price}}) <span class="add2Order" ng-init="optionId = option.id; optionPrice = option.price; optionName = option.name" ng-click="addOption(optionId,optionName,optionPrice,itemName)">Add to Order<br></span></div>
+							<div class="itemOptions" ng-repeat="option in item.options">
+								{{option.name}} ({{option.price}})
+								<span class="add2Order pull-right" ng-init="optionId = option.id; optionPrice = option.price; optionName = option.name" ng-click="addOption(optionId,optionName,optionPrice,itemName)">
+									Add to Order
+									<br>
+								</span>
+								<!--
+								<button class="btn btn-danger pull-right" ng-init="optionId = option.id; optionPrice = option.price; optionName = option.name" ng-click="addOption(optionId,optionName,optionPrice,itemName)">
+									Add to Order
+								</button>
+								-->
+							</div>
 						</div>
 						<div class="col-md-6">
-							<img src="/images/{{item.image}}.jpg" class="img-responsive">
+							<img src="{{item.image}}" class="img-responsive">
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="col-md-3" id="orderPanel">
+		<div class="col-md-3 col-md-offset-9" id="orderPanel">
 			<div class="row">
 				<div class="col-md-12">
 					<div class="row">
