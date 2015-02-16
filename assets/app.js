@@ -600,7 +600,7 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	datatables, navMgr, messenger, pod, $scope, $http, $routeParams
+	datatables, navMgr, messenger, pod, $scope, $http, $routeParams, $modal
 ) {
 	// TODO
 	// get areaId
@@ -659,7 +659,6 @@ app.controller('RestaurantsController', function(
 				restaurant.menus = res.data;
 				restaurant.menus.forEach(function(menu) {
 					if(menu.slug == uglySlug) {
-						console.log('match: '+menu.slug+' = '+uglySlug);
 						$scope.showMenu(menu.id);
 					}
 				});
@@ -731,35 +730,64 @@ app.controller('RestaurantsController', function(
 		});
 	};
 
-	$scope.addOption = function(optionId, optionName, optionPrice, itemName) {
-
-		var nextThing = {'optionId': optionId, 'option': optionName, 'price': optionPrice, 'name': itemName};
-
-		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
+	$scope.addItem = function(itemId, itemName) {
+		var n = $http.get('/options/byItemId/' + itemId);
 		
 		// if orders ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: addOption-get ajax failed');
+		n.error(function(err) {
+			console.log('RestaurantsController: addItem-getOptions ajax failed');
 			console.log(err);
 		});
 				
 		// if orders ajax succeeds...
-		p.then(function(res) {
-			res.data[0].things.push(nextThing);
-		
-			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+		n.then(function(res) {
+			$scope.itemOptions = res.data;
 
-			// if orders ajax fails...
-			r.error(function(err) {
-				console.log('RestaurantsController: addOption-put ajax failed');
-				console.log(err);
+			var modal = $modal.open({
+				templateUrl: '/templates/addItemOptions.html',
+				backdrop: 'static',
+				resolve: {}
 			});
-					
-			// if orders ajax succeeds...
-			r.then(function(res) {
-				$scope.updateOrder();
+	
+			modal.result.then(function(selected) {
+				if(selected == 'save') {
+					// TODO
+					alert('functionality not implemented: save as draft');
+					return;
+				}
+	
+				self.protect(false);
+				$window.location.href = newUrl;
 			});
 		});
+
+//		var nextThing = {'optionId': optionId, 'option': optionName, 'price': optionPrice, 'name': itemName};
+//
+//		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
+//		
+//		// if orders ajax fails...
+//		p.error(function(err) {
+//			console.log('RestaurantsController: addItem-getOrder ajax failed');
+//			console.log(err);
+//		});
+//				
+//		// if orders ajax succeeds...
+//		p.then(function(res) {
+//			res.data[0].things.push(nextThing);
+//		
+//			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+//
+//			// if orders ajax fails...
+//			r.error(function(err) {
+//				console.log('RestaurantsController: addOption-put ajax failed');
+//				console.log(err);
+//			});
+//					
+//			// if orders ajax succeeds...
+//			r.then(function(res) {
+//				$scope.updateOrder();
+//			});
+//		});
 	};
 
 
@@ -876,7 +904,6 @@ app.controller('RestaurantsController', function(
 
 	// retrieve and display restaurant data (including menus)
 	$scope.showRestaurant = function(id) {
-		console.log(id+' = 54b6c11e6ae280250265097b');
 		$('.hideMenuList').hide();
 		$('.hideItemList').hide();
 		$('#'+id).show();
