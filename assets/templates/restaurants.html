@@ -57,7 +57,7 @@
 							{{thing.name}}<br>({{thing.option}})
 						</div>
 						<div class="col-md-3" id="thingPrice">
-							{{thing.price}}<br><div class="priceOptionRemove"><span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeOption(thingId)">Remove</span></div>
+							{{thing.price}}<br><div class="priceOptionRemove"><span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thingId)">Remove</span></div>
 						</div>
 					</div>
 					<div class="row" id="subtotalRow" ng-show="orderStatus > 0 && orderStatus < 6">

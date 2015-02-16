@@ -731,6 +731,9 @@ app.controller('RestaurantsController', function(
 	};
 
 	$scope.addItem = function(itemId, itemName) {
+		$scope.addItemName = itemName;
+		$scope.addItemId = itemId;
+
 		var n = $http.get('/options/byItemId/' + itemId);
 		
 		// if orders ajax fails...
@@ -742,7 +745,7 @@ app.controller('RestaurantsController', function(
 		// if orders ajax succeeds...
 		n.then(function(res) {
 			$scope.itemOptions = res.data;
-
+		
 			var modal = $modal.open({
 				templateUrl: '/templates/addItemOptions.html',
 				backdrop: 'static',
@@ -755,12 +758,10 @@ app.controller('RestaurantsController', function(
 					alert('functionality not implemented: save as draft');
 					return;
 				}
-	
-				self.protect(false);
-				$window.location.href = newUrl;
 			});
 		});
 
+// TODO Complete this section
 //		var nextThing = {'optionId': optionId, 'option': optionName, 'price': optionPrice, 'name': itemName};
 //
 //		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
@@ -791,7 +792,7 @@ app.controller('RestaurantsController', function(
 	};
 
 
-	$scope.removeOption = function(optionId) {
+	$scope.removeItem = function(optionId) {
 		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
 		
 		// if orders ajax fails...
@@ -802,39 +803,53 @@ app.controller('RestaurantsController', function(
 				
 		// if orders ajax succeeds...
 		p.then(function(res) {
-			
-			var holdingMap = [];
-			var counter = 0;
-			var things = res.data[0].things;
-			var hmSize = things.length;
-			var cntnu = true;
-
-			while(counter < hmSize & cntnu) {
-				if(things[counter].optionId != optionId) {
-					holdingMap.push({
-					 	'name': res.data[0].things[counter].name,
-					 	'option': res.data[0].things[counter].option,
-					 	'optionId': res.data[0].things[counter].optionId,
-					 	'price': res.data[0].things[counter].price
-					});
+			var modal = $modal.open({
+				templateUrl: '/templates/removeItemOptions.html',
+				backdrop: 'static',
+				resolve: {}
+			});
+	
+			modal.result.then(function(selected) {
+				if(selected == 'save') {
+					// TODO
+					alert('functionality not implemented: save as draft');
+					return;
 				}
-				counter ++;
-			}
-
-			res.data[0].things = holdingMap;
-
-			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
-
-			// if orders ajax fails...
-			r.error(function(err) {
-				console.log('RestaurantsController: removeOption-put ajax failed');
-				console.log(err);
 			});
-					
-			// if orders ajax succeeds...
-			r.then(function(res) {
-				$scope.updateOrder();
-			});
+			
+// TODO Complete this section
+//			var holdingMap = [];
+//			var counter = 0;
+//			var things = res.data[0].things;
+//			var hmSize = things.length;
+//			var cntnu = true;
+//
+//			while(counter < hmSize & cntnu) {
+//				if(things[counter].optionId != optionId) {
+//					holdingMap.push({
+//					 	'name': res.data[0].things[counter].name,
+//					 	'option': res.data[0].things[counter].option,
+//					 	'optionId': res.data[0].things[counter].optionId,
+//					 	'price': res.data[0].things[counter].price
+//					});
+//				}
+//				counter ++;
+//			}
+//
+//			res.data[0].things = holdingMap;
+//
+//			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+//
+//			// if orders ajax fails...
+//			r.error(function(err) {
+//				console.log('RestaurantsController: removeOption-put ajax failed');
+//				console.log(err);
+//			});
+//					
+//			// if orders ajax succeeds...
+//			r.then(function(res) {
+//				$scope.updateOrder();
+//			});
 		});
 	};
 
