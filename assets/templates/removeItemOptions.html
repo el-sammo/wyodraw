@@ -1,22 +1,18 @@
-<div class="modal-header" ng-controller="RestaurantsController">
+<div class="modal-header">
   <h4 class="modal-title" id="nav-away-modal-title">
-		Remove {{removeItemName}} from Your Order
-  </h4>
-	<br/>
-	<div class="row">
-		<div class="col-md-12">
-			<span>
-				Are you sure you want to remove {{removeItemName}} from your order?
-			</span>
-		</div>
-	</div>
+		Remove <strong>{{thing.name}}</strong> from Your Order
+	</h4>
 </div>
-<br/>
+<div class="modal-body">
+	<span>
+		Are you sure you want to remove <strong>{{thing.name}}</strong> from your order?
+	</span>
+</div>
 <div class="modal-footer">
   <button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
     <i class="fa fa-reply"></i> &nbsp; Go Back
   </button>
-  <button type="button" class="btn btn-danger pull-right" ng-click="$close('save')">
+  <button type="button" class="btn btn-danger pull-right" ng-click="removeThing()">
     <i class="fa fa-remove"></i> &nbsp; Remove from Order
   </button>
 </div>

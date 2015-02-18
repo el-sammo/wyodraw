@@ -23,7 +23,7 @@
 		<div class="col-md-6 col-md-offset-3" id="menuItemsPanel">
 			<div class="row">
 				<div class="col-md-12">
-					<div class="row" id="itemRow" ng-init="itemName = item.name; itemId = item.id" ng-repeat="item in items">
+					<div class="row" id="itemRow" ng-repeat="item in items">
 						<div class="col-md-6">
 							<span class="itemName">{{item.name}}</span>
 							</br>
@@ -32,7 +32,7 @@
 							<div class="itemOptions" ng-repeat="option in item.options">
 								{{option.name}} ({{option.price}})
 							</div>
-							<span class="add2Order pull-left" ng-click="addItem(itemId,itemName)">
+							<span class="add2Order pull-left" ng-click="addItem(item)">
 								Add to Order
 								<br>
 							</span>
@@ -52,12 +52,12 @@
 							<span class="orderHead">My Order</span>
 						</div>
 					</div>
-					<div class="row" id="thingRow" ng-init="thingId = thing.id" ng-repeat="thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
+					<div class="row" id="thingRow" ng-repeat="thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
 						<div class="col-md-9">
 							{{thing.name}}<br>({{thing.option}})
 						</div>
 						<div class="col-md-3" id="thingPrice">
-							{{thing.price}}<br><div class="priceOptionRemove"><span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thingId)">Remove</span></div>
+							{{thing.price}}<br><div class="priceOptionRemove"><span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thing)">Remove</span></div>
 						</div>
 					</div>
 					<div class="row" id="subtotalRow" ng-show="orderStatus > 0 && orderStatus < 6">

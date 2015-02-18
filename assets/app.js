@@ -314,7 +314,15 @@ app.config(function($httpProvider) {
 // Event-Based Services Loader
 ///
 
-app.controller('LoadServices', function(loginModal, errMgr) {});
+app.controller('LoadServices', function(loginModal, errMgr, fakeAuth) {});
+
+
+app.factory('fakeAuth', function($rootScope) {
+	// TODO
+	// get customerId
+	$rootScope.customerId = '54c6644c0517463077a759aa';
+	return {};
+});
 
 
 ///
@@ -438,6 +446,153 @@ app.controller('PodController', function(args, $scope, $modalInstance) {
 		list.splice(idx, 1);
 		$modalInstance.dismiss('done');
 	};
+});
+
+///
+// Order Management
+///
+
+app.factory('orderMgmt', function($modal, $rootScope) {
+	var service = {
+		add: function(item) {
+			$modal.open({
+				templateUrl: '/templates/addItemOptions.html',
+				backdrop: true,
+				controller: 'OrderMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							item: item
+						}
+					}
+				}
+			});
+		},
+		remove: function(thing) {
+			$modal.open({
+				templateUrl: '/templates/removeItemOptions.html',
+				backdrop: true,
+				controller: 'OrderMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							thing: thing
+						}
+					}
+				}
+			});
+		}
+	};
+	return service;
+});
+
+app.controller('OrderMgmtController', function(
+	args, $scope, $modalInstance, $http, $rootScope
+) {
+	$scope.item = args.item;
+	$scope.thing = args.thing;
+	$scope.specInst = '';
+	$scope.selOption = '';
+
+	$scope.addItemOption = function() {
+		var nextThing;
+		$scope.item.options.map(function(val) {
+			if(val.id == $scope.selOption) {
+				nextThing = {
+					'optionId': val.id,
+					'option': val.name,
+					'price': val.price,
+					'name': $scope.item.name,
+					'specInst': $scope.specInst
+				};
+			}
+		});
+
+		if(!nextThing) {
+			console.log('nextThing doesn\'t exist');
+			$modalInstance.dismiss('cancel');
+		} else {
+			var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
+			
+			// if orders ajax fails...
+			p.error(function(err) {
+				console.log('OrderMgmtController: addItem-getOrder ajax failed');
+				console.log(err);
+				$modalInstance.dismiss('cancel');
+			});
+					
+			// if orders ajax succeeds...
+			p.then(function(res) {
+				// TODO get the correct one properly
+				// (not an orphaned order)
+				res.data[0].things.push(nextThing);
+			
+				var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+	
+				// if orders ajax fails...
+				r.error(function(err) {
+					console.log('OrderMgmtController: addOption-put ajax failed');
+					console.log(err);
+					$modalInstance.dismiss('cancel');
+				});
+						
+				// if orders ajax succeeds...
+				r.then(function(res) {
+					$rootScope.$broadcast('orderChanged');
+					$modalInstance.dismiss('done');
+				});
+			});
+		}
+	};
+
+	$scope.removeThing = function() {
+		var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
+			
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('OrderMgmtController: addItem-getOrder ajax failed');
+			console.log(err);
+			$modalInstance.dismiss('cancel');
+		});
+					
+		// if orders ajax succeeds...
+		p.then(function(res) {
+			var holdingMap = [];
+			var counter = 0;
+			var things = res.data[0].things;
+			var hmSize = things.length;
+			var cntnu = true;
+	
+			while(counter < hmSize & cntnu) {
+				if(things[counter].optionId != $scope.thing.optionId) {
+					holdingMap.push({
+						'name': res.data[0].things[counter].name,
+						'option': res.data[0].things[counter].option,
+						'optionId': res.data[0].things[counter].optionId,
+						'price': res.data[0].things[counter].price
+					});
+				}
+				counter ++;
+			}
+	
+			res.data[0].things = holdingMap;
+	
+			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+	
+			// if orders ajax fails...
+			r.error(function(err) {
+				console.log('OrderMgmtController: removeOption-put ajax failed');
+				console.log(err);
+				$modalInstance.dismiss('cancel');
+			});
+						
+			// if orders ajax succeeds...
+			r.then(function(res) {
+				$rootScope.$broadcast('orderChanged');
+				$modalInstance.dismiss('done');
+			});
+		});
+	}
 });
 
 
@@ -600,15 +755,13 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	datatables, navMgr, messenger, pod, $scope, $http, $routeParams, $modal
+	datatables, navMgr, messenger, pod, $scope,
+	$http, $routeParams, $modal, orderMgmt,
+	$rootScope
 ) {
 	// TODO
 	// get areaId
 	var areaId = '54b32e4c3756f5d15ad4ca49';
-
-	// TODO
-	// get customerId
-	$scope.customerId = '54c6644c0517463077a759aa';
 
 	// TODO
 	// put this in a config? or what?
@@ -730,131 +883,16 @@ app.controller('RestaurantsController', function(
 		});
 	};
 
-	$scope.addItem = function(itemId, itemName) {
-		$scope.addItemName = itemName;
-		$scope.addItemId = itemId;
+	$scope.addItem = orderMgmt.add;
 
-		var n = $http.get('/options/byItemId/' + itemId);
-		
-		// if orders ajax fails...
-		n.error(function(err) {
-			console.log('RestaurantsController: addItem-getOptions ajax failed');
-			console.log(err);
-		});
-				
-		// if orders ajax succeeds...
-		n.then(function(res) {
-			$scope.itemOptions = res.data;
-		
-			var modal = $modal.open({
-				templateUrl: '/templates/addItemOptions.html',
-				backdrop: 'static',
-				resolve: {}
-			});
-	
-			modal.result.then(function(selected) {
-				if(selected == 'save') {
-					// TODO
-					alert('functionality not implemented: save as draft');
-					return;
-				}
-			});
-		});
+	$scope.removeItem = orderMgmt.remove;
 
-// TODO Complete this section
-//		var nextThing = {'optionId': optionId, 'option': optionName, 'price': optionPrice, 'name': itemName};
-//
-//		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
-//		
-//		// if orders ajax fails...
-//		p.error(function(err) {
-//			console.log('RestaurantsController: addItem-getOrder ajax failed');
-//			console.log(err);
-//		});
-//				
-//		// if orders ajax succeeds...
-//		p.then(function(res) {
-//			res.data[0].things.push(nextThing);
-//		
-//			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
-//
-//			// if orders ajax fails...
-//			r.error(function(err) {
-//				console.log('RestaurantsController: addOption-put ajax failed');
-//				console.log(err);
-//			});
-//					
-//			// if orders ajax succeeds...
-//			r.then(function(res) {
-//				$scope.updateOrder();
-//			});
-//		});
-	};
-
-
-	$scope.removeItem = function(optionId) {
-		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
-		
-		// if orders ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: removeOption-get ajax failed');
-			console.log(err);
-		});
-				
-		// if orders ajax succeeds...
-		p.then(function(res) {
-			var modal = $modal.open({
-				templateUrl: '/templates/removeItemOptions.html',
-				backdrop: 'static',
-				resolve: {}
-			});
-	
-			modal.result.then(function(selected) {
-				if(selected == 'save') {
-					// TODO
-					alert('functionality not implemented: save as draft');
-					return;
-				}
-			});
-			
-// TODO Complete this section
-//			var holdingMap = [];
-//			var counter = 0;
-//			var things = res.data[0].things;
-//			var hmSize = things.length;
-//			var cntnu = true;
-//
-//			while(counter < hmSize & cntnu) {
-//				if(things[counter].optionId != optionId) {
-//					holdingMap.push({
-//					 	'name': res.data[0].things[counter].name,
-//					 	'option': res.data[0].things[counter].option,
-//					 	'optionId': res.data[0].things[counter].optionId,
-//					 	'price': res.data[0].things[counter].price
-//					});
-//				}
-//				counter ++;
-//			}
-//
-//			res.data[0].things = holdingMap;
-//
-//			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
-//
-//			// if orders ajax fails...
-//			r.error(function(err) {
-//				console.log('RestaurantsController: removeOption-put ajax failed');
-//				console.log(err);
-//			});
-//					
-//			// if orders ajax succeeds...
-//			r.then(function(res) {
-//				$scope.updateOrder();
-//			});
-		});
-	};
+	$rootScope.$on('orderChanged', function(evt, args) {
+		$scope.updateOrder();
+	});
 
 	$scope.updateOrder = function() {
-		var p = $http.get('/orders/byCustomerId/' + $scope.customerId);
+		var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
 		
 		// if orders ajax fails...
 		p.error(function(err) {
