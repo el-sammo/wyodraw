@@ -871,6 +871,7 @@ app.controller('RestaurantsController', function(
 		allRestaurants.map(function(restaurant) {
 			if(uglySlug.match(restaurant.slug)) {
 				$scope.showRestaurant(restaurant.id);
+				$scope.displayRestaurant = restaurant;
 			}
 
 			var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
@@ -887,6 +888,7 @@ app.controller('RestaurantsController', function(
 				restaurant.menus.forEach(function(menu) {
 					if(menu.slug == uglySlug) {
 						$scope.showMenu(menu.id);
+						$scope.displayMenu = menu;
 					}
 				});
 			});
@@ -1102,6 +1104,20 @@ app.controller('RestaurantsController', function(
 		$scope.discount = discount;
 		$scope.total = total;
 
+	};
+
+	$scope.timeFormat = function(secs) {
+		var ampm = 'am';
+		var hours = Math.floor(secs / 3600);
+		if(hours > 12) {
+			hours = hours - 12;
+			ampm = 'pm';
+		}
+		var minutes = secs % 3600;
+		if(minutes < 1) {
+			minutes = '00';
+		}
+		return hours+':'+minutes+' '+ampm;
 	};
 
 	$scope.updateOrder();

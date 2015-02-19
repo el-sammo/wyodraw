@@ -12,7 +12,7 @@
 						<div class="col-md-12">
 							<div class="row" ng-repeat="menu in restaurant.menus">
 								<div>
-									<span class="menuLink" ng-init="menuId = menu.id" ng-click="showMenu(menuId)">{{menu.name}}</span>
+									<a class="menuLink" ng-init="menuSlug = menu.slug" href="#/restaurants/{{menuSlug}}">{{menu.name}}</a>
 								</div>
 							</div>
 						</div>
@@ -23,6 +23,17 @@
 		<div class="col-md-6 col-md-offset-3" id="menuItemsPanel">
 			<div class="row">
 				<div class="col-md-12">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="menuHeader">
+								<span>{{displayRestaurant.name }} - {{displayMenu.name}}</span>
+							</div>
+							<div class="menuInfo">
+								<span>Served from {{timeFormat(displayMenu.availStart)}} to {{timeFormat(displayMenu.availEnd)}}</span>
+							</div>
+						</div>
+					</div>
+					<br/>
 					<div class="row" id="itemRow" ng-repeat="item in items">
 						<div class="col-md-6">
 							<span class="itemName">{{item.name}}</span>
@@ -75,7 +86,7 @@
 						<div class="col-md-9">
 							Subtotal
 						</div>
-						<div class="col-md-3" class="subtotal">
+						<div class="col-md-3" id="subtotal">
 							{{subtotal}}
 						</div>
 					</div>
@@ -83,7 +94,7 @@
 						<div class="col-md-9">
 							Sales Tax
 						</div>
-						<div class="col-md-3" class="tax">
+						<div class="col-md-3" id="tax">
 							{{tax}}
 						</div>
 					</div>
@@ -91,7 +102,7 @@
 						<div class="col-md-9">
 							Delivery Fee
 						</div>
-						<div class="col-md-3" class="deliveryFee">
+						<div class="col-md-3" id="deliveryFee">
 							{{deliveryFee}}
 						</div>
 					</div>
@@ -99,7 +110,7 @@
 						<div class="col-md-9">
 							Discount
 						</div>
-						<div class="col-md-3" class="discount">
+						<div class="col-md-3" id="discount">
 							{{discount}}
 						</div>
 					</div>
@@ -107,7 +118,7 @@
 						<div class="col-md-9">
 							Total
 						</div>
-						<div class="col-md-3" class="total">
+						<div class="col-md-3" id="total">
 							{{total}}
 						</div>
 					</div>
