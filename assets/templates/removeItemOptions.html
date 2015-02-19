@@ -4,9 +4,15 @@
 	</h4>
 </div>
 <div class="modal-body">
-	<span>
-		Are you sure you want to remove <strong>{{thing.name}}</strong> from your order?
-	</span>
+	<form name="removeItemForm" ng-show="thing.quantity > 1">
+		<label for="quantity">How many <u><em>{{thing.name}}</em></u> do you want to remove from your order?</label>
+		<input type="number" name="quantity" class="form-control" required ng-model="quantity" ng-minLength="1" ng-maxLength="thing.quantity">
+		<span class="error" ng-show="removeItemForm.quantity.$error.required">Quantity is required!</span>
+		<span class="error" ng-show="removeItemForm.quantity.$error.number">Not a valid quantity!</span>
+	</form>
+	<span ng-show="thing.quantity < 2 || !thing.quantity">Are you sure you want to remove <u><em>{{thing.name}}</em></u> from your order?</span>
+	<br/>
+	<br/>
 </div>
 <div class="modal-footer">
   <button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">

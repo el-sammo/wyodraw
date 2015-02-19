@@ -490,59 +490,122 @@ app.controller('OrderMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope
 ) {
 	$scope.item = args.item;
+	if($scope.item && $scope.item.options) {
+		$scope.itemOptionsLength = $scope.item.options.length;
+	}
 	$scope.thing = args.thing;
 	$scope.specInst = '';
+	$scope.quantity = 1;
 	$scope.selOption = '';
 
 	$scope.addItemOption = function() {
-		var nextThing;
-		$scope.item.options.map(function(val) {
-			if(val.id == $scope.selOption) {
-				nextThing = {
-					'optionId': val.id,
-					'option': val.name,
-					'price': val.price,
-					'name': $scope.item.name,
-					'specInst': $scope.specInst
-				};
-			}
-		});
-
-		if(!nextThing) {
-			console.log('nextThing doesn\'t exist');
-			$modalInstance.dismiss('cancel');
-		} else {
-			var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
+		var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
 			
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('OrderMgmtController: addItem-getOrder ajax failed');
+			console.log(err);
+			$modalInstance.dismiss('cancel');
+		});
+					
+		// if orders ajax succeeds...
+		p.then(function(res) {
+			// TODO get the correct one properly
+			// (not an orphaned order)
+			var things = res.data[0].things;
+	
+			var holdingMap = [];
+
+			var thisAddedThing = {};
+
+			$scope.item.options.forEach(function(val) {
+				if(!$scope.selOption.localeCompare(val.id)) {
+					thisAddedThing.name = $scope.item.name;
+					thisAddedThing.option = val.name;
+					thisAddedThing.optionId = val.id;
+					thisAddedThing.price = val.price;
+					thisAddedThing.quantity = $scope.quantity;
+					thisAddedThing.specInst = $scope.specInst;
+				}
+			});
+
+			if(things.length > 0) {
+				var matched = false;
+				things.forEach(function(thing) {
+					if(!thing.optionId.localeCompare(thisAddedThing.optionId)) {
+						thing.quantity = (parseInt(thing.quantity) + parseInt(thisAddedThing.quantity));
+
+						// TODO replace this nasty solution for one in which the pre-existing specInst, if any, is in the textarea when adding
+						var specInst = '';
+						if(thing.specInst && thing.specInst.length > 0) {
+					 		if(thisAddedThing.specInst.length > 0) {
+								specInst = thing.specInst+'; '+thisAddedThing.specInst;
+							} else {
+								specInst = thing.specInst;
+							}
+						} else {
+							if(thisAddedThing.specInst.length > 0) {
+								specInst = thisAddedThing.specInst;
+							}
+						}
+						holdingMap.push({
+							'name': thing.name,
+							'option': thing.option,
+							'optionId': thing.optionId,
+							'price': thing.price,
+							'quantity': thing.quantity,
+							'specInst': specInst
+						});
+						matched = true;
+					} else {
+						holdingMap.push({
+							'name': thing.name,
+							'option': thing.option,
+							'optionId': thing.optionId,
+							'price': thing.price,
+							'quantity': thing.quantity,
+							'specInst': thing.specInst
+						});
+					}
+				});
+				if(!matched) {
+					holdingMap.push({
+						'name': thisAddedThing.name,
+						'option': thisAddedThing.option,
+						'optionId': thisAddedThing.optionId,
+						'price': thisAddedThing.price,
+						'quantity': thisAddedThing.quantity,
+						'specInst': thisAddedThing.specInst
+					});
+				}
+			} else {
+				holdingMap.push({
+					'name': thisAddedThing.name,
+					'option': thisAddedThing.option,
+					'optionId': thisAddedThing.optionId,
+					'price': thisAddedThing.price,
+					'quantity': thisAddedThing.quantity,
+					'specInst': thisAddedThing.specInst
+				});
+			}
+
+			res.data[0].things = holdingMap;
+			
+			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+	
 			// if orders ajax fails...
-			p.error(function(err) {
-				console.log('OrderMgmtController: addItem-getOrder ajax failed');
+			r.error(function(err) {
+				console.log('OrderMgmtController: addOption-put ajax failed');
 				console.log(err);
 				$modalInstance.dismiss('cancel');
 			});
-					
-			// if orders ajax succeeds...
-			p.then(function(res) {
-				// TODO get the correct one properly
-				// (not an orphaned order)
-				res.data[0].things.push(nextThing);
-			
-				var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
-	
-				// if orders ajax fails...
-				r.error(function(err) {
-					console.log('OrderMgmtController: addOption-put ajax failed');
-					console.log(err);
-					$modalInstance.dismiss('cancel');
-				});
 						
-				// if orders ajax succeeds...
-				r.then(function(res) {
-					$rootScope.$broadcast('orderChanged');
-					$modalInstance.dismiss('done');
-				});
+			// if orders ajax succeeds...
+			r.then(function(res) {
+				$rootScope.$broadcast('orderChanged');
+				$modalInstance.dismiss('done');
 			});
-		}
+		});
 	};
 
 	$scope.removeThing = function() {
@@ -557,23 +620,34 @@ app.controller('OrderMgmtController', function(
 					
 		// if orders ajax succeeds...
 		p.then(function(res) {
-			var holdingMap = [];
-			var counter = 0;
 			var things = res.data[0].things;
-			var hmSize = things.length;
-			var cntnu = true;
-	
-			while(counter < hmSize & cntnu) {
-				if(things[counter].optionId != $scope.thing.optionId) {
+
+			var holdingMap = [];
+
+			things.forEach(function(thing) {
+				if(!thing.optionId.localeCompare($scope.thing.optionId)) {
+					thing.quantity = (parseInt(thing.quantity) - parseInt($scope.quantity));
+					if(thing.quantity > 0) {
+						holdingMap.push({
+							'name': thing.name,
+							'option': thing.option,
+							'optionId': thing.optionId,
+							'price': thing.price,
+							'quantity': thing.quantity,
+							'specInst': thing.specInst
+						});
+					}
+				} else {
 					holdingMap.push({
-						'name': res.data[0].things[counter].name,
-						'option': res.data[0].things[counter].option,
-						'optionId': res.data[0].things[counter].optionId,
-						'price': res.data[0].things[counter].price
+						'name': thing.name,
+						'option': thing.option,
+						'optionId': thing.optionId,
+						'price': thing.price,
+						'quantity': thing.quantity,
+						'specInst': thing.specInst
 					});
 				}
-				counter ++;
-			}
+			});
 	
 			res.data[0].things = holdingMap;
 	
@@ -1009,7 +1083,13 @@ app.controller('RestaurantsController', function(
 		var total = 0;
 
 		things.forEach(function(thing) {
-			subtotal = (Math.round((subtotal + parseFloat(thing.price)) * 100)/100);
+			var lineTotal;
+			if(thing.quantity && thing.quantity > 1) {
+				lineTotal = parseFloat(thing.price) * thing.quantity;
+			} else {
+				lineTotal = parseFloat(thing.price);
+			}
+			subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
 		});
 
 		tax = (Math.round((subtotal * taxRate) * 100) / 100);

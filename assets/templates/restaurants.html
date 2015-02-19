@@ -54,10 +54,21 @@
 					</div>
 					<div class="row" id="thingRow" ng-repeat="thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
 						<div class="col-md-9">
-							{{thing.name}}<br>({{thing.option}})
+							{{thing.name}}
+							<span ng-show="thing.quantity > 1"><strong>({{thing.quantity}})</strong></span>
+							<br>
+							({{thing.option}}
+							<span ng-show="thing.specInst.length > 0"> - {{thing.specInst}}</span>)
 						</div>
 						<div class="col-md-3" id="thingPrice">
-							{{thing.price}}<br><div class="priceOptionRemove"><span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thing)">Remove</span></div>
+							<span ng-show="thing.quantity < 2 || !thing.quantity">{{thing.price}}</span>
+							<span ng-show="thing.quantity > 1">{{thing.quantity * thing.price}}</span>
+							<br>
+							<div class="priceOptionRemove">
+								<span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thing)">
+									Remove
+								</span>
+							</div>
 						</div>
 					</div>
 					<div class="row" id="subtotalRow" ng-show="orderStatus > 0 && orderStatus < 6">

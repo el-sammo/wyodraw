@@ -1,13 +1,24 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="nav-away-modal-title">
+  <h3 class="modal-title" id="nav-away-modal-title">
 		Add <strong>{{item.name}}</strong> to Your Order
-  </h4>
+  </h3>
 </div>
 <div class="modal-body">
-	<form>
+	<form name="addItemForm">
+		<h4>Select Your Option</h4>
+		<br/>
 		<div class="radio" ng-repeat="option in item.options">
-			<label><input type="radio" name="optionName" ng-value="option.id" ng-model="$parent.selOption">{{option.name}} - {{option.price}}</label>
+			<label>
+				<input type="radio" name="optionName" ng-value="option.id" ng-model="$parent.selOption" ng-checked="itemOptionsLength < 2">
+				{{option.name}} - {{option.price}} - {{itemOptionsLength}} <!-- TODO - fix this last little bit so that when only one option exists, it is selected by default -->
+			</label>
 		</div>
+		<br/>
+		<label for="quantity">Quantity:</label>
+		<input type="number" name="quantity" class="form-control" required ng-model="quantity">
+		<span class="error" ng-show="addItemForm.quantity.$error.required">Quantity is required!</span>
+		<span class="error" ng-show="addItemForm.quantity.$error.number">Not a valid quantity!</span>
+		<br/>
 		<br/>
 		<label for="specInst">Special Instructions:</label>
 		<textarea class="form-control" rows="5" ng-model="specInst"></textarea>
