@@ -126,13 +126,14 @@ td {
 	position: relative;
 }
 
-#restaurantMenusPanel {
+#restaurantsMenusPanel {
+	top: 60px;
 	background-color: #fff;
 	position:fixed;
-	top: 120px;
 }
 
 #menuItemsPanel {
+	top: 60px;
 	border-left: 1px dotted grey;
 	border-right: 1px dotted grey;
 }
@@ -150,7 +151,7 @@ td {
 }
 
 #orderPanel {
-	top: 120px;
+	top: 60px;
 	background-color: #fff;
 	position:fixed;
 }
@@ -303,7 +304,7 @@ td {
 .navbar-brand img {
 	height:40px;
 	position: relative;
-	top: -5px;
+	top: -25px;
 	background-color: #fff;
 	padding: 5px;
 	border-radius: 15px;

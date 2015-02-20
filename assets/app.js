@@ -28,6 +28,26 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Account
+	///
+
+	$routeProvider.when('/account/:id', {
+		controller: 'AccountController',
+		templateUrl: '/templates/account.html'
+	});
+
+	$routeProvider.when('/account/add', {
+		controller: 'AccountAddController',
+		templateUrl: '/templates/accountForm.html'
+	});
+
+	$routeProvider.when('/account/edit/:id', {
+		controller: 'AccountEditController',
+		templateUrl: '/templates/accountForm.html'
+	});
+
+
+	///
 	// Other
 	///
 
@@ -321,6 +341,14 @@ app.factory('fakeAuth', function($rootScope) {
 	// TODO
 	// get customerId
 	$rootScope.customerId = '54c6644c0517463077a759aa';
+	// TODO
+	// get areaId
+	$rootScope.areaId = '54b32e4c3756f5d15ad4ca49';
+
+	if($rootScope.customerId) {
+		$rootScope.accessAccount = true;
+	}
+	
 	return {};
 });
 
@@ -674,10 +702,8 @@ app.controller('OrderMgmtController', function(
 // Controllers: Splash
 ///
 app.controller('SplashController', function($scope, $http, $routeParams, $rootScope) {
-	//TODO
-	//get areaId
-	var areaId = '54b32e4c3756f5d15ad4ca49';
-	
+	var areaId = $rootScope.areaId;
+
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
 
 	p.error(function(err) {
@@ -820,6 +846,7 @@ app.controller('SplashController', function($scope, $http, $routeParams, $rootSc
 
 });
 
+
 ///
 // Controllers: Restaurants
 ///
@@ -829,28 +856,12 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	datatables, navMgr, messenger, pod, $scope,
+	navMgr, messenger, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
 	$rootScope
 ) {
-	// TODO
-	// get areaId
-	var areaId = '54b32e4c3756f5d15ad4ca49';
+	var areaId = $rootScope.areaId;
 
-	// TODO
-	// put this in a config? or what?
-	// orderStatus map
-	// < 1 = not started
-	// 1   = started (ordering)
-	// 2   = payment initiated
-	// 3   = payment accepted
-	// 4   = payment declined
-	// 5   = order completed
-	// 6   = order ordered (at restaurant)
-	// 7   = order picked up
-	// 8   = order en route
-	// 9   = order delivered
-	
 	var uglySlug = $routeParams.id;
 
 	$scope.imageUrl = '/images/';
@@ -959,33 +970,6 @@ app.controller('RestaurantsController', function(
 		});
 	};
 
-	$scope.addItem = orderMgmt.add;
-
-	$scope.removeItem = orderMgmt.remove;
-
-	$rootScope.$on('orderChanged', function(evt, args) {
-		$scope.updateOrder();
-	});
-
-	$scope.updateOrder = function() {
-		var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
-		
-		// if orders ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: updateOrder ajax failed');
-			console.log(err);
-		});
-				
-		// if orders ajax succeeds...
-		p.then(function(res) {
-			// TODO properly get the only order that should be used
-			// here, we're cheating by selecting the first (and only)
-			$scope.orderStatus = parseInt(res.data[0].orderStatus);
-			$scope.things = res.data[0].things;
-			$scope.updateTotals(res.data[0].things);
-		});
-	};
-
 	$scope.restaurantOpen = function(restaurant) {
 		var d = new Date();
 		var n = d.getDay(); 
@@ -1073,6 +1057,73 @@ app.controller('RestaurantsController', function(
 	
 	};
 
+	$scope.timeFormat = function(secs) {
+		var ampm = 'am';
+		var hours = Math.floor(secs / 3600);
+		if(hours > 12) {
+			hours = hours - 12;
+			ampm = 'pm';
+		}
+		var minutes = secs % 3600;
+		if(minutes < 1) {
+			minutes = '00';
+		}
+		return hours+':'+minutes+' '+ampm;
+	};
+});
+
+
+///
+// OrderController
+///
+
+app.controller('OrderController', function(
+	navMgr, messenger, pod, $scope,
+	$http, $routeParams, $modal, orderMgmt,
+	$rootScope
+) {
+
+	// TODO
+	// put this in a config? or what?
+	// orderStatus map
+	// < 1 = not started
+	// 1   = started (ordering)
+	// 2   = payment initiated
+	// 3   = payment accepted
+	// 4   = payment declined
+	// 5   = order completed
+	// 6   = order ordered (at restaurant)
+	// 7   = order picked up
+	// 8   = order en route
+	// 9   = order delivered
+	
+	$scope.addItem = orderMgmt.add;
+
+	$scope.removeItem = orderMgmt.remove;
+
+	$rootScope.$on('orderChanged', function(evt, args) {
+		$scope.updateOrder();
+	});
+
+	$scope.updateOrder = function() {
+		var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
+		
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: updateOrder ajax failed');
+			console.log(err);
+		});
+				
+		// if orders ajax succeeds...
+		p.then(function(res) {
+			// TODO properly get the only order that should be used
+			// here, we're cheating by selecting the first (and only)
+			$scope.orderStatus = parseInt(res.data[0].orderStatus);
+			$scope.things = res.data[0].things;
+			$scope.updateTotals(res.data[0].things);
+		});
+	};
+
 	$scope.updateTotals = function(things) {
 
 		var subtotal = 0;
@@ -1106,21 +1157,177 @@ app.controller('RestaurantsController', function(
 
 	};
 
-	$scope.timeFormat = function(secs) {
-		var ampm = 'am';
-		var hours = Math.floor(secs / 3600);
-		if(hours > 12) {
-			hours = hours - 12;
-			ampm = 'pm';
+	$scope.updateOrder();
+});
+
+
+///
+// Controllers: Account
+///
+
+
+app.factory('customerSchema', function() {
+	function nameTransform(customer) {
+		if(! customer || ! customer.fName || customer.name.length < 1) {
+			return 'customer-name';
 		}
-		var minutes = secs % 3600;
-		if(minutes < 1) {
-			minutes = '00';
+		return (customer.name
+			.replace(/[^a-zA-Z ]/g, '')
+			.replace(/ /g, '-')
+			.toLowerCase()
+		);
+	}
+
+	var service = {
+		defaults: {
+			customer: {
+				fName: '',
+				lName: '',
+				addresses: {
+					primary: {
+						street: '',
+						apt: '',
+						city: '',
+						state: '',
+						zip: ''
+					}
+				},
+				password: '',
+				phone: '',
+				email: ''
+			}
+		},
+
+		links: {
+			website: {
+				placeholder: function(customer) {
+					return 'www.' + nameTransform(customer) + '.com';
+				},
+				addon: 'http://'
+			},
+			facebook: {
+				placeholder: nameTransform,
+				addon: 'facebook.com/'
+			},
+			twitter: {
+				placeholder: nameTransform,
+				addon: '@'
+			},
+			instagram: {
+				placeholder: nameTransform,
+				addon: 'instagram.com/'
+			},
+			pinterest: {
+				placeholder: nameTransform,
+				addon: 'pinterest.com/'
+			},
+		},
+
+		populateDefaults: function(customer) {
+			$.map(service.defaults.customer, function(value, key) {
+				if(customer[key]) return;
+				if(typeof value === 'object') {
+					customer[key] = angular.copy(value);
+					return;
+				}
+				customer[key] = value;
+			});
+			return customer;
 		}
-		return hours+':'+minutes+' '+ampm;
 	};
 
-	$scope.updateOrder();
+	return service;
+});
+
+
+app.controller('AccountController', function($scope, $http, $routeParams, $rootScope) {
+	var customerId = $rootScope.customerId;
+	
+	var p = $http.get('/customers/' + customerId);
+
+	p.error(function(err) {
+		console.log('AccountController: customers ajax failed');
+		console.log(err);
+	});
+
+	p.then(function(res) {
+		$scope.customer = res.data;
+	});
+
+});
+
+app.controller('AccountAddController', function(
+	navMgr, messenger, pod, customerSchema, $scope, $http, $routeParams, $window
+) {
+		
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	$scope.customerSchema = customerSchema;
+	$scope.customer = customerSchema.populateDefaults({});
+
+	$scope.save = function save(customer, options) {
+
+		options || (options = {});
+
+		$http.post(
+			'/customers/create', customer
+			).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('The account has been created.', 'Success!');
+
+			if(options.addMore) {
+				$scope.customer = {};
+				return;
+			}
+
+			navMgr.protect(false);
+			$window.location.href = '#/account/' + data.id;
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/');
+	};
+});
+
+app.controller('AccountEditController', function(
+	navMgr, messenger, pod, customerSchema, $scope, $http, $routeParams, $rootScope
+) {
+	navMgr.protect(function() { return $scope.form.$dirty; });
+	pod.podize($scope);
+
+	console.log('fms: '+$rootScope.featuredMenuSlug);
+	$scope.featuredMenuSlug = $rootScope.featuredMenuSlug;
+
+	$scope.customerSchema = customerSchema;
+	$scope.editMode = true;
+
+	$http.get(
+		'/customers/' + $routeParams.id
+	).success(function(data, status, headers, config) {
+		$scope.customer = customerSchema.populateDefaults(data);
+	});
+
+	$scope.save = function save(customer, options) {
+		console.log('save() called');
+		options || (options = {});
+
+		$http.put(
+			'/customers/' + customer.id, customer
+		).success(function(data, status, headers, config) {
+			if(status >= 400) return;
+
+			messenger.show('Your account has been updated.', 'Success!');
+
+			$scope.form.$setPristine();
+		});
+	};
+
+	$scope.cancel = function cancel() {
+		navMgr.cancel('#/account/' +$routeParams.id);
+	};
 });
 
 

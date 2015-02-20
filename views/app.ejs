@@ -7,14 +7,13 @@
         </a>
       </li>
       <li>
-			<h1><a href="#/restaurants/{{featuredMenuSlug}}">Restaurants</a></h1>
-				<h1><a href="#/account/">My Account</a></h1>
-				<h1><a href="#/about/">About Grub2You</a></h1>
+				<span><h1><a href="#/restaurants/{{featuredMenuSlug}}">Restaurants</a></h1></span>
+				<span ng-show="accessAccount"><h1><a href="#/account/{{customerId}}">My Account</a></h1></span>
+				<span><h1><a href="#/about/">About Grub2You</a></h1></span>
       </li>
     </ul>
   </div>
 </nav>
-<div class="navbar-fixed-fix"></div>
 
 <div ng-controller="MessageController" id="fms-messenger">
   <alert type="{{alertType}}" ng-show="userMessage" close="close()">
