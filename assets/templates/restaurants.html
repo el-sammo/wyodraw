@@ -1,129 +1,28 @@
-<div class="col-md-12" style="background-color: white;">
+<div class="col-md-12">
 	<div class="row">
-		<div class="col-md-3" id="restaurantsMenusPanel">
-			<div class="row" ng-repeat="restaurant in restaurants">
+		<div class="col-md-3">
+			<div class="row" id="restListHead">
 				<div class="col-md-12">
-					<div class="row">
-						<div class="col-md-12">
-							<span class="restaurantLink" ng-init="restaurantId = restaurant.id" ng-click="showRestaurant(restaurantId)">{{restaurant.name}}</span>
-						</div>
-					</div>
-					<div id="{{restaurantId}}" class="hideMenuList">
-						<div class="col-md-12">
-							<div class="row" ng-repeat="menu in restaurant.menus">
-								<div>
-									<a class="menuLink" ng-init="menuSlug = menu.slug" href="#/restaurants/{{menuSlug}}">{{menu.name}}</a>
-								</div>
-							</div>
-						</div>
-					</div>
+					<h3>Restaurants</h3>
 				</div>
 			</div>
+			<ng-include src="'/templates/restaurantsMenusPanel.html'">
 		</div>
-		<div class="col-md-6 col-md-offset-3" id="menuItemsPanel" ng-controller="OrderController">
-			<div class="row">
+		<div class="col-md-6">
+			<div class="row" id="menuListHead">
 				<div class="col-md-12">
-					<div class="row">
-						<div class="col-md-12">
-							<div class="menuHeader">
-								<span>{{displayRestaurant.name }} - {{displayMenu.name}}</span>
-							</div>
-							<div class="menuInfo">
-								<span>Served from {{timeFormat(displayMenu.availStart)}} to {{timeFormat(displayMenu.availEnd)}}</span>
-							</div>
-						</div>
-					</div>
-					<br/>
-					<div class="row" id="itemRow" ng-repeat="item in items">
-						<div class="col-md-6">
-							<span class="itemName">{{item.name}}</span>
-							</br>
-							<span class="itemDesc">{{item.desc}}</span>
-							</br>
-							<div class="itemOptions" ng-repeat="option in item.options">
-								{{option.name}} ({{option.price}})
-							</div>
-							<span class="add2Order pull-left" ng-click="addItem(item)">
-								Add to Order
-								<br>
-							</span>
-						</div>
-						<div class="col-md-6">
-							<img src="{{item.image}}" class="img-responsive">
-						</div>
-					</div>
+					<h3>Menus</h3>
 				</div>
 			</div>
+			<ng-include src="'/templates/menuItemsPanel.html'">
 		</div>
-		<div class="col-md-3 col-md-offset-9" id="orderPanel" ng-controller="OrderController">
-			<div class="row">
+		<div class="col-md-3">
+			<div class="row" id="orderHead">
 				<div class="col-md-12">
-					<div class="row">
-						<div class="col-md-12">
-							<span class="orderHead">My Order</span>
-						</div>
-					</div>
-					<div class="row" id="thingRow" ng-repeat="thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
-						<div class="col-md-9">
-							{{thing.name}}
-							<span ng-show="thing.quantity > 1"><strong>({{thing.quantity}})</strong></span>
-							<br>
-							({{thing.option}}
-							<span ng-show="thing.specInst.length > 0"> - {{thing.specInst}}</span>)
-						</div>
-						<div class="col-md-3" id="thingPrice">
-							<span ng-show="thing.quantity < 2 || !thing.quantity">{{thing.price}}</span>
-							<span ng-show="thing.quantity > 1">{{thing.quantity * thing.price}}</span>
-							<br>
-							<div class="priceOptionRemove">
-								<span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thing)">
-									Remove
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="row" id="subtotalRow" ng-show="orderStatus > 0 && orderStatus < 6">
-						<div class="col-md-9">
-							Subtotal
-						</div>
-						<div class="col-md-3" id="subtotal">
-							{{subtotal}}
-						</div>
-					</div>
-					<div class="row" id="taxRow" ng-show="orderStatus > 0 && orderStatus < 6">
-						<div class="col-md-9">
-							Sales Tax
-						</div>
-						<div class="col-md-3" id="tax">
-							{{tax}}
-						</div>
-					</div>
-					<div class="row" id="deliveryFeeRow" ng-show="orderStatus > 0 && orderStatus < 6">
-						<div class="col-md-9">
-							Delivery Fee
-						</div>
-						<div class="col-md-3" id="deliveryFee">
-							{{deliveryFee}}
-						</div>
-					</div>
-					<div class="row" id="discountRow" ng-show="orderStatus > 0 && orderStatus < 6 && discount < 0">
-						<div class="col-md-9">
-							Discount
-						</div>
-						<div class="col-md-3" id="discount">
-							{{discount}}
-						</div>
-					</div>
-					<div class="row" id="totalRow" ng-show="orderStatus > 0 && orderStatus < 6">
-						<div class="col-md-9">
-							Total
-						</div>
-						<div class="col-md-3" id="total">
-							{{total}}
-						</div>
-					</div>
+					<h3>Your Order</h3>
 				</div>
 			</div>
+			<ng-include src="'/templates/orderPanel.html'">
 		</div>
 	</div>
 </div>

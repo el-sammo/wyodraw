@@ -1,20 +1,20 @@
-		<div class="col-md-3" id="restaurantsMenusPanel" style="position:fixed; top: 120px;">
-			<div class="row" ng-repeat="restaurant in restaurants">
-				<div class="col-md-12">
-					<div class="row">
-						<div class="col-md-12">
-							<span class="restaurantLink" ng-init="restaurantId = restaurant.id" ng-click="showRestaurant(restaurantId)">{{restaurant.name}}</span>
+			<div ng-controller="RestaurantsController" id="restaurantsMenusPanel">
+				<div class="row" ng-repeat="restaurant in restaurants">
+					<div class="col-md-12">
+						<div class="row">
+							<div class="col-md-12">
+								<span class="restaurantLink" ng-init="restaurantId = restaurant.id" ng-click="showRestaurant(restaurantId)">{{restaurant.name}}</span>
+							</div>
 						</div>
-					</div>
-					<div id="{{restaurantId}}" class="hideMenuList">
-						<div class="col-md-12">
-							<div class="row" ng-repeat="menu in restaurant.menus">
-								<div>
-									<a class="menuLink" ng-init="menuSlug = menu.slug" href="#/restaurants/{{menuSlug}}">{{menu.name}}</a>
+						<div id="{{restaurantId}}" class="hideMenuList">
+							<div class="col-md-12">
+								<div class="row" ng-repeat="menu in restaurant.menus">
+									<div>
+										<a class="menuLink" style="text-decoration: none;" ng-init="menuSlug = menu.slug" href="#/restaurants/{{menuSlug}}">{{menu.name}}</a>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>

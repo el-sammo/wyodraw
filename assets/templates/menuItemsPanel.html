@@ -1,13 +1,12 @@
-		<div class="col-md-6 col-md-offset-3" id="menuItemsPanel">
 			<div class="row">
-				<div class="col-md-12">
+				<div class="col-md-12" id="menuItemsPanel" ng-controller="OrderController">
 					<div class="row">
 						<div class="col-md-12">
 							<div class="menuHeader">
-								<span>{{displayRestaurant.name }} - {{displayMenu.name}}</span>
+								<span ng-show="displayRestaurant && displayMenu">{{displayRestaurant.name }} - {{displayMenu.name}}</span>
 							</div>
 							<div class="menuInfo">
-								<span>Served from {{timeFormat(displayMenu.availStart)}} to {{timeFormat(displayMenu.availEnd)}}</span>
+								<span ng-show="displayMenu">Served from {{timeFormat(displayMenu.availStart)}} to {{timeFormat(displayMenu.availEnd)}}</span>
 							</div>
 						</div>
 					</div>
@@ -32,4 +31,3 @@
 					</div>
 				</div>
 			</div>
-		</div>

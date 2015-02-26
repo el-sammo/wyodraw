@@ -1,18 +1,20 @@
 <nav id="fms-headbar" class="navbar navbar-default navbar-fixed-top">
 	<div class="container-fluid">
-    <ul class="nav navbar-nav">
-      <li class="navbar-brand">
-        <a href="#/">
-          <img src="/images/logo-sm.png">
-        </a>
-      </li>
-      <li>
-				<span><h1><a href="#/restaurants/{{featuredMenuSlug}}">Restaurants</a></h1></span>
-				<span ng-show="accessAccount"><h1><a href="#/account/{{customerId}}">My Account</a></h1></span>
-				<span><h1><a href="#/about/">About Grub2You</a></h1></span>
-      </li>
-    </ul>
-  </div>
+		<div style="top: 40px; position: relative;">
+	    <ul class="nav navbar-nav">
+	      <li class="navbar-brand">
+	        <a href="#/">
+	          <img src="/images/logo01-small.png">
+	        </a>
+	      </li>
+	      <li>
+					<span><h1><a href="#/restaurants/{{featuredMenuSlug}}">Restaurants</a></h1></span>
+					<span ng-show="accessAccount"><h1><a href="#/account/{{customerId}}">My Account</a></h1></span>
+					<span><h1><a href="#/about/">About Grub2You</a></h1></span>
+	      </li>
+	    </ul>
+		</div>
+	</div>
 </nav>
 
 <div ng-controller="MessageController" id="fms-messenger">

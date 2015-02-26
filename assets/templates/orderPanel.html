@@ -1,11 +1,5 @@
-		<div class="col-md-3 col-md-offset-9" id="orderPanel">
-			<div class="row">
+			<div class="row" ng-controller="OrderController" id="orderPanel">
 				<div class="col-md-12">
-					<div class="row">
-						<div class="col-md-12">
-							<span class="orderHead">My Order</span>
-						</div>
-					</div>
 					<div class="row" id="thingRow" ng-repeat="thing in things" ng-show="orderStatus > 0 && orderStatus < 6">
 						<div class="col-md-9">
 							{{thing.name}}
@@ -49,6 +43,14 @@
 							{{deliveryFee}}
 						</div>
 					</div>
+					<div class="row" id="gratuityRow" ng-show="orderStatus > 0 && orderStatus < 6">
+						<div class="col-md-9">
+							Gratuity
+						</div>
+						<div class="col-md-3" id="gratuity">
+							{{gratuity}}
+						</div>
+					</div>
 					<div class="row" id="discountRow" ng-show="orderStatus > 0 && orderStatus < 6 && discount < 0">
 						<div class="col-md-9">
 							Discount
@@ -67,4 +69,3 @@
 					</div>
 				</div>
 			</div>
-		</div>

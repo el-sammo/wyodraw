@@ -17,11 +17,28 @@ app.config(function($routeProvider) {
 		templateUrl: '/templates/index.html'
 	});
 
+
+	///
+	// About Page
+	///
+
+	$routeProvider.when('/about', {
+		controller: 'AboutController',
+		templateUrl: '/templates/about.html'
+	});
+
+
 	///
 	// Restaurants
 	///
 
 	$routeProvider.when('/restaurants/:id', {
+		controller: 'RestaurantsController',
+		templateUrl: '/templates/restaurants.html'
+	});
+
+
+	$routeProvider.when('/restaurants/', {
 		controller: 'RestaurantsController',
 		templateUrl: '/templates/restaurants.html'
 	});
@@ -701,7 +718,7 @@ app.controller('OrderMgmtController', function(
 ///
 // Controllers: Splash
 ///
-app.controller('SplashController', function($scope, $http, $routeParams, $rootScope) {
+app.controller('SplashController', function($scope, $http, $rootScope) {
 	var areaId = $rootScope.areaId;
 
 	var p = $http.get('/restaurants/byAreaId/' + areaId);
@@ -801,8 +818,6 @@ app.controller('SplashController', function($scope, $http, $routeParams, $rootSc
 
 	$scope.getItems = function(id, callback) {
 		var frItems = [];
-		$scope.menuSlugSet = false;
-		$scope.menuSlugs = [];
 		var r = $http.get('/menus/byRestaurantId/' + id);
 
 		r.error(function(err) {
@@ -812,8 +827,6 @@ app.controller('SplashController', function($scope, $http, $routeParams, $rootSc
 
 		r.then(function(res) {
 			res.data.map(function(menu) {
-				$scope.menuSlugs.push(menu.slug);
-					
 				var s = $http.get('/items/byMenuId/' + menu.id);
 		
 				s.error(function(err) {
@@ -830,19 +843,28 @@ app.controller('SplashController', function($scope, $http, $routeParams, $rootSc
 					callback(null, frItems);
 				});
 			});
-			if(!$scope.menuSlugSet && $scope.menuSlugs.length > 9) {
-				$scope.getFeaturedMenuSlug($scope.menuSlugs);
-			}
 		});
 	};
 
-	$scope.getFeaturedMenuSlug = function(menus) {
-		var menuMin = 0;
-		var menuMax = menus.length
-		var randomIndex = Math.floor(Math.random() * (menuMax - menuMin + 1)) + menuMin;
-		$rootScope.featuredMenuSlug = menus[randomIndex];
-		$scope.menuSlugSet = true;
-	}
+});
+
+
+///
+// Controllers: About
+///
+app.controller('AboutController', function($scope, $http, $routeParams, $rootScope) {
+	var areaId = $rootScope.areaId;
+
+	var p = $http.get('/areas/' + areaId);
+
+	p.error(function(err) {
+		console.log('AboutController: areas ajax failed');
+		console.log(err);
+	});
+
+	p.then(function(res) {
+		$scope.area = res.data;
+	});
 
 });
 
@@ -856,63 +878,103 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	navMgr, messenger, pod, $scope,
-	$http, $routeParams, $modal, orderMgmt,
-	$rootScope
+	messenger, $scope, $http, $routeParams,
+	$modal, orderMgmt, $rootScope
 ) {
 	var areaId = $rootScope.areaId;
 
-	var uglySlug = $routeParams.id;
-
-	$scope.imageUrl = '/images/';
-
-	// retrieve restaurants
-	var p = $http.get('/restaurants/byAreaId/' + areaId);
-
-	// if restaurants ajax fails...
-	p.error(function(err) {
-		console.log('RestaurantsController: restaurants ajax failed');
-		console.log(err);
-	});
+	$scope.getUglySlug = function() {
+		// retrieve restaurants
+		var p = $http.get('/restaurants/byAreaId/' + areaId);
 	
-	// if restaurants ajax succeeds...
-	p.then(function(res) {
-		var allRestaurants = res.data;
+		// if restaurants ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: getUglySlug-restaurants ajax failed');
+			console.log(err);
+		});
+	
+		// if restaurants ajax succeeds...
+		p.then(function(res) {
+			var restLength = res.data.length;
 
-		allRestaurants.map(function(restaurant) {
-			if(uglySlug.match(restaurant.slug)) {
-				$scope.showRestaurant(restaurant.id);
-				$scope.displayRestaurant = restaurant;
-			}
+			var randRestId = res.data[Math.floor((Math.random() * restLength))].id;
 
-			var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
+			var r = $http.get('/menus/byRestaurantId/' + randRestId);
 			
 			// if menus ajax fails...
 			r.error(function(err) {
-				console.log('RestaurantsController: returnMenus ajax failed');
+				console.log('RestaurantsController: getUglySlug-menus ajax failed');
 				console.log(err);
 			});
 		
 			// if menus ajax succeeds...
 			r.then(function(res) {
-				restaurant.menus = res.data;
-				restaurant.menus.forEach(function(menu) {
-					if(menu.slug == uglySlug) {
-						$scope.showMenu(menu.id);
-						$scope.displayMenu = menu;
-					}
-				});
+				var menuLength = res.data.length;
+
+				var elSluggo = res.data[Math.floor((Math.random() * menuLength))].slug;
+
+				$scope.buildRestMenus(elSluggo);
 			});
 		});
+	}
 
-		$scope.restaurantId = allRestaurants[0].id;
-		$scope.restaurantName = allRestaurants[0].name;
-		$scope.restaurantImg = allRestaurants[0].image;
+	$scope.buildRestMenus = function(slug) {
+		// retrieve restaurants
+		var p = $http.get('/restaurants/byAreaId/' + areaId);
+	
+		// if restaurants ajax fails...
+		p.error(function(err) {
+			console.log('RestaurantsController: restaurants ajax failed');
+			console.log(err);
+		});
+		
+		// if restaurants ajax succeeds...
+		p.then(function(res) {
+			var allRestaurants = res.data;
+	
+			allRestaurants.map(function(restaurant) {
+				if(slug.match(restaurant.slug)) {
+					$scope.showRestaurant(restaurant.id);
+					$scope.displayRestaurant = restaurant;
+				}
+	
+				var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
+				
+				// if menus ajax fails...
+				r.error(function(err) {
+					console.log('RestaurantsController: returnMenus ajax failed');
+					console.log(err);
+				});
+			
+				// if menus ajax succeeds...
+				r.then(function(res) {
+					restaurant.menus = res.data;
+					restaurant.menus.forEach(function(menu) {
+						if(menu.slug == slug) {
+							$scope.showMenu(menu.id);
+							$scope.displayMenu = menu;
+						}
+					});
+				});
+			});
+	
+			$scope.restaurantId = allRestaurants[0].id;
+			$scope.restaurantName = allRestaurants[0].name;
+			$scope.restaurantImg = allRestaurants[0].image;
+	
+			$scope.restaurants = allRestaurants;
+	
+			$scope.getMenus($scope.restaurantId, true);
+		});
+	}
 
-		$scope.restaurants = allRestaurants;
+	if($routeParams.id) {
+		$scope.buildRestMenus($routeParams.id);
+	} else {
+		$scope.getUglySlug();
+	}
 
-		$scope.getMenus($scope.restaurantId, true);
-	});
+	$scope.imageUrl = '/images/';
 
 	// get menus by restaurant id
 	$scope.getMenus = function(restaurantId, firstMenu) {
@@ -1019,7 +1081,6 @@ app.controller('RestaurantsController', function(
 	$scope.showRestaurant = function(id) {
 		$('.hideMenuList').hide();
 		$('.hideItemList').hide();
-		$('#'+id).show();
 		var p = $http.get('/restaurants/' + id);
 	
 		// if restaurant ajax fails...
@@ -1034,6 +1095,11 @@ app.controller('RestaurantsController', function(
 			$scope.restaurantName = res.data.name;
 			$scope.restaurantImage = res.data.image;
 			$scope.getMenus($scope.restaurantId, false);
+		
+			$('#'+id).show();
+			$(window).load(function() {
+				$('#'+id).show();
+			});
 		});
 	
 	};
@@ -1297,9 +1363,6 @@ app.controller('AccountEditController', function(
 ) {
 	navMgr.protect(function() { return $scope.form.$dirty; });
 	pod.podize($scope);
-
-	console.log('fms: '+$rootScope.featuredMenuSlug);
-	$scope.featuredMenuSlug = $rootScope.featuredMenuSlug;
 
 	$scope.customerSchema = customerSchema;
 	$scope.editMode = true;

@@ -29,8 +29,7 @@ td {
 }
 
 .collageMain {
-	top: 10px;
-	left: 200px;
+	top: 164px;
 	width: 640px;
 	background-color: white;
 	border: 1px solid white;
@@ -95,7 +94,6 @@ td {
 
 #itemRow {
 	padding: 8px;
-	border-bottom: 1px solid #FFCFC2;
 }
 
 .itemName {
@@ -126,16 +124,143 @@ td {
 	position: relative;
 }
 
-#restaurantsMenusPanel {
-	top: 60px;
+#aboutMain {
+	top: 164px;
 	background-color: #fff;
-	position:fixed;
+	position: relative;
+}
+
+#aboutStoryHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#aboutOtherHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#aboutDriversHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#aboutStoryBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+#aboutOtherBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+#aboutDriversBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+#accountMain {
+	top: 164px;
+	background-color: #fff;
+	position: relative;
+}
+
+#accountHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#accountBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
+.managementLink {
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+#historyHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#historyBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
+#managementHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#managementBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
+.menuHeader {
+	font-size: 16px;
+	font-weight: 700;
+	text-align: center;
+}
+
+.menuInfo {
+	font-size: 12px;
+	font-weight: 500;
+	text-align: center;
+}
+
+#restListHead {
+	top: 164px;
+	text-align: center;
+	background-color: white;
+	border-bottom: 1px solid #C0C2FF;
+	margin-bottom: 12px;
+	position: relative;
+}
+
+#menuListHead {
+	top: 164px;
+	text-align: center;
+	background-color: white;
+	border-bottom: 1px solid #C0C2FF;
+	margin-bottom: 12px;
+	position: relative;
+}
+
+#orderHead {
+	top: 164px;
+	text-align: center;
+	background-color: white;
+	border-bottom: 1px solid #C0C2FF;
+	margin-bottom: 12px;
+	position: relative;
+}
+
+#restaurantsMenusPanel {
+	top: 234px;
+	background-color: #fff;
+	position: fixed;
 }
 
 #menuItemsPanel {
-	top: 60px;
-	border-left: 1px dotted grey;
-	border-right: 1px dotted grey;
+	top: 164px;
+	border-left: 1px dotted #C0C2FF;
+	border-right: 1px dotted #C0C2FF;
+	position: relative;
 }
 
 .menuHeader {
@@ -151,9 +276,9 @@ td {
 }
 
 #orderPanel {
-	top: 60px;
+	top: 160px;
 	background-color: #fff;
-	position:fixed;
+	position: relative;
 }
 
 .orderHead {
@@ -162,7 +287,9 @@ td {
 }
 
 #thingRow {
-	border-top: 1px solid #C0C2FF;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #C0C2FF;
 }
 
 #thingPrice {
@@ -173,22 +300,42 @@ td {
 }
 
 #subtotalRow {
-	border-top: 1px solid #C0C2FF;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#taxRow {
+	padding-top: 4px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #C0C2FF;
 }
 
 #deliveryFeeRow {
-	border-top: 1px solid #C0C2FF;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#gratuityRow {
+	padding-top: 4px;
+	padding-bottom: 4px;
 }
 
 #discountRow {
-	border-top: 1px solid #C0C2FF;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #C0C2FF;
 }
 
 #totalRow {
-	border-top: 1px solid #C0C2FF;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	border-top: 1px solid #263248;
 }
 
 #subtotal {
+	padding-top: 4px;
 	text-align: right;
 }
 
@@ -197,6 +344,10 @@ td {
 }
 
 #deliveryFee {
+	text-align: right;
+}
+
+#gratuity {
 	text-align: right;
 }
 
@@ -301,17 +452,18 @@ td {
 
 /** Layout **/
 
-.navbar-brand img {
-	height:40px;
+.navbar-brand a {
+	height: 174px;
 	position: relative;
-	top: -25px;
-	background-color: #fff;
-	padding: 5px;
-	border-radius: 15px;
+	top: -63px;
+}
+
+.navbar-brand img {
 }
 
 #fms-headbar {
-	background-color: #7E8AA2;
+	background-color: #FF9800;
+	height: 120px;
 	border: 0;
 }
 
@@ -370,8 +522,7 @@ td {
 #fms-main-container {
 	margin-left: 0px;
 	width: 100%;
-	background-color: #FF9800;
-	background-image: url('/images/bg_icons_2.png');
+	background-color: white;
 	height: 100%;
 }
 
