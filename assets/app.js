@@ -1247,6 +1247,7 @@ app.factory('customerSchema', function() {
 	var service = {
 		defaults: {
 			customer: {
+				areaId: '',
 				fName: '',
 				lName: '',
 				addresses: {
@@ -1323,7 +1324,8 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 });
 
 app.controller('AccountAddController', function(
-	navMgr, messenger, pod, customerSchema, $scope, $http, $routeParams, $window
+	navMgr, messenger, pod, customerSchema,
+	$scope, $http, $routeParams, $window, $rootScope
 ) {
 		
 	navMgr.protect(function() { return $scope.form.$dirty; });
@@ -1331,6 +1333,11 @@ app.controller('AccountAddController', function(
 
 	$scope.customerSchema = customerSchema;
 	$scope.customer = customerSchema.populateDefaults({});
+
+	$scope.customer.areaId = $rootScope.areaId;
+
+	// TODO
+	// clean phone; integers only
 
 	$scope.save = function save(customer, options) {
 
@@ -1374,8 +1381,10 @@ app.controller('AccountEditController', function(
 	});
 
 	$scope.save = function save(customer, options) {
-		console.log('save() called');
 		options || (options = {});
+
+		// TODO
+		// clean phone; integers only
 
 		$http.put(
 			'/customers/' + customer.id, customer
