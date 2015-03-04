@@ -20,6 +20,10 @@ module.exports = {
 		areaId: {
       type: 'string',
       required: true
+		},
+		featured: {
+      type: 'string',
+      required: true
 		}
   },
 

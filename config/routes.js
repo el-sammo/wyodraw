@@ -35,7 +35,10 @@ module.exports.routes = {
 
   '/': {
     view: 'app'
-  }
+  },
+
+  // Media / Images
+  'GET /images/:collection/:id/:field/:version': 'ImagesController.show',
 
   /***************************************************************************
   *                                                                          *

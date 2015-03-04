@@ -365,6 +365,21 @@ td {
 	color: red;
 }
 
+/** Carousel **/
+#slides_control > div {
+	width: 640px;
+	background-color: white;
+	border: 1px solid white;
+}
+
+#slides_control {
+	position:absolute;
+	width: 400px;
+	left:50%;
+	top:20px;
+	margin-left:-200px;
+}
+
 /** Bootstrap overrides **/
 
 .page-header {
