@@ -354,16 +354,47 @@ app.config(function($httpProvider) {
 app.controller('LoadServices', function(loginModal, errMgr, fakeAuth) {});
 
 
-app.factory('fakeAuth', function($rootScope) {
+app.factory('fakeAuth', function($rootScope, $http) {
 	// TODO
 	// get customerId
-	$rootScope.customerId = '54c6644c0517463077a759aa';
-	// TODO
-	// get areaId
-	$rootScope.areaId = '54b32e4c3756f5d15ad4ca49';
+	$rootScope.customerId = '54f73ac22d47f8c90f1cb0d1';
 
 	if($rootScope.customerId) {
 		$rootScope.accessAccount = true;
+	}
+
+	var winLocStr = location.hostname;
+	var winLocPcs = winLocStr.split('.');
+
+	if(winLocPcs[0] == 'grub2you' || winLocPcs[0] == 'www') {
+		// not an area-specific url
+	
+		// TODO
+		// get areaId
+		$rootScope.areaId = '54b32e4c3756f5d15ad4ca49';
+		// TODO
+		// get areaName
+		$rootScope.areaName = 'Casper';
+		// TODO
+		// get areaPhone
+		$rootScope.areaPhone = '234-GRUB';
+
+	} else {
+		var p = $http.get('/areas/byName/' + winLocPcs[0]);
+			
+		// if areas ajax fails...
+		p.error(function(err) {
+			console.log('fakeAuthFactory: areas ajax failed');
+			console.log(err);
+		});
+					
+		// if areas ajax succeeds...
+		p.then(function(res) {
+			$rootScope.areaId = res.data[0].id;
+			$rootScope.areaName = res.data[0].name;
+			$rootScope.areaPhone = res.data[0].phone;
+		});
+
 	}
 	
 	return {};
@@ -720,6 +751,8 @@ app.controller('OrderMgmtController', function(
 ///
 app.controller('SplashController', function($scope, $http, $rootScope) {
 	var areaId = $rootScope.areaId;
+	var areaName = $rootScope.areaName;
+	var areaPhone = $rootScope.areaPhone;
 
 	// Carousel
 	// http://codepen.io/Fabiano/pen/LACzk

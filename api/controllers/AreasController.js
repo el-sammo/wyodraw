@@ -16,6 +16,17 @@ module.exports = {
       console.error(err);
       throw err;
     });
-  }
+  },
+
+	byName: function(req, res) {
+		Areas.findByName(req.params.id).sort({name: 1}).then(function(results) {
+			res.send(JSON.stringify(results));
+		}).catch(function(err) {
+      res.json({error: 'Server error'}, 500);
+      console.error(err);
+      throw err;
+		});
+	}
+
 };
 

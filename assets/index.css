@@ -12,6 +12,34 @@ body {
 	height: 100%;
 }
 
+footer {
+	margin-top: -135px;
+	padding: 40px 0 20px;
+	vertical-align: top;
+}
+
+.footer-container {
+	width: 100%;
+	background-color: #FF9800;
+	height: 100%;
+}
+
+.footer-nav {
+	left: 25%;
+	width: 50%;
+	position: relative;
+}
+
+.footerLink {
+	margin-right: 20px;
+	color: #FFF;
+	font-size: 16px;
+	text-align: left;
+	line-height: 80px;
+	font-weight: 600;
+	font-style: normal;
+}
+
 td {
 	vertical-align: middle!important;
 }
@@ -32,8 +60,28 @@ td {
 	top: 164px;
 	width: 640px;
 	background-color: white;
-	border: 1px solid white;
 	position: relative;
+}
+
+#featuredHeadContainer {
+	top: -46px;
+	left: 120px;
+	text-align: center;
+	position: relative;
+}
+
+#featuredHeadIcon {
+	position: relative;
+	z-index: 99;
+}
+
+.featuredHead {
+	top: -38px;
+	font-size: 28px;
+	font-weight: 700;
+	color: #000;
+	position: relative;
+	z-index: 100;
 }
 
 .restInfo {
@@ -367,9 +415,11 @@ td {
 
 /** Carousel **/
 #slides_control > div {
+	top: 20px;
 	width: 640px;
-	background-color: white;
-	border: 1px solid white;
+	background-color: #FFF;
+	border: 2px solid #263248;
+	position: relative;
 }
 
 #slides_control {
