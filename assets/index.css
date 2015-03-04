@@ -75,15 +75,6 @@ td {
 	z-index: 99;
 }
 
-.featuredHead {
-	top: -38px;
-	font-size: 28px;
-	font-weight: 700;
-	color: #000;
-	position: relative;
-	z-index: 100;
-}
-
 .restInfo {
 	top: -260px;
 	left: 200px;
