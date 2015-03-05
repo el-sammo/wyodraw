@@ -29,6 +29,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Contact Page
+	///
+
+	$routeProvider.when('/contact', {
+		controller: 'ContactController',
+		templateUrl: '/templates/contact.html'
+	});
+
+
+	///
 	// Restaurants
 	///
 
@@ -396,7 +406,23 @@ app.factory('fakeAuth', function($rootScope, $http) {
 		});
 
 	}
+
+	var corporate = {
+		phone: '- - -',
+		email: 'info@grub2you.com',
+		address: {
+			street: 'PO Box 52274',
+			city: 'Casper',
+			state: 'WY',
+			zip: '82605'
+		}
+	};
+
+	console.log('corporate:');
+	console.log(corporate);
 	
+	$rootScope.corporate = corporate;
+
 	return {};
 });
 
@@ -925,6 +951,26 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 
 	p.error(function(err) {
 		console.log('AboutController: areas ajax failed');
+		console.log(err);
+	});
+
+	p.then(function(res) {
+		$scope.area = res.data;
+	});
+
+});
+
+
+///
+// Controllers: Contact
+///
+app.controller('ContactController', function($scope, $http, $routeParams, $rootScope) {
+	var areaId = $rootScope.areaId;
+
+	var p = $http.get('/areas/' + areaId);
+
+	p.error(function(err) {
+		console.log('ContactController: areas ajax failed');
 		console.log(err);
 	});
 
