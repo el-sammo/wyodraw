@@ -418,9 +418,6 @@ app.factory('fakeAuth', function($rootScope, $http) {
 		}
 	};
 
-	console.log('corporate:');
-	console.log(corporate);
-	
 	$rootScope.corporate = corporate;
 
 	return {};
@@ -614,63 +611,76 @@ app.controller('OrderMgmtController', function(
 		p.then(function(res) {
 			// TODO get the correct one properly
 			// (not an orphaned order)
-			var things = res.data[0].things;
+
+			// if an uncompleted order already exists, we'll use it
+			if(res.data.length > 0) {
+				var things = res.data[0].things;
+		
+				var holdingMap = [];
 	
-			var holdingMap = [];
-
-			var thisAddedThing = {};
-
-			$scope.item.options.forEach(function(val) {
-				if(!$scope.selOption.localeCompare(val.id)) {
-					thisAddedThing.name = $scope.item.name;
-					thisAddedThing.option = val.name;
-					thisAddedThing.optionId = val.id;
-					thisAddedThing.price = val.price;
-					thisAddedThing.quantity = $scope.quantity;
-					thisAddedThing.specInst = $scope.specInst;
-				}
-			});
-
-			if(things.length > 0) {
-				var matched = false;
-				things.forEach(function(thing) {
-					if(!thing.optionId.localeCompare(thisAddedThing.optionId)) {
-						thing.quantity = (parseInt(thing.quantity) + parseInt(thisAddedThing.quantity));
-
-						// TODO replace this nasty solution for one in which the pre-existing specInst, if any, is in the textarea when adding
-						var specInst = '';
-						if(thing.specInst && thing.specInst.length > 0) {
-					 		if(thisAddedThing.specInst.length > 0) {
-								specInst = thing.specInst+'; '+thisAddedThing.specInst;
-							} else {
-								specInst = thing.specInst;
-							}
-						} else {
-							if(thisAddedThing.specInst.length > 0) {
-								specInst = thisAddedThing.specInst;
-							}
-						}
-						holdingMap.push({
-							'name': thing.name,
-							'option': thing.option,
-							'optionId': thing.optionId,
-							'price': thing.price,
-							'quantity': thing.quantity,
-							'specInst': specInst
-						});
-						matched = true;
-					} else {
-						holdingMap.push({
-							'name': thing.name,
-							'option': thing.option,
-							'optionId': thing.optionId,
-							'price': thing.price,
-							'quantity': thing.quantity,
-							'specInst': thing.specInst
-						});
+				var thisAddedThing = {};
+	
+				$scope.item.options.forEach(function(val) {
+					if(!$scope.selOption.localeCompare(val.id)) {
+						thisAddedThing.name = $scope.item.name;
+						thisAddedThing.option = val.name;
+						thisAddedThing.optionId = val.id;
+						thisAddedThing.price = val.price;
+						thisAddedThing.quantity = $scope.quantity;
+						thisAddedThing.specInst = $scope.specInst;
 					}
 				});
-				if(!matched) {
+	
+				if(things.length > 0) {
+					var matched = false;
+					things.forEach(function(thing) {
+						if(!thing.optionId.localeCompare(thisAddedThing.optionId)) {
+							thing.quantity = (parseInt(thing.quantity) + parseInt(thisAddedThing.quantity));
+	
+							// TODO replace this nasty solution for one in which the pre-existing specInst, if any, is in the textarea when adding
+							var specInst = '';
+							if(thing.specInst && thing.specInst.length > 0) {
+						 		if(thisAddedThing.specInst.length > 0) {
+									specInst = thing.specInst+'; '+thisAddedThing.specInst;
+								} else {
+									specInst = thing.specInst;
+								}
+							} else {
+								if(thisAddedThing.specInst.length > 0) {
+									specInst = thisAddedThing.specInst;
+								}
+							}
+							holdingMap.push({
+								'name': thing.name,
+								'option': thing.option,
+								'optionId': thing.optionId,
+								'price': thing.price,
+								'quantity': thing.quantity,
+								'specInst': specInst
+							});
+							matched = true;
+						} else {
+							holdingMap.push({
+								'name': thing.name,
+								'option': thing.option,
+								'optionId': thing.optionId,
+								'price': thing.price,
+								'quantity': thing.quantity,
+								'specInst': thing.specInst
+							});
+						}
+					});
+					if(!matched) {
+						holdingMap.push({
+							'name': thisAddedThing.name,
+							'option': thisAddedThing.option,
+							'optionId': thisAddedThing.optionId,
+							'price': thisAddedThing.price,
+							'quantity': thisAddedThing.quantity,
+							'specInst': thisAddedThing.specInst
+						});
+					}
+				} else {
 					holdingMap.push({
 						'name': thisAddedThing.name,
 						'option': thisAddedThing.option,
@@ -680,33 +690,69 @@ app.controller('OrderMgmtController', function(
 						'specInst': thisAddedThing.specInst
 					});
 				}
+	
+				res.data[0].things = holdingMap;
+				
+				var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
+		
+				// if orders ajax fails...
+				r.error(function(err) {
+					console.log('OrderMgmtController: addOption-put ajax failed');
+					console.log(err);
+					$modalInstance.dismiss('cancel');
+				});
+							
+				// if orders ajax succeeds...
+				r.then(function(res) {
+					$rootScope.$broadcast('orderChanged');
+					$modalInstance.dismiss('done');
+				});
 			} else {
-				holdingMap.push({
-					'name': thisAddedThing.name,
-					'option': thisAddedThing.option,
-					'optionId': thisAddedThing.optionId,
-					'price': thisAddedThing.price,
-					'quantity': thisAddedThing.quantity,
-					'specInst': thisAddedThing.specInst
+				// we'll start a new order
+
+				$scope.item.options.forEach(function(val) {
+					if(!$scope.selOption.localeCompare(val.id)) {
+						var thisAddedThing = {
+							name: $scope.item.name,
+							option: val.name,
+							optionId: val.id,
+							price: val.price,
+							quantity: $scope.quantity,
+							specInst: $scope.specInst,
+						};
+
+						var order = {
+							customerId: $rootScope.customerId,
+							orderStatus: 1,
+							things: [
+								{
+									'name': thisAddedThing.name,
+									'option': thisAddedThing.option,
+									'optionId': thisAddedThing.optionId,
+									'price': thisAddedThing.price,
+									'quantity': thisAddedThing.quantity,
+									'specInst': thisAddedThing.specInst
+								}
+							]
+						}
+		
+						$http.post(
+							'/orders/create', order
+						).success(function(data, status, headers, config) {
+						// if orders ajax succeeds...
+							if(status >= 400) {
+								$rootScope.$broadcast('orderChanged');
+								$modalInstance.dismiss('done');
+							}
+						}).error(function(err) {
+						// if orders ajax fails...
+							console.log('OrderMgmtController: addOption-create ajax failed');
+							console.log(err);
+							$modalInstance.dismiss('cancel');
+						});
+					}
 				});
 			}
-
-			res.data[0].things = holdingMap;
-			
-			var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
-	
-			// if orders ajax fails...
-			r.error(function(err) {
-				console.log('OrderMgmtController: addOption-put ajax failed');
-				console.log(err);
-				$modalInstance.dismiss('cancel');
-			});
-						
-			// if orders ajax succeeds...
-			r.then(function(res) {
-				$rootScope.$broadcast('orderChanged');
-				$modalInstance.dismiss('done');
-			});
 		});
 	};
 
@@ -1288,7 +1334,7 @@ app.controller('OrderController', function(
 		
 		// if orders ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: updateOrder ajax failed');
+			console.log('OrderController: updateOrder ajax failed');
 			console.log(err);
 		});
 				
@@ -1296,13 +1342,20 @@ app.controller('OrderController', function(
 		p.then(function(res) {
 			// TODO properly get the only order that should be used
 			// here, we're cheating by selecting the first (and only)
-			$scope.orderStatus = parseInt(res.data[0].orderStatus);
-			$scope.things = res.data[0].things;
-			$scope.updateTotals(res.data[0].things);
+			if(res.data.length > 0) {
+				$scope.customerOrderExists = true;
+				$scope.orderStatus = parseInt(res.data[0].orderStatus);
+				$scope.things = res.data[0].things;
+				$scope.updateTotals(res.data[0]);
+			} else {
+				$scope.customerOrderExists = false;
+			}
 		});
 	};
 
-	$scope.updateTotals = function(things) {
+	$scope.updateTotals = function(order) {
+
+		var things = order.things;
 
 		var subtotal = 0;
 		var tax = 0;
@@ -1311,6 +1364,7 @@ app.controller('OrderController', function(
 		var multiplier = 100;
 		var deliveryFee = 12.95;
 		var discount = 0;
+		var gratuity = 0;
 		var total = 0;
 
 		things.forEach(function(thing) {
@@ -1325,16 +1379,33 @@ app.controller('OrderController', function(
 
 		tax = (Math.round((subtotal * taxRate) * 100) / 100);
 
-		total = (Math.round((subtotal + tax + deliveryFee + discount) * 100)/100);
+		if(order.gratuity) {
+			gratuity = order.gratuity;
+		}
 
-		$scope.subtotal = subtotal;
-		$scope.tax = tax;
-		$scope.deliveryFee = deliveryFee;
-		$scope.discount = discount;
-		$scope.total = total;
+		total = (Math.round((subtotal + tax + deliveryFee + discount + gratuity) * 100)/100);
 
+		$scope.subtotal = subtotal.toFixed(2);
+		$scope.tax = tax.toFixed(2);
+		$scope.deliveryFee = deliveryFee.toFixed(2);
+		$scope.discount = discount.toFixed(2);
+		$scope.gratuity = gratuity.toFixed(2);
+		$scope.total = total.toFixed(2);
+
+		order.subtotal = subtotal;
+		order.tax = tax;
+		order.deliveryFee = deliveryFee;
+		order.discount = discount;
+		order.total = total;
+
+		var p = $http.put('/orders/' + order.id, order);
+		
+		// if orders ajax fails...
+		p.error(function(err) {
+			console.log('OrderController: updateOrder ajax failed');
+			console.log(err);
+		});
 	};
-
 	$scope.updateOrder();
 });
 
@@ -1421,7 +1492,7 @@ app.factory('customerSchema', function() {
 
 app.controller('AccountController', function($scope, $http, $routeParams, $rootScope) {
 	var customerId = $rootScope.customerId;
-	
+
 	var p = $http.get('/customers/' + customerId);
 
 	p.error(function(err) {
@@ -1431,6 +1502,22 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 
 	p.then(function(res) {
 		$scope.customer = res.data;
+	});
+
+	var r = $http.get('/orders/byCustomerId/' + customerId);
+
+	r.error(function(err) {
+		console.log('AccountController: orders ajax failed');
+		console.log(err);
+	});
+
+	r.then(function(res) {
+		res.data.map(function(order) {
+			order.updatedAt = order.updatedAt.substr(0,10);
+			order.total = parseFloat(order.total).toFixed(2);
+		});
+
+		$scope.orders = res.data;
 	});
 
 });

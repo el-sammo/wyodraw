@@ -19,7 +19,7 @@ module.exports = {
   },
 
 	byCustomerId: function(req, res) {
-		Orders.findByCustomerId(req.params.id).sort({field: 'orderStatus'}).then(function(results) {
+		Orders.findByCustomerId(req.params.id).sort({field: 'updatedAt'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);

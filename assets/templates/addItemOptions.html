@@ -10,12 +10,12 @@
 		<div class="radio" ng-repeat="option in item.options">
 			<label>
 				<input type="radio" name="optionName" ng-value="option.id" ng-model="$parent.selOption" ng-checked="itemOptionsLength < 2">
-				{{option.name}} - {{option.price}} - {{itemOptionsLength}} <!-- TODO - fix this last little bit so that when only one option exists, it is selected by default -->
+				{{option.name}} - {{option.price}} <!-- TODO - fix this so that when only one option exists, it is selected by default -->
 			</label>
 		</div>
 		<br/>
 		<label for="quantity">Quantity:</label>
-		<input type="number" name="quantity" class="form-control" required ng-model="quantity">
+		<input type="number" name="quantity" class="form-control" min="1" required ng-model="quantity">
 		<span class="error" ng-show="addItemForm.quantity.$error.required">Quantity is required!</span>
 		<span class="error" ng-show="addItemForm.quantity.$error.number">Not a valid quantity!</span>
 		<br/>
