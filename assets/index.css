@@ -242,6 +242,10 @@ td {
 .orderHistoryLink {
 }
 
+.logOutLink {
+	cursor: pointer;
+}
+
 #privacyMain {
 	top: 164px;
 	background-color: #fff;

@@ -13,14 +13,14 @@ module.exports = {
   ///
 
   attributes: {
-    fName: {
-      type: 'string',
-      required: true
-		},
-    lName: {
-      type: 'string',
-      required: true
-		},
+//    fName: {
+//      type: 'string',
+//      required: true
+//		},
+//    lName: {
+//      type: 'string',
+//      required: true
+//		},
     email: {
       type: 'string',
       required: true

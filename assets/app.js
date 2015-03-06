@@ -227,6 +227,25 @@ app.factory('loginModal', function loginModalFactory($modal, $rootScope) {
 	return service;
 });
 
+
+///
+// Screen Manager
+///
+
+app.factory('screenMgr', function($rootScope) {
+	var service = {
+		screenHt: screen.height,
+		screenWt: screen.width,
+		// TODO complete this
+		//
+		// also need to create an event listener for
+		// screen size change then trigger this service
+	};
+
+	return service;
+});
+
+
 app.controller('LoginController', function(
 	$scope, $modalInstance, $http, $window
 ) {
@@ -384,14 +403,19 @@ app.config(function($httpProvider) {
 app.controller('LoadServices', function(loginModal, errMgr, fakeAuth) {});
 
 
-app.factory('fakeAuth', function($rootScope, $http) {
-	// TODO
-	// get customerId
-	$rootScope.customerId = '54f73ac22d47f8c90f1cb0d1';
+app.factory('fakeAuth', function($rootScope, $http, $window) {
 
-	if($rootScope.customerId) {
-		$rootScope.accessAccount = true;
-	}
+	$rootScope.$on('customerLoggedIn', function(evt, args) {
+		if($rootScope.customerId) {
+			$rootScope.accessAccount = true;
+		}
+	});
+
+	$rootScope.$on('customerLoggedOut', function(evt, args) {
+		$rootScope.customerId = false;
+		$rootScope.accessAccount = false;
+		$window.location.href = '/';
+	});
 
 	var winLocStr = location.hostname;
 	var winLocPcs = winLocStr.split('.');
@@ -643,17 +667,26 @@ app.controller('LayoutMgmtController', function(
 					zip: $scope.zip
 				}
 			},
-			phone: $scope.phone,
-			email: $scope.email,
 			username: $scope.username,
-			password: $scope.password
+			password: $scope.password,
+			phone: $scope.phone,
+			email: $scope.email
 		}
-		
+
 		$http.post(
 			'/customers/create', customer
 		).success(function(data, status, headers, config) {
 		// if customers ajax succeeds...
 			if(status >= 400) {
+				$rootScope.customerId = data.id;
+				$rootScope.$broadcast('customerLoggedIn');
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$rootScope.customerId = data.id;
+				$rootScope.$broadcast('customerLoggedIn');
+				$modalInstance.dismiss('done');
+		 	} else {
+				$rootScope.customerId = data.id;
 				$rootScope.$broadcast('customerLoggedIn');
 				$modalInstance.dismiss('done');
 			}
@@ -1482,11 +1515,6 @@ app.controller('OrderController', function(
 
 	$scope.removeItem = orderMgmt.remove;
 
-	$rootScope.$on('customerLoggedIn', function(evt, args) {
-		// TODO do what here?
-		// no doubt something with fake auth (soon-to-be real auth)
-	});
-
 	$rootScope.$on('orderChanged', function(evt, args) {
 		$scope.updateOrder();
 	});
@@ -1653,7 +1681,11 @@ app.factory('customerSchema', function() {
 });
 
 
-app.controller('AccountController', function($scope, $http, $routeParams, $rootScope) {
+app.controller('AccountController', function($scope, $http, $routeParams, $rootScope, $window) {
+	if(!$rootScope.accessAccount) {
+		$window.location.href = '/';
+	}
+
 	var customerId = $rootScope.customerId;
 
 	var p = $http.get('/customers/' + customerId);
@@ -1682,6 +1714,11 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 
 		$scope.orders = res.data;
 	});
+
+	$scope.logOut = function() {
+		console.log('logOut() called');
+		$rootScope.$broadcast('customerLoggedOut');
+	}
 
 });
 

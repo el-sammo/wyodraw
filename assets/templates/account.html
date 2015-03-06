@@ -9,7 +9,8 @@
 				{{customer.addresses.primary.street}} <span ng-show="customer.addresses.primary.apt">{{customer.addresses.primary.apt}}</span><br/>
 				{{customer.addresses.primary.city}}, {{customer.addresses.primary.state}} {{customer.addresses.primary.zip}}<br/>
 				{{customer.phone}}<br/>
-				{{customer.email}}
+				{{customer.email}}<br/><br/>
+				<span ng-click="logOut()" class="logOutLink">Log Out</span>
 			</div>
 		</div>
 		<div class="col-md-3 col-md-offset-1">

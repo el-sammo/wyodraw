@@ -9,8 +9,8 @@
 	      </li>
 	      <li>
 					<span><h1><a href="#/restaurants/{{featuredMenuSlug}}"><span ng-show="areaName">{{areaName}} </span>Restaurants</a></h1></span>
-					<span ng-show="!accessAccount"><h1><a href="#/account/{{customerId}}">My Account</a></h1></span>
-					<span ng-show="accessAccount"><span ng-click="logIn()" class="logInSignUpLink">Log In</span><span class="logInSignUpPipe"> | </span><span ng-click="signUp(areas)" class="logInSignUpLink">Sign Up</span></span>
+					<span ng-show="accessAccount"><h1><a href="#/account/{{customerId}}">My Account</a></h1></span>
+					<span ng-show="!accessAccount"><span ng-click="logIn()" class="logInSignUpLink">Log In</span><span class="logInSignUpPipe"> | </span><span ng-click="signUp(areas)" class="logInSignUpLink">Sign Up</span></span>
 					<span><h1><a href="#/about/">About Grub2You</a></h1></span>
 	      </li>
 	    </ul>
