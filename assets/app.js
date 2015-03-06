@@ -39,6 +39,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Privacy Page
+	///
+
+	$routeProvider.when('/privacy', {
+		controller: 'PrivacyController',
+		templateUrl: '/templates/privacy.html'
+	});
+
+
+	///
 	// Restaurants
 	///
 
@@ -51,6 +61,16 @@ app.config(function($routeProvider) {
 	$routeProvider.when('/restaurants/', {
 		controller: 'RestaurantsController',
 		templateUrl: '/templates/restaurants.html'
+	});
+
+
+	///
+	// Terms Page
+	///
+
+	$routeProvider.when('/terms', {
+		controller: 'TermsController',
+		templateUrl: '/templates/terms.html'
 	});
 
 
@@ -548,6 +568,136 @@ app.controller('PodController', function(args, $scope, $modalInstance) {
 });
 
 ///
+// Authentication Management
+///
+
+app.factory('layoutMgmt', function($modal, $rootScope, $http) {
+	var service = {
+		login: function() {
+			$modal.open({
+				templateUrl: '/templates/login.html',
+				backdrop: true,
+				controller: 'LayoutMgmtController',
+			});
+		},
+		signUp: function(areas) {
+
+			$modal.open({
+				templateUrl: '/templates/signUp.html',
+				backdrop: true,
+				controller: 'LayoutMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							areas: areas
+						}
+					}
+				}
+			});
+		}
+	};
+	return service;
+});
+
+app.controller('LayoutMgmtController', function(
+	args, $scope, $modalInstance, $http, $rootScope
+) {
+
+	$scope.areas = args.areas;
+
+	$scope.areaName = $rootScope.areaName;
+	$scope.accessAccount = $rootScope.accessAccount;
+
+	$scope.logIn = function() {
+
+		console.log('LayoutMgmtController - logIn() called');
+		
+//		$http.post(
+//			'/orders/create', order
+//		).success(function(data, status, headers, config) {
+//		// if orders ajax succeeds...
+//			if(status >= 400) {
+//				$rootScope.$broadcast('orderChanged');
+//				$modalInstance.dismiss('done');
+//			}
+//		}).error(function(err) {
+//			// if orders ajax fails...
+//				console.log('OrderMgmtController: addOption-create ajax failed');
+//				console.log(err);
+//				$modalInstance.dismiss('cancel');
+//		});
+	};
+
+	$scope.createAccount = function() {
+
+		var customer = {
+			areaId: $scope.selArea,
+			fname: $scope.fName,
+			lname: $scope.lName,
+			addresses: {
+				primary: {
+					street: $scope.street,
+					apt: $scope.apt,
+					city: $scope.city,
+					state: $scope.state,
+					zip: $scope.zip
+				}
+			},
+			phone: $scope.phone,
+			email: $scope.email,
+			username: $scope.username,
+			password: $scope.password
+		}
+		
+		$http.post(
+			'/customers/create', customer
+		).success(function(data, status, headers, config) {
+		// if customers ajax succeeds...
+			if(status >= 400) {
+				$rootScope.$broadcast('customerLoggedIn');
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if customers ajax fails...
+				console.log('LayoutMgmtController: customer-create ajax failed');
+				console.log(err);
+				$modalInstance.dismiss('cancel');
+		});
+	};
+
+});
+
+
+///
+// Layout Controller
+///
+
+
+app.controller('LayoutController', function(
+	navMgr, messenger, pod, $scope,
+	$http, $routeParams, $modal, layoutMgmt,
+	$rootScope
+) {
+
+	var p = $http.get('/areas/');
+					
+	// if areas ajax fails...
+	p.error(function(err) {
+		console.log('layoutMgmt: areas ajax failed');
+		console.log(err);
+	});
+							
+	// if orders ajax succeeds...
+	p.then(function(res) {
+		$scope.areas = res.data;
+	});
+	
+	$scope.logIn = layoutMgmt.logIn;
+	$scope.signUp = layoutMgmt.signUp;
+
+});
+
+///
 // Order Management
 ///
 
@@ -1028,6 +1178,13 @@ app.controller('ContactController', function($scope, $http, $routeParams, $rootS
 
 
 ///
+// Controllers: Privacy
+///
+app.controller('PrivacyController', function($scope, $http, $routeParams, $rootScope) {
+});
+
+
+///
 // Controllers: Restaurants
 ///
 
@@ -1325,6 +1482,11 @@ app.controller('OrderController', function(
 
 	$scope.removeItem = orderMgmt.remove;
 
+	$rootScope.$on('customerLoggedIn', function(evt, args) {
+		// TODO do what here?
+		// no doubt something with fake auth (soon-to-be real auth)
+	});
+
 	$rootScope.$on('orderChanged', function(evt, args) {
 		$scope.updateOrder();
 	});
@@ -1442,6 +1604,7 @@ app.factory('customerSchema', function() {
 						zip: ''
 					}
 				},
+				username: '',
 				password: '',
 				phone: '',
 				email: ''
@@ -1599,6 +1762,13 @@ app.controller('AccountEditController', function(
 	$scope.cancel = function cancel() {
 		navMgr.cancel('#/account/' +$routeParams.id);
 	};
+});
+
+
+///
+// Controllers: Terms
+///
+app.controller('TermsController', function($scope, $http, $routeParams, $rootScope) {
 });
 
 

@@ -12,6 +12,25 @@ body {
 	height: 100%;
 }
 
+.logInSignUpLink {
+	top: -5px;
+	left: -28px;
+	font-size: 14pt;
+	font-weight: 700;
+	color: #FFF;
+	position: relative;
+}
+
+.logInSignUpPipe {
+	top: -6px;
+	left: -28px;
+	font-size: 14pt;
+	font-weight: 700;
+	color: #FFF;
+	cursor: default;
+	position: relative;
+}
+
 footer {
 	margin-top: -135px;
 	padding: 40px 0 20px;
@@ -221,6 +240,18 @@ td {
 }
 
 .orderHistoryLink {
+}
+
+#privacyMain {
+	top: 164px;
+	background-color: #fff;
+	position: relative;
+}
+
+#termsMain {
+	top: 164px;
+	background-color: #fff;
+	position: relative;
 }
 
 .managementLink {
