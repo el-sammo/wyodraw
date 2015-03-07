@@ -233,11 +233,20 @@ app.factory('loginModal', function loginModalFactory($modal, $rootScope) {
 ///
 
 app.factory('screenMgr', function($rootScope) {
+	// TODO
+	// these first three values shouldn't be hard-coded
+	var pushDown = 220;
+	var footerHeight = 80;
+	var otherSpace = 130;
+	
+	var screenHt = screen.height;
+
+	var acHt = parseInt(screenHt) - parseInt(pushDown) - parseInt(footerHeight) - parseInt(otherSpace);
+
 	var service = {
-		screenHt: screen.height,
-		screenWt: screen.width,
-		// TODO complete this
-		//
+		acHt: acHt,
+
+		// TODO
 		// also need to create an event listener for
 		// screen size change then trigger this service
 	};
@@ -400,11 +409,10 @@ app.config(function($httpProvider) {
 // Event-Based Services Loader
 ///
 
-app.controller('LoadServices', function(loginModal, errMgr, fakeAuth) {});
+app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, screenMgr) {});
 
 
-app.factory('fakeAuth', function($rootScope, $http, $window) {
-
+app.factory('fakeAuth', function($rootScope, $http, $window, screenMgr) {
 	$rootScope.$on('customerLoggedIn', function(evt, args) {
 		if($rootScope.customerId) {
 			$rootScope.accessAccount = true;
@@ -1227,9 +1235,10 @@ app.config(function(httpInterceptorProvider) {
 
 app.controller('RestaurantsController', function(
 	messenger, $scope, $http, $routeParams,
-	$modal, orderMgmt, $rootScope
+	$modal, orderMgmt, $rootScope, screenMgr
 ) {
 	var areaId = $rootScope.areaId;
+	$scope.acHt = screenMgr.acHt;
 
 	$scope.getUglySlug = function() {
 		// retrieve restaurants
