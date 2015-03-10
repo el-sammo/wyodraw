@@ -26,6 +26,16 @@ module.exports = {
       console.error(err);
       throw err;
 		});
+	},
+
+	bySessionId: function(req, res) {
+		Orders.findBySessionId(req.params.id).sort({field: 'updatedAt'}).then(function(results) {
+			res.send(JSON.stringify(results));
+		}).catch(function(err) {
+      res.json({error: 'Server error'}, 500);
+      console.error(err);
+      throw err;
+		});
 	}
 	
 };

@@ -31,7 +31,7 @@ module.exports.routes = {
   * `assets` directory)                                                      *
   *                                                                          *
   ***************************************************************************/
-  '/login': 'Users.login',
+  '/login': 'Customers.login',
 
   '/': {
     view: 'app'

@@ -14,16 +14,14 @@ module.exports = {
   ///
 
   attributes: {
-// TODO why does it fail with these un-commented?
-// the error says the two are null, expecting string								
-//    fName: {
-//      type: 'string',
-//      required: true
-//		},
-//    lName: {
-//      type: 'string',
-//      required: true
-//		},
+    fName: {
+      type: 'string',
+      required: true
+		},
+    lName: {
+      type: 'string',
+      required: true
+		},
     email: {
       type: 'string',
       required: true

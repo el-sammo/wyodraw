@@ -409,7 +409,24 @@ app.config(function($httpProvider) {
 // Event-Based Services Loader
 ///
 
-app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, screenMgr) {});
+app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, screenMgr, sessionMgr) {});
+
+app.factory('sessionMgr', function($rootScope, $http) {
+	var p = $http.get('/customers/session');
+			
+	// if session ajax fails...
+	p.error(function(err) {
+		console.log('AccountController: session ajax failed');
+		console.log(err);
+	});
+					
+	// if session ajax succeeds...
+	p.then(function(res) {
+		var sessionData = res.data;
+	});
+
+	return {};
+});
 
 
 app.factory('fakeAuth', function($rootScope, $http, $window, screenMgr) {
@@ -420,7 +437,7 @@ app.factory('fakeAuth', function($rootScope, $http, $window, screenMgr) {
 	});
 
 	$rootScope.$on('customerLoggedOut', function(evt, args) {
-		$rootScope.customerId = false;
+		$rootScope.customerId = null;
 		$rootScope.accessAccount = false;
 		$window.location.href = '/';
 	});
@@ -605,11 +622,32 @@ app.controller('PodController', function(args, $scope, $modalInstance) {
 
 app.factory('layoutMgmt', function($modal, $rootScope, $http) {
 	var service = {
-		login: function() {
+		logIn: function(area) {
 			$modal.open({
 				templateUrl: '/templates/login.html',
 				backdrop: true,
 				controller: 'LayoutMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							area: area
+						}
+					}
+				}
+			});
+		},
+		logOut: function(area) {
+			$modal.open({
+				templateUrl: '/templates/logout.html',
+				backdrop: true,
+				controller: 'LayoutMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							area: area
+						}
+					}
+				}
 			});
 		},
 		signUp: function(areas) {
@@ -635,37 +673,47 @@ app.controller('LayoutMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope
 ) {
 
-	$scope.areas = args.areas;
+	if(args.areas) {
+		$scope.areas = args.areas;
+	}
 
 	$scope.areaName = $rootScope.areaName;
 	$scope.accessAccount = $rootScope.accessAccount;
 
-	$scope.logIn = function() {
+	$scope.credentials = {};
 
-		console.log('LayoutMgmtController - logIn() called');
-		
-//		$http.post(
-//			'/orders/create', order
-//		).success(function(data, status, headers, config) {
-//		// if orders ajax succeeds...
-//			if(status >= 400) {
-//				$rootScope.$broadcast('orderChanged');
-//				$modalInstance.dismiss('done');
-//			}
-//		}).error(function(err) {
-//			// if orders ajax fails...
-//				console.log('OrderMgmtController: addOption-create ajax failed');
-//				console.log(err);
-//				$modalInstance.dismiss('cancel');
-//		});
+	$scope.submit = function(credentials) {
+		$http.post(
+			'/login', credentials
+		).success(function(data, status, headers, config) {
+		// if orders ajax succeeds...
+			if(status >= 400) {
+				$rootScope.customerId = data.customerId;
+				$rootScope.$broadcast('customerLoggedIn');
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$rootScope.customerId = data.customerId;
+				$rootScope.$broadcast('customerLoggedIn');
+				$modalInstance.dismiss('done');
+		 	} else {
+				$rootScope.customerId = data.customerId;
+				$rootScope.$broadcast('customerLoggedIn');
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if orders ajax fails...
+				console.log('LayoutMgmtController: logIn ajax failed');
+				console.log(err);
+				$modalInstance.dismiss('cancel');
+		});
 	};
 
 	$scope.createAccount = function() {
 
 		var customer = {
 			areaId: $scope.selArea,
-			fname: $scope.fName,
-			lname: $scope.lName,
+			fName: $scope.fName,
+			lName: $scope.lName,
 			addresses: {
 				primary: {
 					street: $scope.street,
@@ -706,6 +754,34 @@ app.controller('LayoutMgmtController', function(
 		});
 	};
 
+	$scope.cancel = function() {
+		$modalInstance.dismiss('cancel');
+	}
+
+	$scope.logOut = function() {
+		$http.post('/customers/logout').success(function(data, status, headers, config) {
+		// if customers ajax succeeds...
+			if(status >= 400) {
+				$rootScope.customerId = null;
+				$rootScope.$broadcast('customerLoggedOut');
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$rootScope.customerId = null;
+				$rootScope.$broadcast('customerLoggedOut');
+				$modalInstance.dismiss('done');
+		 	} else {
+				$rootScope.customerId = null;
+				$rootScope.$broadcast('customerLoggedOut');
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if customers ajax fails...
+				console.log('LayoutMgmtController: logOut ajax failed');
+				console.log(err);
+				$modalInstance.dismiss('cancel');
+		});
+	}
+
 });
 
 
@@ -734,6 +810,7 @@ app.controller('LayoutController', function(
 	});
 	
 	$scope.logIn = layoutMgmt.logIn;
+	$scope.logOut = layoutMgmt.logOut;
 	$scope.signUp = layoutMgmt.signUp;
 
 });
@@ -777,7 +854,7 @@ app.factory('orderMgmt', function($modal, $rootScope) {
 });
 
 app.controller('OrderMgmtController', function(
-	args, $scope, $modalInstance, $http, $rootScope
+	args, $scope, $modalInstance, $http, $rootScope, sessionMgr
 ) {
 	$scope.item = args.item;
 	if($scope.item && $scope.item.options) {
@@ -912,9 +989,18 @@ app.controller('OrderMgmtController', function(
 							specInst: $scope.specInst,
 						};
 
+						if($rootScope.customerId) {
+							var orderCustomerId = $rootScope.customerId;
+						} else if(sessionMgr.sessionData.customerId) {
+							var orderCustomerId = sessionMgr.sessionData.customerId;
+						} else {
+							var orderCustomerId = sessionMgr.sessionData.sid;
+						}
+
 						var order = {
-							customerId: $rootScope.customerId,
+							customerId: orderCustomerId,
 							orderStatus: 1,
+							sessionId: sessionMgr.sessionData.sid,
 							things: [
 								{
 									'name': thisAddedThing.name,
@@ -926,7 +1012,7 @@ app.controller('OrderMgmtController', function(
 								}
 							]
 						}
-		
+
 						$http.post(
 							'/orders/create', order
 						).success(function(data, status, headers, config) {
@@ -1503,7 +1589,7 @@ app.controller('RestaurantsController', function(
 app.controller('OrderController', function(
 	navMgr, messenger, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
-	$rootScope
+	$rootScope, sessionMgr
 ) {
 
 	// TODO
@@ -1529,7 +1615,13 @@ app.controller('OrderController', function(
 	});
 
 	$scope.updateOrder = function() {
-		var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
+		if(sessionMgr.sessionData && essionMgr.sessionData.customerId) {
+			var lookupCustomerId = sessionMgr.sessionData.customerId;
+		} else if($rootScope.customerId) {
+			var lookupCustomerId = $rootScope.customerId;
+		}
+
+		var p = $http.get('/orders/byCustomerId/' + lookupCustomerId);
 		
 		// if orders ajax fails...
 		p.error(function(err) {
@@ -1723,11 +1815,6 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 
 		$scope.orders = res.data;
 	});
-
-	$scope.logOut = function() {
-		console.log('logOut() called');
-		$rootScope.$broadcast('customerLoggedOut');
-	}
 
 });
 

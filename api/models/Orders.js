@@ -20,6 +20,10 @@ module.exports = {
 		customerId: {
       type: 'string',
       required: true
+		},
+		sessionId: {
+      type: 'string',
+      required: true
 		}
   },
 
