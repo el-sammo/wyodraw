@@ -1,12 +1,13 @@
 			<div class="row">
-				<div class="col-md-12" id="menuItemsPanel" ng-controller="OrderController" style="max-height: {{acHt}}px; overflow: auto;">
+				<div class="col-md-12" id="menuItemsPanel" ng-controller="OrderController" style="height: {{acHt}}px;">
 					<div class="row">
 						<div class="col-md-12">
 							<div class="menuHeader">
 								<span ng-show="displayRestaurant && displayMenu">{{displayRestaurant.name }} - {{displayMenu.name}}</span>
 							</div>
 							<div class="menuInfo">
-								<span ng-show="displayMenu">Served from {{timeFormat(displayMenu.availStart)}} to {{timeFormat(displayMenu.availEnd)}}</span>
+								<span ng-show="displayMenu.availStart && displayMenu.availEnd">Served from {{timeFormat(displayMenu.availStart)}} to {{timeFormat(displayMenu.availEnd)}}<br></span>
+								<span ng-show="displayMenu.desc">{{displayMenu.desc}}<br></span>
 							</div>
 						</div>
 					</div>

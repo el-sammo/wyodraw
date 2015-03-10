@@ -207,18 +207,24 @@ td {
 	padding-top: 4px;
 	padding-left: 12px;
 	padding-right: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 #aboutOtherBody {
 	padding-top: 4px;
 	padding-left: 12px;
 	padding-right: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 #aboutDriversBody {
 	padding-top: 4px;
 	padding-left: 12px;
 	padding-right: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 #accountMain {
@@ -250,12 +256,16 @@ td {
 	top: 164px;
 	background-color: #fff;
 	position: relative;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 #termsMain {
 	top: 164px;
 	background-color: #fff;
 	position: relative;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .managementLink {
@@ -330,6 +340,8 @@ td {
 #restaurantsMenusPanel {
 	top: 234px;
 	background-color: #fff;
+	overflow-y: auto;
+	overflow-x: hidden;
 	position: fixed;
 }
 
@@ -337,6 +349,8 @@ td {
 	top: 164px;
 	border-left: 1px dotted #C0C2FF;
 	border-right: 1px dotted #C0C2FF;
+	overflow-y: auto;
+	overflow-x: hidden;
 	position: relative;
 }
 
@@ -355,6 +369,8 @@ td {
 #orderPanel {
 	top: 160px;
 	background-color: #fff;
+	overflow-y: auto;
+	overflow-x: hidden;
 	position: relative;
 }
 
