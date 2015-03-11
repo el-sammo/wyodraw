@@ -718,7 +718,8 @@ app.controller('LayoutMgmtController', function(
 			lName: $scope.lName,
 			addresses: {
 				primary: {
-					street: $scope.street,
+					streetNumber: $scope.streetNumber,
+					streetName: $scope.streetName,
 					apt: $scope.apt,
 					city: $scope.city,
 					state: $scope.state,
@@ -1758,7 +1759,8 @@ app.factory('customerSchema', function() {
 				lName: '',
 				addresses: {
 					primary: {
-						street: '',
+						streetNumber: '',
+						streetName: '',
 						apt: '',
 						city: '',
 						state: '',

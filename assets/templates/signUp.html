@@ -20,9 +20,12 @@
 		<label for="lName">Last Name:</label>
 		<input type="text" name="lName" class="form-control" required ng-model="lName">
 		<span class="error" ng-show="createAccountForm.lName.$error.required">Last Name is required!<br/></span>
-		<label for="street">Street Address:</label>
-		<input type="text" name="street" class="form-control" required ng-model="street">
-		<span class="error" ng-show="createAccountForm.street.$error.required">Street Address is required!<br/></span>
+		<label for="streetNumber">Address Number:</label>
+		<input type="text" name="streetNumber" class="form-control" required ng-model="streetNumber">
+		<span class="error" ng-show="createAccountForm.streetNumber.$error.required">Street Number is required!<br/></span>
+		<label for="streetName">Street Name:</label>
+		<input type="text" name="streetName" class="form-control" required ng-model="streetName">
+		<span class="error" ng-show="createAccountForm.streetName.$error.required">Street Name is required!<br/></span>
 		<label for="apt">Apt / Ste:</label>
 		<input type="text" name="apt" class="form-control" ng-model="apt">
 		<label for="city">City:</label>
