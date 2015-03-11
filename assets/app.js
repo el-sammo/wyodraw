@@ -869,7 +869,13 @@ app.controller('OrderMgmtController', function(
 		var sessionPromise = sessionMgr.getSessionPromise();
 	
 		sessionPromise.then(function(sessionData) {
-			var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
+			if(sessionData.customerId) {
+				var orderCustomerId = sessionData.customerId;
+			} else {
+				var orderCustomerId = sessionData.sid;
+			}
+
+			var p = $http.get('/orders/byCustomerId/' + orderCustomerId);
 				
 			// if orders ajax fails...
 			p.error(function(err) {
@@ -885,6 +891,9 @@ app.controller('OrderMgmtController', function(
 	
 				// if an uncompleted order already exists, we'll use it
 				if(res.data.length > 0) {
+					// TODO is this really legit? are we getting the right order?
+					// TODO we need to consider converting a started order under a sid
+					// to a logged in order
 					var things = res.data[0].things;
 			
 					var holdingMap = [];
@@ -1019,6 +1028,12 @@ app.controller('OrderMgmtController', function(
 							).success(function(data, status, headers, config) {
 							// if orders ajax succeeds...
 								if(status >= 400) {
+									$rootScope.$broadcast('orderChanged');
+									$modalInstance.dismiss('done');
+								} else if(status == 200) {
+									$rootScope.$broadcast('orderChanged');
+									$modalInstance.dismiss('done');
+							 	} else {
 									$rootScope.$broadcast('orderChanged');
 									$modalInstance.dismiss('done');
 								}
