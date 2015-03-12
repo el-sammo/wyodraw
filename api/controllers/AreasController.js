@@ -19,7 +19,7 @@ module.exports = {
   },
 
 	byName: function(req, res) {
-		Areas.findByName(req.params.id).sort({name: 1}).then(function(results) {
+		Areas.findByName(req.params.id).sort({name: 'asc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);

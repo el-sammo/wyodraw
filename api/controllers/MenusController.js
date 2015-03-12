@@ -9,7 +9,7 @@ module.exports = {
   datatables: function(req, res) {
     var options = req.query;
 
-    Menus.datatables(options).sort({name: 1}).then(function(results) {
+    Menus.datatables(options).sort({name: 'asc'}).then(function(results) {
       res.send(JSON.stringify(results));
     }).catch(function(err) {
       res.json({error: 'Server error'}, 500);
@@ -19,7 +19,7 @@ module.exports = {
   },
 
 	byRestaurantId: function(req, res) {
-		Menus.findByRestaurantId(req.params.id).sort({name: 1}).then(function(results) {
+		Menus.findByRestaurantId(req.params.id).sort({name: 'asc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);

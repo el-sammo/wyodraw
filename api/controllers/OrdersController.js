@@ -9,7 +9,7 @@ module.exports = {
   datatables: function(req, res) {
     var options = req.query;
 
-    Orders.datatables(options).sort({field: 'orderStatus'}).then(function(results) {
+    Orders.datatables(options).sort({orderStatus: 'desc'}).then(function(results) {
       res.send(JSON.stringify(results));
     }).catch(function(err) {
       res.json({error: 'Server error'}, 500);
@@ -19,7 +19,7 @@ module.exports = {
   },
 
 	byCustomerId: function(req, res) {
-		Orders.findByCustomerId(req.params.id).sort({field: 'updatedAt'}).then(function(results) {
+		Orders.findByCustomerId(req.params.id).sort({updatedAt: 'desc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);
@@ -29,7 +29,7 @@ module.exports = {
 	},
 
 	bySessionId: function(req, res) {
-		Orders.findBySessionId(req.params.id).sort({field: 'updatedAt'}).then(function(results) {
+		Orders.findBySessionId(req.params.id).sort({updatedAt: 'desc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);
