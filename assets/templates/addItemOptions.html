@@ -5,12 +5,11 @@
 </div>
 <div class="modal-body">
 	<form name="addItemForm">
-		<h4>Select Your Option</h4>
-		<br/>
+		<h4 class="breakbeat">Select Your Option</h4>
 		<div class="radio" ng-repeat="option in item.options">
 			<label>
-				<input type="radio" name="optionName" ng-value="option.id" ng-model="$parent.selOption" ng-checked="itemOptionsLength < 2">
-				{{option.name}} - {{option.price}} <!-- TODO - fix this so that when only one option exists, it is selected by default -->
+				<input type="radio" name="optionName" ng-value="option.id" ng-model="$parent.selOption">
+				{{option.name}} - {{option.price}}
 			</label>
 		</div>
 		<br/>

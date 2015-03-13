@@ -5,50 +5,49 @@
 </div>
 <div class="modal-body">
 	<form name="createAccountForm">
-		<h4>Select Your Area</h4>
-		<br/>
-		<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
-			<label>
-				<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
-				{{area.name}} <!-- TODO - fix this so that when only one area exists, it is selected by default -->
-			</label>
+		<div class="row no-margin">
+			<h4>Select Your Area</h4>
+			<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
+				<label>
+					<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
+					{{area.name}} <font style="color: red; font-weight: 900;">(Delivery Service Starts April 2015)</font>
+				</label>
+			</div>
 		</div>
 		<br/>
-		<label for="fName">First Name:</label>
-		<input type="text" name="fName" class="form-control" required ng-model="fName">
-		<span class="error" ng-show="createAccountForm.fName.$error.required">First Name is required!<br/></span>
-		<label for="lName">Last Name:</label>
-		<input type="text" name="lName" class="form-control" required ng-model="lName">
-		<span class="error" ng-show="createAccountForm.lName.$error.required">Last Name is required!<br/></span>
-		<label for="streetNumber">Address Number:</label>
-		<input type="text" name="streetNumber" class="form-control" required ng-model="streetNumber">
-		<span class="error" ng-show="createAccountForm.streetNumber.$error.required">Street Number is required!<br/></span>
-		<label for="streetName">Street Name:</label>
-		<input type="text" name="streetName" class="form-control" required ng-model="streetName">
-		<span class="error" ng-show="createAccountForm.streetName.$error.required">Street Name is required!<br/></span>
-		<label for="apt">Apt / Ste:</label>
-		<input type="text" name="apt" class="form-control" ng-model="apt">
-		<label for="city">City:</label>
-		<input type="text" name="city" class="form-control" required ng-model="city">
-		<span class="error" ng-show="createAccountForm.city.$error.required">City is required!<br/></span>
-		<label for="state">State:</label>
-		<input type="text" name="state" class="form-control" required ng-model="state">
-		<span class="error" ng-show="createAccountForm.state.$error.required">State is required!<br/></span>
-		<label for="zip">Zip:</label>
-		<input type="text" name="zip" class="form-control" required ng-model="zip">
-		<span class="error" ng-show="createAccountForm.zip.$error.required">Zip is required!<br/></span>
-		<label for="phone">Phone:</label>
-		<input type="text" name="phone" class="form-control" required ng-model="phone">
-		<span class="error" ng-show="createAccountForm.phone.$error.required">Phone is required!<br/></span>
-		<label for="email">Email:</label>
-		<input type="text" name="email" class="form-control" required ng-model="email">
-		<span class="error" ng-show="createAccountForm.email.$error.required">Email is required!<br/></span>
-		<label for="username">Username:</label>
-		<input type="text" name="username" class="form-control" required ng-model="username">
-		<span class="error" ng-show="createAccountForm.username.$error.required">Username is required!<br/></span>
-		<label for="password">Password:</label>
-		<input type="password" name="password" class="form-control" required ng-model="password">
-		<span class="error" ng-show="createAccountForm.password.$error.required">Password is required!<br/></span>
+		<div class="row" ng-show="submitted && ! isFormComplete()" class="formError">
+			TODO: Error message here
+		</div>
+		<div class="row">
+			<div class="col-md-6">
+				<label for="fName">First Name*</label>
+				<input type="text" name="fName" class="form-control" required ng-model="fName" ng-class="required(fName)">
+				<label for="lName">Last Name:</label>
+				<input type="text" name="lName" class="form-control" required ng-model="lName" ng-class="required(lName)">
+				<label for="phone">Phone:</label>
+				<input type="text" name="phone" class="form-control" required ng-model="phone" ng-class="required(phone)">
+				<label for="email">Email:</label>
+				<input type="text" name="email" class="form-control" required ng-model="email" ng-class="required(email)">
+				<label for="username">Username:</label>
+				<input type="text" name="username" class="form-control" required ng-model="username" ng-class="required(username)">
+				<label for="password">Password:</label>
+				<input type="password" name="password" class="form-control" required ng-model="password" ng-class="required(password)">
+			</div>
+			<div class="col-md-6">
+				<label for="streetNumber">Address Number:</label>
+				<input type="text" name="streetNumber" class="form-control" required ng-model="streetNumber" ng-class="required(streetNumber)">
+				<label for="streetName">Street Name:</label>
+				<input type="text" name="streetName" class="form-control" required ng-model="streetName" ng-class="required(streetName)">
+				<label for="apt">Apt / Ste:</label>
+				<input type="text" name="apt" class="form-control" ng-model="apt">
+				<label for="city">City:</label>
+				<input type="text" name="city" class="form-control" required ng-model="city" ng-class="required(city)">
+				<label for="state">State:</label>
+				<input type="text" name="state" class="form-control" required ng-model="state" ng-class="required(state)">
+				<label for="zip">Zip:</label>
+				<input type="text" name="zip" class="form-control" required ng-model="zip" ng-class="required(zip)">
+			</div>
+		</div>
 	</form>
 </div>
 <div class="modal-footer">

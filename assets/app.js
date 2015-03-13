@@ -29,6 +29,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Careers Page
+	///
+
+	$routeProvider.when('/careers', {
+		controller: 'CareersController',
+		templateUrl: '/templates/careers.html'
+	});
+
+
+	///
 	// Contact Page
 	///
 
@@ -685,10 +695,30 @@ app.controller('LayoutMgmtController', function(
 		$scope.areas = args.areas;
 	}
 
+	if($scope.areas.length === 1) {
+		$scope.selArea = _.first($scope.areas).id;
+	}
+
 	$scope.areaName = $rootScope.areaName;
 	$scope.accessAccount = $rootScope.accessAccount;
 
 	$scope.credentials = {};
+
+	$scope.required = function(field) {
+		if(! $scope.submitted || field) return;
+	 	return 'error';
+	};
+
+	$scope.isFormComplete = function() {
+		var isComplete = true;
+		[
+			'fName', 'lName', 'phone', 'email', 'username', 'password',
+			'streetNumber', 'streetName', 'apt', 'city', 'state', 'zip',
+		].forEach(function(fieldName) {
+			isComplete = isComplete && $scope[fieldName];
+		});
+		return isComplete;
+	}
 
 	$scope.submit = function(credentials) {
 		$http.post(
@@ -711,6 +741,8 @@ app.controller('LayoutMgmtController', function(
 	};
 
 	$scope.createAccount = function() {
+		$scope.submitted = true;
+		if(! $scope.isFormComplete()) return;
 
 		var customer = {
 			areaId: $scope.selArea,
@@ -792,6 +824,8 @@ app.controller('LayoutController', function(
 	var sessionPromise = sessionMgr.getSessionPromise();
 
 	sessionPromise.then(function(sessionData) {
+		console.log('sessionData:');
+		console.log(sessionData);
 		if(sessionData.customerId) {
 			$scope.accessAccount = true;
 			$scope.customerId = sessionData.customerId;
@@ -858,13 +892,15 @@ app.controller('OrderMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope, sessionMgr
 ) {
 	$scope.item = args.item;
-	if($scope.item && $scope.item.options) {
-		$scope.itemOptionsLength = $scope.item.options.length;
-	}
 	$scope.thing = args.thing;
 	$scope.specInst = '';
 	$scope.quantity = 1;
 	$scope.selOption = '';
+
+	// If there's only one option, auto-choose it
+	if($scope.item && $scope.item.options && $scope.item.options.length === 1) {
+		$scope.selOption = _.first($scope.item.options).id;
+	}
 
 	$scope.addItemOption = function() {
 		var sessionPromise = sessionMgr.getSessionPromise();
@@ -1303,6 +1339,26 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 
 	p.error(function(err) {
 		console.log('AboutController: areas ajax failed');
+		console.log(err);
+	});
+
+	p.then(function(res) {
+		$scope.area = res.data;
+	});
+
+});
+
+
+///
+// Controllers: Careers
+///
+app.controller('CareersController', function($scope, $http, $routeParams, $rootScope) {
+	var areaId = $rootScope.areaId;
+
+	var p = $http.get('/areas/' + areaId);
+
+	p.error(function(err) {
+		console.log('CareersController: areas ajax failed');
 		console.log(err);
 	});
 

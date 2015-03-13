@@ -12,6 +12,26 @@ body {
 	height: 100%;
 }
 
+.no-margin {
+	margin-left: 0px!important;
+}
+
+.breakbeat5 {
+	margin-bottom: 5px;
+}
+.breakbeat8 {
+	margin-bottom: 5px;
+}
+.breakbeat12 {
+	margin-bottom: 12px;
+}
+.breakbeat20 {
+	margin-bottom: 20px;
+}
+input.error {
+	border: 1px solid red;
+}
+
 .logInSignUpLink {
 	top: -5px;
 	left: -28px;
@@ -92,6 +112,18 @@ td {
 #featuredHeadIcon {
 	position: relative;
 	z-index: 99;
+}
+
+#serviceStarts {
+	top: 0px;
+	left: 75%
+	position: relative;
+}
+
+.applyLink {
+	color: red;
+	font-weight: 700;
+	cursor: pointer;
 }
 
 .restInfo {
@@ -450,6 +482,12 @@ td {
 
 #total {
 	text-align: right;
+}
+
+.formError {
+	font-size: 14px;
+	font-weight: 500;
+	color: red;
 }
 
 .error {
