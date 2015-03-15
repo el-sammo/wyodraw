@@ -48,14 +48,8 @@ module.exports = {
     }).catch(function(err) {
       return next(err);
     });
-  },
-
-  afterCreate: function(attrs, next) {
-		console.log('attrs:');
-		console.log(attrs);
-
-		next();
   }
+
 };
 
 tablize(module.exports);
