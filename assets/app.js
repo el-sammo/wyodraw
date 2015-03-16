@@ -2,6 +2,7 @@
 var app = angular.module('app', ['ngRoute', 'ui.bootstrap'])
 var $ = jQuery;
 
+//var request = require('request-bluebird');
 
 ///
 // Routes
@@ -726,13 +727,13 @@ app.controller('LayoutMgmtController', function(
 		).success(function(data, status, headers, config) {
 		// if orders ajax succeeds...
 			if(status >= 400) {
-				$rootScope.$broadcast('customerLoggedIn', credentials.customerId);
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			} else if(status == 200) {
-				$rootScope.$broadcast('customerLoggedIn', credentials.customerId);
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 		 	} else {
-				$rootScope.$broadcast('customerLoggedIn', credentials.customerId);
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			}
 		}).error(function(err) {
@@ -856,6 +857,40 @@ app.controller('LayoutController', function(
 		$scope.accessAccount = true;
 		$scope.customerId = args;
 		$rootScope.customerId = args;
+
+		var sessionPromise = sessionMgr.getSessionPromise();
+
+		sessionPromise.then(function(sessionData) {
+			var r = $http.get('/orders/bySessionId/' +sessionData.sid);
+
+			// if orders ajax fails...
+			r.error(function(err) {
+				console.log('layoutMgmt: cLI-orders-get ajax failed');
+				console.log(err);
+			});
+									
+			// if orders ajax succeeds...
+			r.then(function(res) {
+				order = res.data[0];
+				order.customerId = args;
+
+				var s = $http.put('/orders/' + order.id, order);
+				
+				// if orders ajax fails...
+				s.error(function(err) {
+					console.log('layoutMgmt: cLI-orders-put ajax failed');
+					console.log(err);
+				});
+
+				s.then(function(res) {
+					console.log('wtf?!?');
+					$rootScope.$broadcast('orderChanged');
+					console.log('right?!?');
+					// TODO
+					// why doesn't this work?
+				});
+			});
+		});
 	});
 
 });
@@ -917,13 +952,11 @@ app.controller('OrderMgmtController', function(
 	
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.customerId) {
-				var orderCustomerId = sessionData.customerId;
+				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
 			} else {
-				var orderCustomerId = sessionData.sid;
+				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
 			}
 
-			var p = $http.get('/orders/byCustomerId/' + orderCustomerId);
-				
 			// if orders ajax fails...
 			p.error(function(err) {
 				console.log('OrderMgmtController: addItem-getOrder ajax failed');
@@ -1003,19 +1036,17 @@ app.controller('OrderMgmtController', function(
 					var deferred = $q.defer();
 
 					if(! order) {
-						var orderCustomerId;
 						if(sessionData.customerId) {
-							orderCustomerId = sessionData.customerId;
+							order = {
+								customerId: sessionData.customerId,
+								orderStatus: 1,
+							};
 						} else {
-							orderCustomerId = sessionData.sid;
+							order = {
+								orderStatus: 1,
+								sessionId: sessionData.sid,
+							};
 						}
-
-						order = {
-							customerId: orderCustomerId,
-							orderStatus: 1,
-							sessionId: sessionData.sid,
-						};
-
 					}
 
 					buildThings(order.things).then(function(things) {
@@ -1055,12 +1086,10 @@ app.controller('OrderMgmtController', function(
 	
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.customerId) {
-				var orderCustomerId = sessionData.customerId;
+				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
 			} else {
-				var orderCustomerId = sessionData.sid;
+				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
 			}
-	
-			var p = $http.get('/orders/byCustomerId/' + orderCustomerId);
 				
 			// if orders ajax fails...
 			p.error(function(err) {
@@ -1710,6 +1739,7 @@ app.controller('OrderController', function(
 	$scope.removeItem = orderMgmt.remove;
 
 	$rootScope.$on('orderChanged', function(evt, args) {
+		console.log('orderChanged heard');
 		$scope.updateOrder();
 	});
 
@@ -1718,12 +1748,11 @@ app.controller('OrderController', function(
 	
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.customerId) {
-				var orderCustomerId = sessionData.customerId;
+				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
 			} else {
-				var orderCustomerId = sessionData.sid;
+				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
 			}
 	
-			var p = $http.get('/orders/byCustomerId/' + orderCustomerId);
 			
 			// if orders ajax fails...
 			p.error(function(err) {
@@ -1748,7 +1777,6 @@ app.controller('OrderController', function(
 	};
 
 	$scope.updateTotals = function(order) {
-
 		var things = order.things;
 
 		var subtotal = 0;
@@ -1756,7 +1784,7 @@ app.controller('OrderController', function(
 		// TODO this should be configged on the area level
 		var taxRate = .05;
 		var multiplier = 100;
-		var deliverFee = 0;
+		var deliveryFee = 0;
 		var discount = 0;
 		var gratuity = 0;
 		var total = 0;
@@ -1781,73 +1809,164 @@ app.controller('OrderController', function(
 		var sessionPromise = sessionMgr.getSessionPromise();
 
 		sessionPromise.then(function(sessionData) {
-			deliveryFee = $scope.calculateDeliveryFee(sessionData.customerId, things);
+			var deliveryFeeTiers = [6.95, 9.95, 12.95];
+			deliveryFee = deliveryFeeTiers[0];
 
-			total = (Math.round((subtotal + tax + deliveryFee + discount + gratuity) * 100)/100);
-	
-			$scope.subtotal = subtotal.toFixed(2);
-			$scope.tax = tax.toFixed(2);
-			$scope.deliveryFee = deliveryFee.toFixed(2);
-			$scope.discount = discount.toFixed(2);
-			$scope.gratuity = gratuity.toFixed(2);
-			$scope.total = total.toFixed(2);
-	
-			order.subtotal = subtotal;
-			order.tax = tax;
-			order.deliveryFee = deliveryFee;
-			order.discount = discount;
-			order.total = total;
-	
-			var p = $http.put('/orders/' + order.id, order);
+			if(sessionData.customerId) {
+				var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
+
+				deliveryFeePromise.then(function(fee) {
+				
+					total = (Math.round((subtotal + tax + fee + discount + gratuity) * 100)/100);
 			
-			// if orders ajax fails...
-			p.error(function(err) {
-				console.log('OrderController: updateOrder ajax failed');
-				console.log(err);
-			});
+					$scope.subtotal = subtotal.toFixed(2);
+					$scope.tax = tax.toFixed(2);
+					$scope.deliveryFee = fee.toFixed(2);
+					$scope.discount = discount.toFixed(2);
+					$scope.gratuity = gratuity.toFixed(2);
+					$scope.total = total.toFixed(2);
+			
+					order.subtotal = subtotal;
+					order.tax = tax;
+					order.deliveryFee = $scope.deliveryFee;
+					order.discount = discount;
+					order.total = total;
+			
+					var p = $http.put('/orders/' + order.id, order);
+					
+					// if orders ajax fails...
+					p.error(function(err) {
+						console.log('OrderController: updateOrder ajax failed');
+						console.log(err);
+					});
+				});
+			} else {
+				total = (Math.round((subtotal + tax + deliveryFee + discount + gratuity) * 100)/100);
+		
+				$scope.subtotal = subtotal.toFixed(2);
+				$scope.tax = tax.toFixed(2);
+				$scope.deliveryFee = deliveryFee.toFixed(2);
+				$scope.discount = discount.toFixed(2);
+				$scope.gratuity = gratuity.toFixed(2);
+				$scope.total = total.toFixed(2);
+		
+				order.subtotal = subtotal;
+				order.tax = tax;
+				order.deliveryFee = $scope.deliveryFee;
+				order.discount = discount;
+				order.total = total;
+		
+				var p = $http.put('/orders/' + order.id, order);
+				
+				// if orders ajax fails...
+				p.error(function(err) {
+					console.log('OrderController: updateOrder ajax failed');
+					console.log(err);
+				});
+			}
 		});
 	};
 
 	$scope.calculateDeliveryFee = function(customerId, things) {
-		// time to fee
-		// '450': 6.95},
-		// '720': 9.95},
-		// '1050': 12.95}
-		var deliveryFeeTiers = [6.95, 9.95, 12.95];
-
-		if(things.length < 1) {
-			console.log('no things');
-		} else if(things.length === 1) {
-			return deliveryFeeTiers[0];
-		} else {
-			var t = $http.get('/customers/' + customerId);
-				
-			t.error(function(err) {
-				console.log('OrderController: calculateDeliveryFee-customer ajax failed');
-				console.log(err);
-			});
-				
-			t.then(function(res) {
-				var customer = res.data;
-
-				// time to fee
-				// '450': 6.95},
-				// '720': 9.95},
-				// '1050': 12.95}
-				things.map(function(thing) {
-					driveTime = $scope.getDriveTime(thing, customer);
+		return $q(function(resolve, reject) {
+			// time to fee
+			// '450': 6.95},
+			// '720': 9.95},
+			// '1050': 12.95}
+			var deliveryFeeTiers = [6.95, 9.95, 12.95];
+	
+			if(things.length < 2) {
+				resolve(deliveryFeeTiers[0]);
+			} else {
+				var t = $http.get('/customers/' + customerId);
+					
+				t.error(function(err) {
+					console.log('OrderController: calculateDeliveryFee-customer ajax failed');
+					console.log(err);
+					resolve(deliveryFeeTiers[0]);
 				});
-			});
-		}
-		return 6.95;
+					
+				t.then(function(res) {
+					var customer = res.data;
+	
+					var mostDriveTime = 0;
+					things.forEach(function(thing) {
+						var driveTime = $scope.getDriveTime(thing, customer);
+						if(driveTime > mostDriveTime) {
+							mostDriveTime = driveTime;
+						}
+					});
+	
+					// TODO turn debug off / on
+					var debug = true;
+	
+					if(debug) {
+						resolve(deliveryFeeTiers[0]);
+					}
+	
+					if(mostDriveTime <= 450) {
+						resolve(deliveryFeeTiers[0]);
+					} else if(mostDriveTime <= 720) {
+						resolve(deliveryFeeTiers[1]);
+					} else {
+						resolve(deliveryFeeTiers[2]);
+					}
+				});
+			}
+		});
 	};
 
 	$scope.getDriveTime = function(thing, customer) {
-		console.log('gDT - thing.restaurantName:');
-		console.log(thing.restaurantName);
-		console.log('gDT - customer:');
-		console.log(customer);
-		return 150;
+		var v = $http.get('/restaurants/' + thing.restaurantId);
+				
+		v.error(function(err) {
+			console.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
+			console.log(err);
+		});
+
+		// TODO turn debug off / on
+		var debug = true;
+
+		if(debug) {
+			var rotatorMin = 250;
+			var rotatorMax = 1280;
+			return Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
+		}
+				
+		v.then(function(res) {
+			var addresses = res.data.addresses;
+			var delivery = customer.addresses.primary;
+			request.getAsync({
+				uri: 'https://maps.googleapis.com/maps/api/distancematrix/json?',
+				qs: {
+					origins: [
+//						'\''+addresses[0].streetNumber+' '+addresses[0].streetName+' '+addresses[0].city+' '+addresses[0].state+' '+addresses[0].zip+'\'';
+						'229 Miracle St, Evansville WY 82636'
+					].join('|'),
+					destinations: [
+//						'\''+delivery.streetNumber+' '+delivery.streetName+' '+delivery.city+' '+delivery.state+' '+delivery.zip+'\'';
+						'4040 Dorset St, Casper WY 82609'
+					].join('+'),
+					key: 'AIzaSyCmRFaH2ROz5TueD8XapBCTAdBppUir_Bs'
+				},
+				headers: {
+					Referer: 'https://grub2you.com'
+				},
+				json: true,
+			}).then(function(res) {
+				var data = res.pop();
+				data.rows.forEach(function(row) {
+					row.elements.forEach(function(element) {
+						var duration = element.duration.value;
+						console.log(duration, 'seconds');
+						return duration;
+					});
+				});
+			}).catch(function(err) {
+				console.error(err);
+				return 150;
+			});
+		});
 	};
 
 	$scope.updateOrder();

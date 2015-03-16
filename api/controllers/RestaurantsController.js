@@ -28,6 +28,16 @@ module.exports = {
 		});
 	},
 
+	byName: function(req, res) {
+		Restaurants.findByName(req.params.id).sort({name: 'asc'}).then(function(results) {
+			res.send(JSON.stringify(results));
+		}).catch(function(err) {
+      res.json({error: 'Server error'}, 500);
+      console.error(err);
+      throw err;
+		});
+	},
+
 	featured: function(req, res) {
 		Restaurants.find({featured: 'true', areaId: req.params.id}).sort({name: 'asc'}).then(function(results) {
 			res.send(JSON.stringify(results));

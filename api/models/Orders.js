@@ -19,11 +19,11 @@ module.exports = {
     },
 		customerId: {
       type: 'string',
-      required: true
+      required: false
 		},
 		sessionId: {
       type: 'string',
-      required: true
+      required: false
 		}
   },
 
