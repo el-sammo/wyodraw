@@ -51,6 +51,12 @@ input.error {
 	position: relative;
 }
 
+#hpFooter {
+	margin-top: -135px;
+	padding: 40px 0 20px;
+	vertical-align: top;
+}
+
 footer {
 	margin-top: -135px;
 	padding: 40px 0 20px;
@@ -100,6 +106,44 @@ td {
 	width: 640px;
 	background-color: white;
 	position: relative;
+}
+
+#newsFeeder {
+	top: 164px;
+	position: relative;
+}
+
+#areaNewsHeader {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+.areaNewsHead {
+	font-size: 18px;
+	font-weight: 900;
+}
+
+.storyFeed {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#storySection {
+	left: 20px;
+	position: relative;
+}
+
+.storyHeadline {
+	font-size: 16px;
+	font-weight: 500;
+}
+
+.storyBody {
+	font-size: 14px;
+	font-weight: 300;
 }
 
 #featuredHeadContainer {

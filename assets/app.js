@@ -1203,12 +1203,86 @@ app.controller('OrderMgmtController', function(
 
 
 ///
+// Careers Management
+///
+
+app.factory('careersMgmt', function($modal, $rootScope) {
+	var service = {
+		apply: function(position) {
+			$modal.open({
+				templateUrl: '/templates/apply.html',
+				backdrop: true,
+				controller: 'CareersMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							position: position
+						}
+					}
+				}
+			});
+		}
+	};
+	return service;
+});
+
+app.controller('CareersMgmtController', function(
+	args, $scope, $modalInstance, $http, $rootScope
+) {
+
+	$scope.apply = function() {
+		var applicant = {
+			fName: $scope.fName,
+			lName: $scope.lName,
+			phone: $scope.phone,
+			email: $scope.email,
+			position: $scope.position
+		}
+	
+		$http.post(
+			'/applicants/create', applicant
+		).success(function(data, status, headers, config) {
+			// if applicants ajax succeeds...
+			if(status >= 400) {
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$modalInstance.dismiss('done');
+			} else {
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if applicants ajax fails...
+			console.log('CareersMgmtController: applicants-create ajax failed');
+			console.log(err);
+			$modalInstance.dismiss('cancel');
+		});
+	};
+});
+
+
+///
 // Controllers: Splash
 ///
 app.controller('SplashController', function($scope, $http, $rootScope) {
 	var areaId = $rootScope.areaId;
 	var areaName = $rootScope.areaName;
 	var areaPhone = $rootScope.areaPhone;
+
+	// Hide Footer on homepage only
+	$('footer').hide();
+
+	// News Feeder
+	
+	var t = $http.get('/stories/byAreaId/' + areaId);
+
+	t.error(function(err) {
+		console.log('SplashController: stories ajax failed');
+		console.log(err);
+	});
+
+	t.then(function(res) {
+		$scope.stories = res.data;
+	});
 
 	// Carousel
 	// http://codepen.io/Fabiano/pen/LACzk
@@ -1395,8 +1469,10 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 ///
 // Controllers: Careers
 ///
-app.controller('CareersController', function($scope, $http, $routeParams, $rootScope) {
+app.controller('CareersController', function($scope, $http, $routeParams, $rootScope, careersMgmt) {
 	var areaId = $rootScope.areaId;
+
+	$scope.apply = careersMgmt.apply;
 
 	var p = $http.get('/areas/' + areaId);
 
