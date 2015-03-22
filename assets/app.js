@@ -712,7 +712,7 @@ app.controller('LayoutMgmtController', function(
 		var isComplete = true;
 		[
 			'fName', 'lName', 'phone', 'email', 'username', 'password',
-			'streetNumber', 'streetName', 'apt', 'city', 'state', 'zip',
+			'streetNumber', 'streetName', 'city', 'state', 'zip',
 		].forEach(function(fieldName) {
 			isComplete = isComplete && $scope[fieldName];
 		});
@@ -744,7 +744,10 @@ app.controller('LayoutMgmtController', function(
 
 	$scope.createAccount = function() {
 		$scope.submitted = true;
-		if(! $scope.isFormComplete()) return;
+
+		if(! $scope.isFormComplete()) {
+			return;
+		}
 
 		var customer = {
 			areaId: $scope.selArea,
@@ -868,21 +871,26 @@ app.controller('LayoutController', function(
 			});
 									
 			// if orders ajax succeeds...
+console.log('order ajax succeeded');
 			r.then(function(res) {
-				order = res.data[0];
-				order.customerId = args;
-
-				var s = $http.put('/orders/' + order.id, order);
-				
-				// if orders ajax fails...
-				s.error(function(err) {
-					console.log('layoutMgmt: cLI-orders-put ajax failed');
-					console.log(err);
-				});
-
-				s.then(function(res) {
-					$rootScope.$broadcast('orderChanged');
-				});
+console.log('length', res.data.length);
+				if(res.data.length > 0) {
+					order = res.data[0];
+					order.customerId = $rootScope.customerId;
+	
+					var s = $http.put('/orders/' + order.id, order);
+					
+					// if orders ajax fails...
+					s.error(function(err) {
+						console.log('layoutMgmt: cLI-orders-put ajax failed');
+						console.log(err);
+					});
+	
+					s.then(function(res) {
+console.log('order changed');
+						$rootScope.$broadcast('orderChanged');
+					});
+				}
 			});
 		});
 	});
@@ -1035,12 +1043,12 @@ app.controller('OrderMgmtController', function(
 							order = {
 								customerId: sessionData.customerId,
 								areaId: $rootScope.areaId,
-								orderStatus: 1,
+								orderStatus: parseInt(1),
 							};
 						} else {
 							order = {
 								areaId: $rootScope.areaId,
-								orderStatus: 1,
+								orderStatus: parseInt(1),
 								sessionId: sessionData.sid,
 							};
 						}
@@ -2005,7 +2013,7 @@ app.controller('OrderController', function(
 		});
 
 		// TODO turn debug off / on
-		var debug = true;
+		var debug = false;
 
 		if(debug) {
 			var rotatorMin = 250;
@@ -2014,10 +2022,9 @@ app.controller('OrderController', function(
 		}
 				
 		v.then(function(res) {
-			console.log('got here');
 			var addresses = res.data.addresses;
 			var delivery = customer.addresses.primary;
-			$http.get('https://maps.googleapis.com/maps/api/distancematrix/json?', {
+			return $http.get('/distances/calc', {
 				params: {
 					origins: [
 //						'\''+addresses[0].streetNumber+' '+addresses[0].streetName+' '+addresses[0].city+' '+addresses[0].state+' '+addresses[0].zip+'\'';
@@ -2026,24 +2033,21 @@ app.controller('OrderController', function(
 					destinations: [
 //						'\''+delivery.streetNumber+' '+delivery.streetName+' '+delivery.city+' '+delivery.state+' '+delivery.zip+'\'';
 						'4040 Dorset St, Casper WY 82609'
-					].join('+'),
-					key: 'AIzaSyCmRFaH2ROz5TueD8XapBCTAdBppUir_Bs'
+					].join('+')
 				}
-			}).then(function(res) {
-				console.log('res:');
-				console.log(res);
-				var data = res.pop();
-				data.rows.forEach(function(row) {
-					row.elements.forEach(function(element) {
-						var duration = element.duration.value;
-						console.log(duration, 'seconds');
-						return duration;
-					});
-				});
-			}).catch(function(err) {
-				console.error(err);
-				return 150;
 			});
+		}).then(function(res) {
+			var data = res.data;
+			data.rows.forEach(function(row) {
+				row.elements.forEach(function(element) {
+					var duration = element.duration.value;
+					console.log(duration, 'seconds');
+					return duration;
+				});
+			});
+		}).catch(function(err) {
+			console.error(err);
+			return 150;
 		});
 	};
 
@@ -2281,5 +2285,32 @@ app.directive('holderJs', function() {
 			Holder.run({images:element[0]});
 		}
 	};
+});
+
+
+///
+// Focus On
+///
+
+/**
+ * Focus On - Sets focus to element when value evaluates to true.
+ *
+ * Example:
+ *
+ *   <input ng-show="! myVal" focus-on="! myVal">
+ *
+ */
+app.directive('focusOn',function($timeout) {
+	return {
+		restrict: 'A',
+		link: function($scope, element, attr) {
+			$scope.$watch(attr.focusOn, function(_focusVal) {
+				if(! _focusVal) return;
+				$timeout(function() {
+					$(element).focus();
+				});
+			});
+		}
+	}
 });
 

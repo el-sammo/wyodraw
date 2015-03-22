@@ -16,35 +16,35 @@
 		</div>
 		<br/>
 		<div class="row" ng-show="submitted && ! isFormComplete()" class="formError">
-			TODO: Error message here
+			<span class="error" style="left: 20px; position: relative;">All fields with an asterisk (*) are required. Please complete all required fields.</span>
 		</div>
 		<div class="row">
 			<div class="col-md-6">
 				<label for="fName">First Name*</label>
 				<input type="text" name="fName" class="form-control" required ng-model="fName" ng-class="required(fName)">
-				<label for="lName">Last Name:</label>
+				<label for="lName">Last Name*</label>
 				<input type="text" name="lName" class="form-control" required ng-model="lName" ng-class="required(lName)">
-				<label for="phone">Phone:</label>
+				<label for="phone">Phone*</label>
 				<input type="text" name="phone" class="form-control" required ng-model="phone" ng-class="required(phone)">
-				<label for="email">Email:</label>
+				<label for="email">Email*</label>
 				<input type="text" name="email" class="form-control" required ng-model="email" ng-class="required(email)">
-				<label for="username">Username:</label>
+				<label for="username">Username*</label>
 				<input type="text" name="username" class="form-control" required ng-model="username" ng-class="required(username)">
-				<label for="password">Password:</label>
+				<label for="password">Password*</label>
 				<input type="password" name="password" class="form-control" required ng-model="password" ng-class="required(password)">
 			</div>
 			<div class="col-md-6">
-				<label for="streetNumber">Address Number:</label>
+				<label for="streetNumber">Address Number*</label>
 				<input type="text" name="streetNumber" class="form-control" required ng-model="streetNumber" ng-class="required(streetNumber)">
-				<label for="streetName">Street Name:</label>
+				<label for="streetName">Street Name*</label>
 				<input type="text" name="streetName" class="form-control" required ng-model="streetName" ng-class="required(streetName)">
 				<label for="apt">Apt / Ste:</label>
 				<input type="text" name="apt" class="form-control" ng-model="apt">
-				<label for="city">City:</label>
+				<label for="city">City*</label>
 				<input type="text" name="city" class="form-control" required ng-model="city" ng-class="required(city)">
-				<label for="state">State:</label>
+				<label for="state">State*</label>
 				<input type="text" name="state" class="form-control" required ng-model="state" ng-class="required(state)">
-				<label for="zip">Zip:</label>
+				<label for="zip">Zip*</label>
 				<input type="text" name="zip" class="form-control" required ng-model="zip" ng-class="required(zip)">
 			</div>
 		</div>

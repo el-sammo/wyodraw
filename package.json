@@ -27,7 +27,8 @@
     "bcrypt": "*",
     "request-bluebird": "*",
     "bluebird": "*",
-		"nodemailer": "*"
+		"nodemailer": "*",
+		"then-redis": "*"
   },
   "scripts": {
     "start": "node app.js",
