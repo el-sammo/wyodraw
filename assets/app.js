@@ -2,8 +2,6 @@
 var app = angular.module('app', ['ngRoute', 'ui.bootstrap'])
 var $ = jQuery;
 
-//var request = require('request-bluebird');
-
 ///
 // Routes
 ///
@@ -883,11 +881,7 @@ app.controller('LayoutController', function(
 				});
 
 				s.then(function(res) {
-					console.log('wtf?!?');
 					$rootScope.$broadcast('orderChanged');
-					console.log('right?!?');
-					// TODO
-					// why doesn't this work?
 				});
 			});
 		});
@@ -936,6 +930,7 @@ app.factory('orderMgmt', function($modal, $rootScope) {
 app.controller('OrderMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope, sessionMgr, $q
 ) {
+	$('footer').show();
 	$scope.item = args.item;
 	$scope.thing = args.thing;
 	$scope.specInst = '';
@@ -1039,10 +1034,12 @@ app.controller('OrderMgmtController', function(
 						if(sessionData.customerId) {
 							order = {
 								customerId: sessionData.customerId,
+								areaId: $rootScope.areaId,
 								orderStatus: 1,
 							};
 						} else {
 							order = {
+								areaId: $rootScope.areaId,
 								orderStatus: 1,
 								sessionId: sessionData.sid,
 							};
@@ -1229,6 +1226,7 @@ app.factory('careersMgmt', function($modal, $rootScope) {
 app.controller('CareersMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope
 ) {
+	$('footer').show();
 
 	$scope.apply = function() {
 		var applicant = {
@@ -1449,6 +1447,7 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 // Controllers: About
 ///
 app.controller('AboutController', function($scope, $http, $routeParams, $rootScope, screenMgr) {
+	$('footer').show();
 	$scope.acHt = screenMgr.acHt;
 	var areaId = $rootScope.areaId;
 
@@ -1470,6 +1469,7 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 // Controllers: Careers
 ///
 app.controller('CareersController', function($scope, $http, $routeParams, $rootScope, careersMgmt) {
+	$('footer').show();
 	var areaId = $rootScope.areaId;
 
 	$scope.apply = careersMgmt.apply;
@@ -1492,6 +1492,7 @@ app.controller('CareersController', function($scope, $http, $routeParams, $rootS
 // Controllers: Contact
 ///
 app.controller('ContactController', function($scope, $http, $routeParams, $rootScope) {
+	$('footer').show();
 	var areaId = $rootScope.areaId;
 
 	var p = $http.get('/areas/' + areaId);
@@ -1512,6 +1513,7 @@ app.controller('ContactController', function($scope, $http, $routeParams, $rootS
 // Controllers: Privacy
 ///
 app.controller('PrivacyController', function($scope, $http, $routeParams, $rootScope) {
+	$('footer').show();
 });
 
 
@@ -1527,6 +1529,7 @@ app.controller('RestaurantsController', function(
 	messenger, $scope, $http, $routeParams,
 	$modal, orderMgmt, $rootScope, screenMgr
 ) {
+	$('footer').show();
 	var areaId = $rootScope.areaId;
 	$scope.acHt = screenMgr.acHt;
 
@@ -1795,6 +1798,7 @@ app.controller('OrderController', function(
 	$http, $routeParams, $modal, orderMgmt,
 	$rootScope, sessionMgr, $q
 ) {
+	$('footer').show();
 
 	// TODO
 	// put this in a config? or what?
@@ -2010,11 +2014,11 @@ app.controller('OrderController', function(
 		}
 				
 		v.then(function(res) {
+			console.log('got here');
 			var addresses = res.data.addresses;
 			var delivery = customer.addresses.primary;
-			request.getAsync({
-				uri: 'https://maps.googleapis.com/maps/api/distancematrix/json?',
-				qs: {
+			$http.get('https://maps.googleapis.com/maps/api/distancematrix/json?', {
+				params: {
 					origins: [
 //						'\''+addresses[0].streetNumber+' '+addresses[0].streetName+' '+addresses[0].city+' '+addresses[0].state+' '+addresses[0].zip+'\'';
 						'229 Miracle St, Evansville WY 82636'
@@ -2024,12 +2028,10 @@ app.controller('OrderController', function(
 						'4040 Dorset St, Casper WY 82609'
 					].join('+'),
 					key: 'AIzaSyCmRFaH2ROz5TueD8XapBCTAdBppUir_Bs'
-				},
-				headers: {
-					Referer: 'https://grub2you.com'
-				},
-				json: true,
+				}
 			}).then(function(res) {
+				console.log('res:');
+				console.log(res);
 				var data = res.pop();
 				data.rows.forEach(function(row) {
 					row.elements.forEach(function(element) {
@@ -2132,6 +2134,7 @@ app.factory('customerSchema', function() {
 
 
 app.controller('AccountController', function($scope, $http, $routeParams, $rootScope, sessionMgr, $window) {
+	$('footer').show();
 	var sessionPromise = sessionMgr.getSessionPromise();
 	
 	sessionPromise.then(function(sessionData) {
@@ -2182,6 +2185,7 @@ app.controller('AccountAddController', function(
 	navMgr, messenger, pod, customerSchema,
 	$scope, $http, $routeParams, $window, $rootScope
 ) {
+	$('footer').show();
 		
 	navMgr.protect(function() { return $scope.form.$dirty; });
 	pod.podize($scope);
@@ -2223,6 +2227,7 @@ app.controller('AccountAddController', function(
 app.controller('AccountEditController', function(
 	navMgr, messenger, pod, customerSchema, $scope, $http, $routeParams, $rootScope
 ) {
+	$('footer').show();
 	navMgr.protect(function() { return $scope.form.$dirty; });
 	pod.podize($scope);
 

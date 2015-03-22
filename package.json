@@ -25,7 +25,9 @@
     "grunt-contrib-coffee": "~0.10.1",
     "lodash": "*",
     "bcrypt": "*",
-    "request-bluebird": "*"
+    "request-bluebird": "*",
+    "bluebird": "*",
+		"nodemailer": "*"
   },
   "scripts": {
     "start": "node app.js",
