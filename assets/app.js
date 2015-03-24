@@ -242,6 +242,9 @@ app.factory('loginModal', function loginModalFactory($modal, $rootScope) {
 ///
 
 app.factory('screenMgr', function($rootScope, $window) {
+	// TODO
+	// consider: http://jsfiddle.net/zbjLh/136/
+	
 	var service = {
 		calculate: function() {
 			// TODO
@@ -257,6 +260,8 @@ app.factory('screenMgr', function($rootScope, $window) {
 			if(service.acHt < 20) {
 				service.acHt = 20;
 			}
+
+			console.log('service.acHt: '+service.acHt);
 		},
 
 		acHt: null
@@ -1242,7 +1247,8 @@ app.controller('CareersMgmtController', function(
 			lName: $scope.lName,
 			phone: $scope.phone,
 			email: $scope.email,
-			position: $scope.position
+			position: $scope.position,
+			areaId: $rootScope.areaId
 		}
 	
 		$http.post(
@@ -1821,6 +1827,9 @@ app.controller('OrderController', function(
 	// 7   = order picked up
 	// 8   = order en route
 	// 9   = order delivered
+	
+	// TODO put in controls that prevent a customer from, for instance, adding items
+	// to an order that has already been paid for
 	
 	$scope.addItem = orderMgmt.add;
 
