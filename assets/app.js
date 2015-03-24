@@ -260,8 +260,6 @@ app.factory('screenMgr', function($rootScope, $window) {
 			if(service.acHt < 20) {
 				service.acHt = 20;
 			}
-
-			console.log('service.acHt: '+service.acHt);
 		},
 
 		acHt: null
@@ -876,9 +874,7 @@ app.controller('LayoutController', function(
 			});
 									
 			// if orders ajax succeeds...
-console.log('order ajax succeeded');
 			r.then(function(res) {
-console.log('length', res.data.length);
 				if(res.data.length > 0) {
 					order = res.data[0];
 					order.customerId = $rootScope.customerId;
@@ -892,9 +888,10 @@ console.log('length', res.data.length);
 					});
 	
 					s.then(function(res) {
-console.log('order changed');
 						$rootScope.$broadcast('orderChanged');
 					});
+				} else {
+					$rootScope.$broadcast('orderChanged');
 				}
 			});
 		});
@@ -974,7 +971,6 @@ app.controller('OrderMgmtController', function(
 						
 			// if orders ajax succeeds...
 			p.then(function(res) {
-
 				function mergeThings(existingThing, thingToMerge) {
 					existingThing.quantity = (
 						parseInt(existingThing.quantity) + parseInt(thingToMerge.quantity)
@@ -1049,12 +1045,14 @@ app.controller('OrderMgmtController', function(
 								customerId: sessionData.customerId,
 								areaId: $rootScope.areaId,
 								orderStatus: parseInt(1),
+								orphaned: false
 							};
 						} else {
 							order = {
 								areaId: $rootScope.areaId,
 								orderStatus: parseInt(1),
 								sessionId: sessionData.sid,
+								orphaned: false
 							};
 						}
 					}
@@ -1168,7 +1166,7 @@ app.controller('OrderMgmtController', function(
 			var r = $http.get('/options/' + optionId);
 				
 			r.error(function(err) {
-				console.log('OrderDetailsController: getRestaurantName-options ajax failed');
+				console.log('OrderMgmtController: getRestaurantName-options ajax failed');
 				console.log(err);
 				reject(err);
 			});
@@ -1177,7 +1175,7 @@ app.controller('OrderMgmtController', function(
 				var s = $http.get('/items/' + res.data.itemId);
 					
 				s.error(function(err) {
-					console.log('OrderDetailsController: getRestaurantName-items ajax failed');
+					console.log('OrderMgmtController: getRestaurantName-items ajax failed');
 					console.log(err);
 					reject(err);
 				});
@@ -1186,7 +1184,7 @@ app.controller('OrderMgmtController', function(
 					var t = $http.get('/menus/' + res.data.menuId);
 						
 					t.error(function(err) {
-						console.log('OrderDetailsController: getRestaurantName-menus ajax failed');
+						console.log('OrderMgmtController: getRestaurantName-menus ajax failed');
 						console.log(err);
 						reject(err);
 					});
@@ -1195,7 +1193,7 @@ app.controller('OrderMgmtController', function(
 						var u = $http.get('/restaurants/' + res.data.restaurantId);
 							
 						u.error(function(err) {
-							console.log('OrderDetailsController: getRestaurantName-restaurants ajax failed');
+							console.log('OrderMgmtController: getRestaurantName-restaurants ajax failed');
 							console.log(err);
 							reject(err);
 						});
@@ -1836,7 +1834,6 @@ app.controller('OrderController', function(
 	$scope.removeItem = orderMgmt.remove;
 
 	$rootScope.$on('orderChanged', function(evt, args) {
-		console.log('orderChanged heard');
 		$scope.updateOrder();
 	});
 
@@ -1846,11 +1843,12 @@ app.controller('OrderController', function(
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.customerId) {
 				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
+			} else if($rootScope.customerId) {
+				var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
 			} else {
 				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
 			}
 	
-			
 			// if orders ajax fails...
 			p.error(function(err) {
 				console.log('OrderController: updateOrder ajax failed');
@@ -1859,13 +1857,21 @@ app.controller('OrderController', function(
 					
 			// if orders ajax succeeds...
 			p.then(function(res) {
-				// TODO properly get the only order that should be used
-				// here, we're cheating by selecting the first (and only)
 				if(res.data.length > 0) {
-					$scope.customerOrderExists = true;
-					$scope.orderStatus = parseInt(res.data[0].orderStatus);
-					$scope.things = res.data[0].things;
-					$scope.updateTotals(res.data[0]);
+					var order = res.data[0];
+					var rightNow = new Date().getTime();
+					var orderSecs = new Date(order.updatedAt).getTime();
+					var difference = rightNow - orderSecs;
+					if(difference >= 90000000) {
+						// this order is stale and the customer needs to start a new order
+						$scope.customerOrderExists = false;
+					} else {
+						// this order is fresh and we can continue using it
+						$scope.customerOrderExists = true;
+						$scope.orderStatus = parseInt(order.orderStatus);
+						$scope.things = order.things;
+						$scope.updateTotals(order);
+					}
 				} else {
 					$scope.customerOrderExists = false;
 				}
