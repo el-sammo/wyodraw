@@ -10,7 +10,7 @@
 						</div>
 						<div class="col-md-3" id="thingPrice">
 							<span ng-show="thing.quantity < 2 || !thing.quantity">{{thing.price}}</span>
-							<span ng-show="thing.quantity > 1">{{thing.quantity * thing.price}}</span>
+							<span ng-show="thing.quantity > 1">{{(thing.quantity * thing.price).toFixed(2)}}</span>
 							<br>
 							<div class="priceOptionRemove">
 								<span class="removeFromOrder" ng-init="thingId = thing.optionId" ng-click="removeItem(thing)">

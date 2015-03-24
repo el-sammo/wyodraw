@@ -1978,35 +1978,30 @@ app.controller('OrderController', function(
 			// '1050': 12.95}
 			var deliveryFeeTiers = [6.95, 9.95, 12.95];
 	
-			if(things.length < 2) {
+			var t = $http.get('/customers/' + customerId);
+					
+			t.error(function(err) {
+				console.log('OrderController: calculateDeliveryFee-customer ajax failed');
+				console.log(err);
 				resolve(deliveryFeeTiers[0]);
-			} else {
-				var t = $http.get('/customers/' + customerId);
+			});
 					
-				t.error(function(err) {
-					console.log('OrderController: calculateDeliveryFee-customer ajax failed');
-					console.log(err);
-					resolve(deliveryFeeTiers[0]);
-				});
-					
-				t.then(function(res) {
-					var customer = res.data;
+			t.then(function(res) {
+				var customer = res.data;
 	
+				var promises = [];
+				things.forEach(function(thing) {
+					promises.push(driveTimePromise = $scope.getDriveTime(thing, customer));
+				});
+
+				$q.all(promises).then(function(durations) {
 					var mostDriveTime = 0;
-					things.forEach(function(thing) {
-						var driveTime = $scope.getDriveTime(thing, customer);
-						if(driveTime > mostDriveTime) {
-							mostDriveTime = driveTime;
+					durations.forEach(function(duration) {
+						if(duration > mostDriveTime) {
+							mostDriveTime = duration;
 						}
 					});
-	
-					// TODO turn debug off / on
-					var debug = true;
-	
-					if(debug) {
-						resolve(deliveryFeeTiers[0]);
-					}
-	
+
 					if(mostDriveTime <= 450) {
 						resolve(deliveryFeeTiers[0]);
 					} else if(mostDriveTime <= 720) {
@@ -2015,57 +2010,55 @@ app.controller('OrderController', function(
 						resolve(deliveryFeeTiers[2]);
 					}
 				});
-			}
+			});
 		});
 	};
 
 	$scope.getDriveTime = function(thing, customer) {
-		var v = $http.get('/restaurants/' + thing.restaurantId);
-				
-		v.error(function(err) {
-			console.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
-			console.log(err);
-		});
-
-		// TODO turn debug off / on
-		var debug = false;
-
-		if(debug) {
-			var rotatorMin = 250;
-			var rotatorMax = 1280;
-			return Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
-		}
-				
-		v.then(function(res) {
-			var addresses = res.data.addresses;
-			var delivery = customer.addresses.primary;
-			return $http.get('/distances/calc', {
-				params: {
-					origins: [
-//						'\''+addresses[0].streetNumber+' '+addresses[0].streetName+' '+addresses[0].city+' '+addresses[0].state+' '+addresses[0].zip+'\'';
-						'229 Miracle St, Evansville WY 82636'
-					].join('|'),
-					destinations: [
-//						'\''+delivery.streetNumber+' '+delivery.streetName+' '+delivery.city+' '+delivery.state+' '+delivery.zip+'\'';
-						'4040 Dorset St, Casper WY 82609'
-					].join('+')
-				}
+		return $q(function(resolve, reject) {
+			var v = $http.get('/restaurants/' + thing.restaurantId);
+					
+			v.error(function(err) {
+				console.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
+				console.log(err);
 			});
-		}).then(function(res) {
-			var data = res.data;
-			data.rows.forEach(function(row) {
-				row.elements.forEach(function(element) {
-					var duration = element.duration.value;
-					console.log(duration, 'seconds');
-					return duration;
+	
+			// TODO turn debug off / on
+			var debug = false;
+	
+			if(debug) {
+				var rotatorMin = 250;
+				var rotatorMax = 1280;
+				return Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
+			}
+					
+			v.then(function(res) {
+				var addresses = res.data.addresses;
+				var delivery = customer.addresses.primary;
+				return $http.get('/distances/calc', {
+					params: {
+						origins: [
+							'\''+addresses[0].streetNumber+' '+addresses[0].streetName+' '+addresses[0].city+' '+addresses[0].state+' '+addresses[0].zip+'\''
+						].join('|'),
+						destinations: [
+							'\''+delivery.streetNumber+' '+delivery.streetName+' '+delivery.city+' '+delivery.state+' '+delivery.zip+'\''
+						].join('+')
+					}
 				});
+			}).then(function(res) {
+				var data = res.data;
+				data.rows.forEach(function(row) {
+					row.elements.forEach(function(element) {
+						var duration = element.duration.value;
+						resolve(duration);
+					});
+				});
+			}).catch(function(err) {
+				console.error(err);
+				resolve(150);
 			});
-		}).catch(function(err) {
-			console.error(err);
-			return 150;
 		});
 	};
-
 	$scope.updateOrder();
 });
 
