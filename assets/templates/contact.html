@@ -6,7 +6,7 @@
 					<div class="row" id="aboutStoryHead">
 						<h3>{{area.name}} Grub2You</h3>
 					</div>
-					<div class="row" id="aboutStoryBody">
+					<div class="row" id="aboutStoryBody" manage-height>
 						<span>Phone:</span><br/>
 						<span>{{area.franchisee.phone}}</span><br/><br/>
 						<span>Email:</span><br/>
@@ -20,7 +20,7 @@
 					<div class="row" id="aboutOtherHead">
 						<h3>Grub2You Corporate</h3>
 					</div>
-					<div class="row" id="aboutOtherBody">
+					<div class="row" id="aboutOtherBody" manage-height>
 						<span>Phone:</span><br/>
 						<span>{{corporate.phone}}</span><br/><br/>
 						<span>Email:</span><br/>
@@ -34,7 +34,7 @@
 					<div class="row" id="aboutDriversHead">
 						<h3>Employment Opportunities</h3>
 					</div>
-					<div class="row" id="aboutDriversBody">
+					<div class="row" id="aboutDriversBody" manage-height>
 						Our drivers are the most personal representation of our company. As such, we have the highest of expectations for their appearance, behavior, courtesy, customer service, professionalism and safe driving.<br/><br/>
 						A thorough background check is performed for each driver before he or she is permitted to deliver; the safety and comfort of our customers is of paramount importance to us.<br/><br/>
 						<span ng-show="area.hiring == 'true'"><a href="/apply" style="text-decoration: none;">Apply to be a Grub2You Driver</a><br/><br/></span>

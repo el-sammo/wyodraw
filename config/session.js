@@ -33,7 +33,7 @@ module.exports.session = {
 
   cookie: {
    maxAge: 7 * 24 * 60 * 60 * 1000
-  }
+  },
 
   /***************************************************************************
   *                                                                          *
@@ -67,11 +67,11 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  // adapter: 'mongo',
-  // host: 'localhost',
-  // port: 27017,
-  // db: 'sails',
-  // collection: 'sessions',
+  adapter: 'mongo',
+  host: 'localhost',
+  port: 27017,
+  db: 'grub2you',
+  collection: 'g2uSessions',
 
   /***************************************************************************
   *                                                                          *

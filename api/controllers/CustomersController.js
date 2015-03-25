@@ -83,10 +83,9 @@ module.exports = {
 			if(orders.length > 0) {
 				sessionData.orders = orders;
 			}
+
 			res.send(JSON.stringify(sessionData));
 		});
-
-		res.send(JSON.stringify(sessionData));
   },
 
   datatables: function(req, res) {

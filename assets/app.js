@@ -238,50 +238,34 @@ app.factory('loginModal', function loginModalFactory($modal, $rootScope) {
 
 
 ///
-// Screen Manager
+// Height Manager
 ///
 
-app.factory('screenMgr', function($rootScope, $window) {
-	// TODO
-	// consider: http://jsfiddle.net/zbjLh/136/
-	
-	var service = {
-		calculate: function() {
-			// TODO
-			// these first three values shouldn't be hard-coded
-			var pushDown = 220;
-			var footerHeight = 80;
-			var otherSpace = 42;
+app.directive('manageHeight', function($window) {
+	function getWindowHeight() {
+		return $(angular.element($window)).height();
+	}
 
-			// var screenHt = screen.height;
-			var screenHt = $(angular.element($window)).height();
+	function resizeElement(el, newHt) {
+		var adjHt = newHt - 342;
+		$(el).height(adjHt);
+	}
 
-			service.acHt = parseInt(screenHt) - parseInt(pushDown) - parseInt(footerHeight) - parseInt(otherSpace);
-			if(service.acHt < 20) {
-				service.acHt = 20;
-			}
-		},
+	return function ($scope, element) {
+		$scope.$watch(getWindowHeight, function(height) {
+			resizeElement(element, height);
+		}, true);
 
-		acHt: null
-	};
-
-	service.calculate();
-
-	angular.element($window).on('resize', function(evt) {
-		service.calculate();
-		$('#restaurantsMenusPanel').height(service.acHt);
-		$('#menuItemsPanel').height(service.acHt);
-		$('#orderPanel').height(service.acHt);
-		$('#aboutStoryBody').height(service.acHt);
-		$('#aboutOtherBody').height(service.acHt);
-		$('#aboutDriversBody').height(service.acHt);
-		$('#privacyMain').height(service.acHt);
-		$('#termsMain').height(service.acHt);
-	});
-
-	return service;
+		angular.element($window).bind('resize', function() {
+			$scope.$apply();
+		});
+	}
 });
 
+
+///
+// Login Controller
+///
 
 app.controller('LoginController', function(
 	$scope, $modalInstance, $http, $window
@@ -437,22 +421,20 @@ app.config(function($httpProvider) {
 // Event-Based Services Loader
 ///
 
-app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, screenMgr, sessionMgr) {});
+app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, sessionMgr) {});
 
 app.factory('sessionMgr', function($rootScope, $http, $q) {
 	var p = $http.get('/customers/session');
 			
 	var service = {
 		getSessionPromise: function() {
-			return $q(function(resolve, reject) {
-				p.then(function(sessionRes) {
-					resolve(sessionRes.data);
-				});
-				p.catch(function(err) {
-					console.log('AccountController: session ajax failed');
-					console.log(err);
-					reject(err);
-				});
+			p.catch(function(err) {
+				console.log('AccountController: session ajax failed');
+				console.log(err);
+			});
+
+			return p.then(function(sessionRes) {
+				return sessionRes.data;
 			});
 		}
 	};
@@ -956,14 +938,15 @@ app.controller('OrderMgmtController', function(
 		var sessionPromise = sessionMgr.getSessionPromise();
 	
 		sessionPromise.then(function(sessionData) {
+			var p;
 			if(sessionData.customerId) {
-				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
+				p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
 			} else {
-				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
+				p = $http.get('/orders/bySessionId/' + sessionData.sid);
 			}
 
 			// if orders ajax fails...
-			p.error(function(err) {
+			p.catch(function(err) {
 				console.log('OrderMgmtController: addItem-getOrder ajax failed');
 				console.log(err);
 				$modalInstance.dismiss('cancel');
@@ -1458,9 +1441,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 ///
 // Controllers: About
 ///
-app.controller('AboutController', function($scope, $http, $routeParams, $rootScope, screenMgr) {
+app.controller('AboutController', function($scope, $http, $routeParams, $rootScope) {
 	$('footer').show();
-	$scope.acHt = screenMgr.acHt;
 	var areaId = $rootScope.areaId;
 
 	var p = $http.get('/areas/' + areaId);
@@ -1539,11 +1521,10 @@ app.config(function(httpInterceptorProvider) {
 
 app.controller('RestaurantsController', function(
 	messenger, $scope, $http, $routeParams,
-	$modal, orderMgmt, $rootScope, screenMgr
+	$modal, orderMgmt, $rootScope
 ) {
 	$('footer').show();
 	var areaId = $rootScope.areaId;
-	$scope.acHt = screenMgr.acHt;
 
 	$scope.getUglySlug = function() {
 		// retrieve restaurants

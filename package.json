@@ -28,7 +28,9 @@
     "request-bluebird": "*",
     "bluebird": "*",
 		"nodemailer": "*",
-		"then-redis": "*"
+		"then-redis": "*",
+		"connect-mongo": "*",
+		"node-authorize-net": "*"
   },
   "scripts": {
     "start": "node app.js",
