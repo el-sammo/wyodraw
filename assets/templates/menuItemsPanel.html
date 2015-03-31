@@ -19,10 +19,14 @@
 							<span class="itemDesc">{{item.desc}}</span>
 							</br>
 							<div class="itemOptions" ng-repeat="option in item.options">
-								{{option.name}} ({{option.price}})
+								<span ng-show="option">{{option.name}} ({{option.price}})</span>
 							</div>
-							<span class="add2Order pull-left" ng-click="addItem(item)">
+							<span class="add2Order pull-left" ng-show="item.options.length > 0" ng-click="addItem(item)">
 								Add to Order
+								<br>
+							</span>
+							<span class="add2Order pull-left" ng-show="item.options.length < 1">
+								Not Available
 								<br>
 							</span>
 						</div>

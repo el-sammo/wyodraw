@@ -3,17 +3,37 @@ var app = angular.module('app', ['ngRoute', 'ui.bootstrap'])
 var $ = jQuery;
 
 ///
+// Configuration
+///
+
+app.config(['$httpProvider', function($httpProvider) {
+	$httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+}]);
+
+///
 // Routes
 ///
 
 app.config(function($routeProvider) {
 	///
+	// Tester Page
+	///
+
+	$routeProvider.when('/tester', {
+		controller: 'TesterController',
+		templateUrl: '/templates/tester.html'
+	});
+
+
+	///
 	// Splash Page
 	///
 
 	$routeProvider.when('/', {
-		controller: 'SplashController',
-		templateUrl: '/templates/index.html'
+		controller: 'RestaurantsController',
+		templateUrl: '/templates/restaurants.html'
+		//controller: 'SplashController',
+		//templateUrl: '/templates/index.html'
 	});
 
 
@@ -114,12 +134,45 @@ app.config(function($routeProvider) {
 
 
 ///
+// User Messaging
+///
+
+app.factory('messenger', function messengerFactory($rootScope) {
+	var service = {
+		show: function(msg, title) {
+			$rootScope.$broadcast('userMessage', {
+				message: msg,
+				title: title
+			});
+		}
+	};
+	return service;
+});
+
+app.controller('MessageController', function($scope) {
+	$scope.alertType = 'info';
+
+	$scope.close = function() {
+		$scope.title = '';
+		$scope.userMessage = '';
+	};
+
+	$scope.$on('userMessage', function(evt, args) {
+		$scope.title = args.title;
+		$scope.userMessage = args.message;
+	});
+});
+
+
+///
 // Navbar Management
 ///
 
 app.factory('navMgr', function navMgrFactory(
 	$rootScope, $location, $window, $modal
 ) {
+logger.log('test 1', {key: 'value', arr: ['one', 'two', 'three'], obj: {x: 'y'}});
+logger.error('test 2', {key: 'value', arr: ['one', 'two', 'three'], obj: {x: 'y'}});
 	var service = {
 		///
 		// Form navigation management
@@ -290,37 +343,6 @@ app.controller('LoginController', function(
 
 
 ///
-// User Messaging
-///
-
-app.factory('messenger', function messengerFactory($rootScope) {
-	var service = {
-		show: function(msg, title) {
-			$rootScope.$broadcast('userMessage', {
-				message: msg,
-				title: title
-			});
-		}
-	};
-	return service;
-});
-
-app.controller('MessageController', function($scope) {
-	$scope.alertType = 'info';
-
-	$scope.close = function() {
-		$scope.title = '';
-		$scope.userMessage = '';
-	};
-
-	$scope.$on('userMessage', function(evt, args) {
-		$scope.title = args.title;
-		$scope.userMessage = args.message;
-	});
-});
-
-
-///
 // HTTP interception
 ///
 
@@ -429,8 +451,8 @@ app.factory('sessionMgr', function($rootScope, $http, $q) {
 	var service = {
 		getSessionPromise: function() {
 			p.catch(function(err) {
-				console.log('AccountController: session ajax failed');
-				console.log(err);
+				logger.log('AccountController: session ajax failed');
+				logger.error(err);
 			});
 
 			return p.then(function(sessionRes) {
@@ -465,8 +487,8 @@ app.factory('fakeAuth', function($rootScope, $http) {
 			
 		// if areas ajax fails...
 		p.error(function(err) {
-			console.log('fakeAuthFactory: areas ajax failed');
-			console.log(err);
+			logger.log('fakeAuthFactory: areas ajax failed');
+			logger.error(err);
 		});
 					
 		// if areas ajax succeeds...
@@ -715,14 +737,15 @@ app.controller('LayoutMgmtController', function(
 			} else if(status == 200) {
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
+				$http.post('/mail/sendConfirmationToCustomer/'+data.customerId);
 		 	} else {
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			}
 		}).error(function(err) {
 			// if orders ajax fails...
-				console.log('LayoutMgmtController: logIn ajax failed');
-				console.log(err);
+				logger.log('LayoutMgmtController: logIn ajax failed');
+				logger.error(err);
 				$modalInstance.dismiss('cancel');
 		});
 	};
@@ -770,8 +793,8 @@ app.controller('LayoutMgmtController', function(
 			}
 		}).error(function(err) {
 			// if customers ajax fails...
-				console.log('LayoutMgmtController: customer-create ajax failed');
-				console.log(err);
+				logger.log('LayoutMgmtController: customer-create ajax failed');
+				logger.error(err);
 				$modalInstance.dismiss('cancel');
 		});
 	};
@@ -795,8 +818,8 @@ app.controller('LayoutMgmtController', function(
 			}
 		}).error(function(err) {
 			// if customers ajax fails...
-				console.log('LayoutMgmtController: logOut ajax failed');
-				console.log(err);
+				logger.log('LayoutMgmtController: logOut ajax failed');
+				logger.error(err);
 				$modalInstance.dismiss('cancel');
 		});
 	}
@@ -810,7 +833,7 @@ app.controller('LayoutMgmtController', function(
 
 
 app.controller('LayoutController', function(
-	navMgr, messenger, pod, $scope,
+	navMgr, pod, $scope,
 	$http, $routeParams, $modal, layoutMgmt,
 	$rootScope, sessionMgr
 ) {
@@ -825,8 +848,8 @@ app.controller('LayoutController', function(
 						
 		// if areas ajax fails...
 		p.error(function(err) {
-			console.log('layoutMgmt: areas ajax failed');
-			console.log(err);
+			logger.log('layoutMgmt: areas ajax failed');
+			logger.error(err);
 		});
 								
 		// if orders ajax succeeds...
@@ -851,8 +874,8 @@ app.controller('LayoutController', function(
 
 			// if orders ajax fails...
 			r.error(function(err) {
-				console.log('layoutMgmt: cLI-orders-get ajax failed');
-				console.log(err);
+				logger.log('layoutMgmt: cLI-orders-get ajax failed');
+				logger.error(err);
 			});
 									
 			// if orders ajax succeeds...
@@ -865,8 +888,8 @@ app.controller('LayoutController', function(
 					
 					// if orders ajax fails...
 					s.error(function(err) {
-						console.log('layoutMgmt: cLI-orders-put ajax failed');
-						console.log(err);
+						logger.log('layoutMgmt: cLI-orders-put ajax failed');
+						logger.error(err);
 					});
 	
 					s.then(function(res) {
@@ -947,8 +970,8 @@ app.controller('OrderMgmtController', function(
 
 			// if orders ajax fails...
 			p.catch(function(err) {
-				console.log('OrderMgmtController: addItem-getOrder ajax failed');
-				console.log(err);
+				logger.log('OrderMgmtController: addItem-getOrder ajax failed');
+				logger.error(err);
 				$modalInstance.dismiss('cancel');
 			});
 						
@@ -1062,8 +1085,8 @@ app.controller('OrderMgmtController', function(
 						$rootScope.$broadcast('orderChanged');
 						$modalInstance.dismiss('done');
 					}).catch(function(err) {
-						console.log('OrderMgmtController: Save order failed - ' + method + ' - ' + url);
-						console.log(err);
+						logger.log('OrderMgmtController: Save order failed - ' + method + ' - ' + url);
+						logger.error(err);
 						$modalInstance.dismiss('cancel');
 					});
 				});
@@ -1084,8 +1107,8 @@ app.controller('OrderMgmtController', function(
 				
 			// if orders ajax fails...
 			p.error(function(err) {
-				console.log('OrderMgmtController: addItem-getOrder ajax failed');
-				console.log(err);
+				logger.log('OrderMgmtController: addItem-getOrder ajax failed');
+				logger.error(err);
 				$modalInstance.dismiss('cancel');
 			});
 						
@@ -1130,8 +1153,8 @@ app.controller('OrderMgmtController', function(
 		
 				// if orders ajax fails...
 				r.error(function(err) {
-					console.log('OrderMgmtController: removeOption-put ajax failed');
-					console.log(err);
+					logger.log('OrderMgmtController: removeOption-put ajax failed');
+					logger.error(err);
 					$modalInstance.dismiss('cancel');
 				});
 							
@@ -1149,8 +1172,8 @@ app.controller('OrderMgmtController', function(
 			var r = $http.get('/options/' + optionId);
 				
 			r.error(function(err) {
-				console.log('OrderMgmtController: getRestaurantName-options ajax failed');
-				console.log(err);
+				logger.log('OrderMgmtController: getRestaurantName-options ajax failed');
+				logger.error(err);
 				reject(err);
 			});
 				
@@ -1158,8 +1181,8 @@ app.controller('OrderMgmtController', function(
 				var s = $http.get('/items/' + res.data.itemId);
 					
 				s.error(function(err) {
-					console.log('OrderMgmtController: getRestaurantName-items ajax failed');
-					console.log(err);
+					logger.log('OrderMgmtController: getRestaurantName-items ajax failed');
+					logger.error(err);
 					reject(err);
 				});
 					
@@ -1167,8 +1190,8 @@ app.controller('OrderMgmtController', function(
 					var t = $http.get('/menus/' + res.data.menuId);
 						
 					t.error(function(err) {
-						console.log('OrderMgmtController: getRestaurantName-menus ajax failed');
-						console.log(err);
+						logger.log('OrderMgmtController: getRestaurantName-menus ajax failed');
+						logger.error(err);
 						reject(err);
 					});
 						
@@ -1176,8 +1199,8 @@ app.controller('OrderMgmtController', function(
 						var u = $http.get('/restaurants/' + res.data.restaurantId);
 							
 						u.error(function(err) {
-							console.log('OrderMgmtController: getRestaurantName-restaurants ajax failed');
-							console.log(err);
+							logger.log('OrderMgmtController: getRestaurantName-restaurants ajax failed');
+							logger.error(err);
 							reject(err);
 						});
 							
@@ -1240,16 +1263,89 @@ app.controller('CareersMgmtController', function(
 				$modalInstance.dismiss('done');
 			} else if(status == 200) {
 				$modalInstance.dismiss('done');
+				$http.post('/mail/sendToApplicant/'+data.id);
+				messenger.show('Your application has been received.', 'Success!');
 			} else {
 				$modalInstance.dismiss('done');
 			}
 		}).error(function(err) {
 			// if applicants ajax fails...
-			console.log('CareersMgmtController: applicants-create ajax failed');
-			console.log(err);
+			logger.log('CareersMgmtController: applicants-create ajax failed');
+			logger.error(err);
 			$modalInstance.dismiss('cancel');
 		});
 	};
+});
+
+
+///
+// Tester Management
+///
+
+app.factory('testerMgmt', function($modal, $rootScope) {
+	var service = {
+		apply: function(position) {
+			$modal.open({
+				templateUrl: '/templates/testerApply.html',
+				backdrop: true,
+				controller: 'TesterMgmtController',
+				resolve: {
+					args: function() {
+						return {
+							position: position
+						}
+					}
+				}
+			});
+		}
+	};
+	return service;
+});
+
+app.controller('TesterMgmtController', function(
+	args, $scope, $modalInstance, $http, $rootScope, messenger
+) {
+	$('footer').show();
+
+	$scope.apply = function() {
+		var applicant = {
+			fName: $scope.fName,
+			lName: $scope.lName,
+			phone: $scope.phone,
+			email: $scope.email,
+			position: $scope.position,
+			areaId: $rootScope.areaId
+		}
+	
+		$http.post(
+			'/applicants/create', applicant
+		).success(function(data, status, headers, config) {
+			// if applicants ajax succeeds...
+			if(status >= 400) {
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$modalInstance.dismiss('done');
+				$http.post('/mail/sendToApplicant/'+data.id);
+				messenger.show('Your application has been received.', 'Success!');
+			} else {
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if applicants ajax fails...
+			logger.log('CareersMgmtController: applicants-create ajax failed');
+			logger.error(err);
+			$modalInstance.dismiss('cancel');
+		});
+	};
+});
+
+
+///
+// Controllers: Tester
+///
+app.controller('TesterController', function($scope, $http, $rootScope, testerMgmt) {
+	var areaId = $rootScope.areaId;
+	$scope.apply = testerMgmt.apply;
 });
 
 
@@ -1269,8 +1365,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 	var t = $http.get('/stories/byAreaId/' + areaId);
 
 	t.error(function(err) {
-		console.log('SplashController: stories ajax failed');
-		console.log(err);
+		logger.log('SplashController: stories ajax failed');
+		logger.error(err);
 	});
 
 	t.then(function(res) {
@@ -1284,8 +1380,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 	var p = $http.get('/restaurants/featured/' + areaId);
 
 	p.error(function(err) {
-		console.log('SplashController: restaurants ajax failed');
-		console.log(err);
+		logger.log('SplashController: restaurants ajax failed');
+		logger.error(err);
 	});
 
 	p.then(function(res) {
@@ -1397,8 +1493,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 		var r = $http.get('/menus/byRestaurantId/' + id);
 
 		r.error(function(err) {
-			console.log('SplashController: getItems-menus ajax failed');
-			console.log(err);
+			logger.log('SplashController: getItems-menus ajax failed');
+			logger.error(err);
 		});
 
 		r.then(function(res) {
@@ -1406,8 +1502,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 				var s = $http.get('/items/byMenuId/' + menu.id);
 		
 				s.error(function(err) {
-					console.log('SplashController: getItems-menus ajax failed');
-					console.log(err);
+					logger.log('SplashController: getItems-menus ajax failed');
+					logger.error(err);
 				});
 		
 				s.then(function(res) {
@@ -1434,7 +1530,6 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 			});
 		});
 	};
-
 });
 
 
@@ -1448,8 +1543,8 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 	var p = $http.get('/areas/' + areaId);
 
 	p.error(function(err) {
-		console.log('AboutController: areas ajax failed');
-		console.log(err);
+		logger.log('AboutController: areas ajax failed');
+		logger.error(err);
 	});
 
 	p.then(function(res) {
@@ -1471,8 +1566,8 @@ app.controller('CareersController', function($scope, $http, $routeParams, $rootS
 	var p = $http.get('/areas/' + areaId);
 
 	p.error(function(err) {
-		console.log('CareersController: areas ajax failed');
-		console.log(err);
+		logger.log('CareersController: areas ajax failed');
+		logger.error(err);
 	});
 
 	p.then(function(res) {
@@ -1492,8 +1587,8 @@ app.controller('ContactController', function($scope, $http, $routeParams, $rootS
 	var p = $http.get('/areas/' + areaId);
 
 	p.error(function(err) {
-		console.log('ContactController: areas ajax failed');
-		console.log(err);
+		logger.log('ContactController: areas ajax failed');
+		logger.error(err);
 	});
 
 	p.then(function(res) {
@@ -1520,7 +1615,7 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	messenger, $scope, $http, $routeParams,
+	$scope, $http, $routeParams,
 	$modal, orderMgmt, $rootScope
 ) {
 	$('footer').show();
@@ -1532,8 +1627,8 @@ app.controller('RestaurantsController', function(
 	
 		// if restaurants ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: getUglySlug-restaurants ajax failed');
-			console.log(err);
+			logger.log('RestaurantsController: getUglySlug-restaurants ajax failed');
+			logger.error(err);
 		});
 	
 		// if restaurants ajax succeeds...
@@ -1546,8 +1641,8 @@ app.controller('RestaurantsController', function(
 			
 			// if menus ajax fails...
 			r.error(function(err) {
-				console.log('RestaurantsController: getUglySlug-menus ajax failed');
-				console.log(err);
+				logger.log('RestaurantsController: getUglySlug-menus ajax failed');
+				logger.error(err);
 			});
 		
 			// if menus ajax succeeds...
@@ -1567,8 +1662,8 @@ app.controller('RestaurantsController', function(
 	
 		// if restaurants ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: restaurants ajax failed');
-			console.log(err);
+			logger.log('RestaurantsController: restaurants ajax failed');
+			logger.error(err);
 		});
 		
 		// if restaurants ajax succeeds...
@@ -1585,8 +1680,8 @@ app.controller('RestaurantsController', function(
 				
 				// if menus ajax fails...
 				r.error(function(err) {
-					console.log('RestaurantsController: returnMenus ajax failed');
-					console.log(err);
+					logger.log('RestaurantsController: returnMenus ajax failed');
+					logger.error(err);
 				});
 			
 				// if menus ajax succeeds...
@@ -1625,8 +1720,8 @@ app.controller('RestaurantsController', function(
 	
 		// if menus ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: getMenus ajax failed');
-			console.log(err);
+			logger.log('RestaurantsController: getMenus ajax failed');
+			logger.error(err);
 		});
 
 		// if menus ajax succeeds...
@@ -1647,8 +1742,8 @@ app.controller('RestaurantsController', function(
 	
 		// if items ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: getItems ajax failed');
-			console.log(err);
+			logger.log('RestaurantsController: getItems ajax failed');
+			logger.error(err);
 		});
 
 		// if items ajax succeeds...
@@ -1660,8 +1755,8 @@ app.controller('RestaurantsController', function(
 			
 				// if options ajax fails...
 				r.error(function(err) {
-					console.log('RestaurantsController: getItems-options ajax failed');
-					console.log(err);
+					logger.log('RestaurantsController: getItems-options ajax failed');
+					logger.error(err);
 				});
 		
 				// if options ajax succeeds...
@@ -1671,7 +1766,6 @@ app.controller('RestaurantsController', function(
 			});
 
 			$scope.items = allItems;
-
 		});
 	};
 
@@ -1728,8 +1822,8 @@ app.controller('RestaurantsController', function(
 	
 		// if restaurant ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: showRestaurant ajax failed');
-			console.log(err);
+			logger.log('RestaurantsController: showRestaurant ajax failed');
+			logger.error(err);
 		});
 
 		// if restaurant ajax succeeds...
@@ -1753,8 +1847,8 @@ app.controller('RestaurantsController', function(
 	
 		// if menu ajax fails...
 		p.error(function(err) {
-			console.log('RestaurantsController: showMenu ajax failed');
-			console.log(err);
+			logger.log('RestaurantsController: showMenu ajax failed');
+			logger.error(err);
 		});
 
 		// if menu ajax succeeds...
@@ -1787,7 +1881,7 @@ app.controller('RestaurantsController', function(
 ///
 
 app.controller('OrderController', function(
-	navMgr, messenger, pod, $scope,
+	navMgr, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
 	$rootScope, sessionMgr, $q
 ) {
@@ -1832,8 +1926,8 @@ app.controller('OrderController', function(
 	
 			// if orders ajax fails...
 			p.error(function(err) {
-				console.log('OrderController: updateOrder ajax failed');
-				console.log(err);
+				logger.log('OrderController: updateOrder ajax failed');
+				logger.error(err);
 			});
 					
 			// if orders ajax succeeds...
@@ -1920,8 +2014,8 @@ app.controller('OrderController', function(
 					
 					// if orders ajax fails...
 					p.error(function(err) {
-						console.log('OrderController: updateOrder ajax failed');
-						console.log(err);
+						logger.log('OrderController: updateOrder ajax failed');
+						logger.error(err);
 					});
 				});
 			} else {
@@ -1944,8 +2038,8 @@ app.controller('OrderController', function(
 				
 				// if orders ajax fails...
 				p.error(function(err) {
-					console.log('OrderController: updateOrder ajax failed');
-					console.log(err);
+					logger.log('OrderController: updateOrder ajax failed');
+					logger.error(err);
 				});
 			}
 		});
@@ -1962,8 +2056,8 @@ app.controller('OrderController', function(
 			var t = $http.get('/customers/' + customerId);
 					
 			t.error(function(err) {
-				console.log('OrderController: calculateDeliveryFee-customer ajax failed');
-				console.log(err);
+				logger.log('OrderController: calculateDeliveryFee-customer ajax failed');
+				logger.error(err);
 				resolve(deliveryFeeTiers[0]);
 			});
 					
@@ -2000,8 +2094,8 @@ app.controller('OrderController', function(
 			var v = $http.get('/restaurants/' + thing.restaurantId);
 					
 			v.error(function(err) {
-				console.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
-				console.log(err);
+				logger.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
+				logger.error(err);
 			});
 	
 			// TODO turn debug off / on
@@ -2142,14 +2236,14 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 		} else if($rootScope.customerId) {
 			customerId = $rootScope.customerId;
 		} else {
-			console.log('AccountController: customerId not found');
+			logger.log('AccountController: customerId not found');
 		}
 
 		var p = $http.get('/customers/' + customerId);
 	
 		p.error(function(err) {
-			console.log('AccountController: customers ajax failed');
-			console.log(err);
+			logger.log('AccountController: customers ajax failed');
+			logger.error(err);
 		});
 	
 		p.then(function(res) {
@@ -2159,8 +2253,8 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 		var r = $http.get('/orders/byCustomerId/' + customerId);
 	
 		r.error(function(err) {
-			console.log('AccountController: orders ajax failed');
-			console.log(err);
+			logger.log('AccountController: orders ajax failed');
+			logger.error(err);
 		});
 	
 		r.then(function(res) {
@@ -2175,7 +2269,7 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 });
 
 app.controller('AccountAddController', function(
-	navMgr, messenger, pod, customerSchema,
+	navMgr, pod, customerSchema,
 	$scope, $http, $routeParams, $window, $rootScope
 ) {
 	$('footer').show();
@@ -2199,13 +2293,6 @@ app.controller('AccountAddController', function(
 			'/customers/create', customer
 			).success(function(data, status, headers, config) {
 			if(status >= 400) return;
-
-			messenger.show('The account has been created.', 'Success!');
-
-			if(options.addMore) {
-				$scope.customer = {};
-				return;
-			}
 
 			navMgr.protect(false);
 			$window.location.href = '#/account/' + data.id;

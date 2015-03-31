@@ -30,7 +30,8 @@
 		"nodemailer": "*",
 		"then-redis": "*",
 		"connect-mongo": "*",
-		"node-authorize-net": "*"
+		"auth-net-types": "*",
+		"auth-net-cim": "*"
   },
   "scripts": {
     "start": "node app.js",

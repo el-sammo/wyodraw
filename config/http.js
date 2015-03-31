@@ -39,7 +39,8 @@ module.exports.http = {
       'compress',
       'methodOverride',
       'www',
-//      'authenticate',
+      'isAjax',
+      'cacheCtrl',
       'router',
       // 'favicon',
       '404',
@@ -52,18 +53,26 @@ module.exports.http = {
   *                                                                           *
   ****************************************************************************/
 
-  authenticate: function (req, res, next) {
-    if(req.session.isAuthenticated) return next();
-    var baseUrl = req.url.replace(/\?.*/, '');
+    isAjax: function(req, res, next) {
+      req.isAjax = function() {
+        return (
+          req.headers['x-requested-with'] === 'XMLHttpRequest'
+        ) ? true : false;
+      };
+      next();
+    },
 
-    if(baseUrl.match(/^\/$/) || baseUrl.match(/^\/login/)) return next();
-
-    if(req.headers.accept.match(/text\/html/)) {
-      return res.redirect('/login');
-    }
-    return res.json({error: 'Not authenticated', notAuthenticated: 1}, 401);
-  }
-
+    cacheCtrl: function(req, res, next) {
+      if(req.isAjax()) {
+        res.header(
+          'Cache-Control',
+          'private, no-cache, no-store, must-revalidate'
+        );
+        res.header('Expires', '-1');
+        res.header('Pragma', 'no-cache');
+      }
+      next();
+    },
 
   /***************************************************************************
   *                                                                          *

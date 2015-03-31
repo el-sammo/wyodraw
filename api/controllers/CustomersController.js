@@ -57,15 +57,6 @@ module.exports = {
 
 		if(req && req.sessionID) {
 			sessionData.sid = req.sessionID;
-		} else {
-			console.log('*****     we DON\'T have a req.sessionID for some reason     *****');
-			console.log('     ');
-			console.log('     ');
-			console.log('     ');
-		 	console.log(req);
-			console.log('     ');
-			console.log('     ');
-			console.log('     ');
 		}
 
 		if(req.session && req.session.customerId) {

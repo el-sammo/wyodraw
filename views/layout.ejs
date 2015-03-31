@@ -39,6 +39,76 @@
       <link href="//fonts.googleapis.com/css?family=Merriweather:400,900italic,900,700italic,700,400italic,300italic,300" rel="stylesheet" type="text/css">
     <!-- /TODO -->
 
+		<script>
+			(function(window) {
+				var logs = {
+					log: [],
+					error: []
+				};
+				function sendLogs() {
+					if(! console) return;
+console.log(logs);
+					while(logs.log.length > 0) {
+						var log = logs.log.shift();
+						console.log.apply(console, log);
+					}
+					while(logs.error.length > 0) {
+						var log = logs.error.shift();
+						console.error.apply(console, log);
+					}
+				}
+				function getArgs(argList) {
+					var args = [];
+					for(var argKey in argList) {
+						args.push(argList[argKey]);
+					}
+					return args;
+				}
+				function staticize(item) {
+					if(typeof item !== 'object') {
+						return item;
+					}
+
+					var newItem;
+
+					// Array
+					if(item.forEach) {
+						newItem = [];
+						item.forEach(function(sub) {
+							newItem.push(staticize(sub));
+						});
+						return newItem;
+					}
+
+					// Std object
+					newItem = {};
+					Object(item).keys().forEach(function(key) {
+						newItem[key] = staticize(item[key]);
+					});
+
+					return newItem;
+				}
+				function log(args, type) {
+					if(console) {
+						console[type].apply(console, args);
+					} else {
+						logs[type].push(staticize(args));
+					}
+					sendLogs();
+				}
+				// Logger shim
+				window.logger = {
+					log: function() {
+						var args = getArgs(arguments);
+						log(args, 'log');
+					},
+					error: function() {
+						var args = getArgs(arguments);
+						log(args, 'error');
+					}
+				};
+			})(window);
+		</script>
     <!-- Scripts -->
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-route.min.js"></script>
@@ -71,7 +141,7 @@
 		</footer>
 
     <!--SCRIPTS-->
-    <script src="/js/dependencies/sails.io.js"></script>
+    
     <!--SCRIPTS END-->
 
     <!-- TODO: Move to grunt -->
