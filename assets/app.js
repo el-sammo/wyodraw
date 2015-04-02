@@ -726,11 +726,39 @@ app.controller('LayoutMgmtController', function(
 		return isComplete;
 	}
 
+	$scope.createANetProfile = function(customer) {
+		var customerId = {customerId: customer.id};
+		$http.post(
+			'/customers/createANet', customerId
+		).success(function(data, status, headers, config) {
+		// if orders ajax succeeds...
+			if(status >= 400) {
+			} else if(status == 200) {
+				customer.aNetProfileId = data.customerProfileId;
+				console.log('customer:');
+				console.log(customer);
+				var s = $http.put('/customers/' + customer.id, customer);
+					
+				// if orders ajax fails...
+				s.error(function(err) {
+					logger.log('layoutMgmt: customer-put ajax failed');
+					logger.error(err);
+				});
+		 	} else {
+			}
+		}).error(function(err) {
+			// if createANet ajax fails...
+				logger.log('LayoutMgmtController: createANet ajax failed');
+				logger.error(err);
+				$modalInstance.dismiss('cancel');
+		});
+	};
+
 	$scope.submit = function(credentials) {
 		$http.post(
 			'/login', credentials
 		).success(function(data, status, headers, config) {
-		// if orders ajax succeeds...
+		// if login ajax succeeds...
 			if(status >= 400) {
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
@@ -784,12 +812,15 @@ app.controller('LayoutMgmtController', function(
 			if(status >= 400) {
 				$modalInstance.dismiss('done');
 				$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
+				$scope.createANetProfile(data);
 			} else if(status == 200) {
 				$modalInstance.dismiss('done');
 				$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
+				$scope.createANetProfile(data);
 		 	} else {
 				$modalInstance.dismiss('done');
 				$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
+				$scope.createANetProfile(data);
 			}
 		}).error(function(err) {
 			// if customers ajax fails...

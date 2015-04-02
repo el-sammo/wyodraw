@@ -14,7 +14,27 @@ var loginUrl = '/login';
 var layout = 'customers/loginLayout';
 var view = 'login';
 
+var Authorize = require('auth-net-types');
+var _AuthorizeCIM = require('auth-net-cim');
+var AuthorizeCIM = new _AuthorizeCIM(sails.config.authorizeNet);
+
 module.exports = {
+  createANet: function(req, res) {
+    var isAjax = req.headers.accept.match(/application\/json/);
+
+		if(req.body && req.body.customerId) {
+			return createANetProfile(req, res);
+		}
+  },
+
+	createPaymentMethod: function(req, res) {
+    var isAjax = req.headers.accept.match(/application\/json/);
+
+		if(req.body && req.body.customerProfileId && req.body.cardNumber && req.body.expirationDate) {
+			return createCustomerPaymentProfile(req, res);
+		}
+	},
+
   login: function(req, res) {
     var isAjax = req.headers.accept.match(/application\/json/);
 
@@ -137,6 +157,113 @@ function processLogin(req, res, self) {
 
     if(isAjax) {
       return res.send(JSON.stringify({success: true, customerId: req.session.customerId}));
+    }
+
+    return res.redirect(nextUrl);
+  };
+
+  function errorHandler(errMsg) {
+    return function(err) {
+      if(err) console.error(err);
+      respond(errMsg);
+    };
+  };
+}
+
+function createANetProfile(req, res, self) {
+  Customers.findOne(req.body.customerId).then(function(customer) {
+    if(! customer) {
+			console.log('customers ajax failed in CustomersController-createANetProfile()');
+	 		return errorHandler(customersError)();
+		}
+
+		AuthorizeCIM.createCustomerProfile({customerProfile: {
+				merchantCustomerId: 1521518,
+				description: customer.id,
+				email: customer.email
+			}
+    }, function(err, response) {
+			if(err) {
+				return errorHandler(aNetError)();
+			}
+      return res.send(JSON.stringify({success: true, customerProfileId: response.customerProfileId}));
+		});
+  });
+
+  ///
+  // Convenience subfunctions
+  ///
+
+  function respond(err) {
+    var isAjax = req.headers.accept.match(/application\/json/);
+    var errCode = 400;
+
+    if(err) {
+      if(isAjax) {
+        if(err == loginError) errCode = 401;
+        return res.send(JSON.stringify({error: err}), errCode);
+      }
+
+      return res.view({
+        layout: layout,
+        error: err
+      }, view);
+    }
+
+    return res.redirect(nextUrl);
+  };
+
+  function errorHandler(errMsg) {
+    return function(err) {
+      if(err) console.error(err);
+      respond(errMsg);
+    };
+  };
+}
+
+function createCustomerPaymentProfile(req, res, self) {
+	var customerProfileId = req.body.customerProfileId;
+	var cardNumber = req.body.cardNumber;
+	var expirationDate = req.body.expirationDate; // <-- format: YYYY-MM
+
+	var options = {
+		customerType: 'individual',
+		payment: new Authorize.Payment({
+			creditCard: new Authorize.CreditCard({
+				cardNumber: cardNumber,
+				expirationDate: expirationDate
+			})
+		})
+	};
+
+	AuthorizeCIM.createCustomerPaymentProfile({
+		customerProfileId: customerProfileId,
+		paymentProfile: options
+	}, function(err, response) {
+		if(err) {
+			return errorHandler(aNetError)();
+		}
+    return res.send(JSON.stringify({success: true, customerPaymentProfileId: response.customerPaymentProfileId, lastFour: req.body.cardNumber}));
+	});
+
+  ///
+  // Convenience subfunctions
+  ///
+
+  function respond(err) {
+    var isAjax = req.headers.accept.match(/application\/json/);
+    var errCode = 400;
+
+    if(err) {
+      if(isAjax) {
+        if(err == loginError) errCode = 401;
+        return res.send(JSON.stringify({error: err}), errCode);
+      }
+
+      return res.view({
+        layout: layout,
+        error: err
+      }, view);
     }
 
     return res.redirect(nextUrl);
