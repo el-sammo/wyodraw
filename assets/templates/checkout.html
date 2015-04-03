@@ -1,6 +1,6 @@
 <div class="modal-header">
   <h3 class="modal-title" id="nav-away-modal-title">
-		Checkout order: {{order.id}}
+		Checkout
   </h3>
 </div>
 <div class="modal-body">
@@ -16,8 +16,35 @@
 		</div>
 		<br/>
 		<div class="row">
-			<div class="col-md-6">
-				{{order.id}} - {{order.paymentMethods}} - {{order.updatedAt}} - {{order.customerId}} - {{order.joeblow}}
+			<div class="col-md-4">
+				<span class="gratuityLabel">Driver Tip?</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<input 
+					type="text" class="form-control col-md-10" placeholder=""
+					ng-model="gratuity" ng-blur="updateTotal()" id="gratuity"
+				>
+			</div>
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-md-4">
+				<span class="promoLabel">Promo Code?</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<input 
+					type="text" class="form-control col-md-10" placeholder=""
+					ng-model="promo" ng-blur="updateTotal()" id="promo"
+				>
+			</div>
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-md-4">
+				<span class="totalLabel">CurrentTotal</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<span class="currentTotal">{{currentTotal}}</span>
 			</div>
 		</div>
 	</form>
@@ -27,6 +54,6 @@
     <i class="fa fa-reply"></i> &nbsp; Go Back
   </button>
   <button type="button" class="btn btn-success pull-right" ng-click="checkout()" ng-disabled="!selMethod">
-    <i class="fa fa-plus"></i> &nbsp; Create Account
+    <i class="fa fa-plus"></i> &nbsp; Checkout
   </button>
 </div>

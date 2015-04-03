@@ -993,12 +993,100 @@ app.controller('CheckoutController', function(
 							
 	// if orders ajax succeeds...
 	p.then(function(res) {
+		var paymentMethods = res.data.paymentMethods;
+		paymentMethods.push({id: 'cash', lastFour: 'Cash'});
 		$scope.order.paymentMethods = res.data.paymentMethods;
 	});
+
+	$scope.getPromo = function(currentFee, promoCode) {
+		console.log('getPromo() called with a current fee of '+currentFee+' and a promo code: '+promoCode);
+		var newFee;
+
+		var p = $http.get('/promos/byName/' + promoCode);
+			
+		// if promos ajax fails...
+		p.error(function(err) {
+			console.log('CheckoutController: promos ajax failed');
+			console.error(err);
+			$modalInstance.dismiss('cancel');
+		});
+								
+		// if promos ajax succeeds...
+		p.then(function(res) {
+			if(res.data.length > 0) {
+				console.log('we have results');
+				var thisPromo = res.data[0];
+	
+				if(thisPromo.effect == 'reduce') {
+					newFee = parseFloat(currentFee) - parseFloat(thisPromo.amount);
+					return newFee;
+				}
+	
+				if(thisPromo.effect == 'replace') {
+					return thisPromo.amount;
+				}
+			} else {
+				console.log('we DON\'T have results');
+				return 'invalid code';
+			}
+		});
+	};
+
+	$scope.updateTotal = function() {
+		var total = (parseFloat($scope.order.subtotal) + parseFloat($scope.order.tax)).toFixed(2);
+		var gratuity = 0;
+		var promo = 7.95;
+		if($scope.order.deliveryFee) {
+			var promo = $scope.order.deliveryFee;
+		}
+		var currentTotal;
+
+		if($scope.gratuity) {
+			gratuity = parseFloat($scope.gratuity);
+		}
+
+		if($scope.promo) {
+			var p = $scope.getPromo(promo, $scope.promo);
+
+			p.error(function(err) {
+				console.log('we have an error');
+				console.log(err);
+			});
+
+			p.then(function(newFee) {
+				console.log('p:');
+				console.log(p);
+//				if(newFee == 'invalid code') {
+//					$scope.invalidCode = true;
+//
+//					currentTotal = parseFloat(total) + parseFloat(gratuity);
+//					$scope.currentTotal = currentTotal;
+//				} else {
+//					console.log('newFee:' +newFee);
+//					promo = newFee;
+//
+//					currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+//					$scope.currentTotal = currentTotal;
+//				}
+			});
+		} else {
+
+			console.log('total: '+total);
+			console.log('gratuity: '+gratuity);
+			console.log('promo: '+promo);
+	
+			currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+			$scope.currentTotal = currentTotal;
+		}
+	}
+
+	$scope.updateTotal();
 
 	$scope.checkout = function() {
 		console.log('$scope.checkout() called with:');
 		console.log($scope);
+		// we have $scope.order, $scope.selMethod (paymentMethodId - or 'cash'),
+		// $scope.gratuity, $scope.promo
 	};
 
 });
@@ -1124,6 +1212,10 @@ app.controller('OrderMgmtController', function(
 				order	= sessionData.order;
 			} else {
 				order = {};
+			}
+
+			if(!order.customerId && sessionData.customerId) {
+				order.customerId = sessionData.customerId;
 			}
 
 			var method = 'post';
