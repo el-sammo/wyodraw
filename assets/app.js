@@ -981,6 +981,8 @@ app.controller('CheckoutController', function(
 	}
 
 	$scope.order = args.order;
+	$scope.validCode = true;
+	$scope.effect;
 
 	var p = $http.get('/customers/' + $scope.order.customerId);
 		
@@ -999,35 +1001,24 @@ app.controller('CheckoutController', function(
 	});
 
 	$scope.getPromo = function(currentFee, promoCode) {
-		console.log('getPromo() called with a current fee of '+currentFee+' and a promo code: '+promoCode);
 		var newFee;
 
-		var p = $http.get('/promos/byName/' + promoCode);
-			
-		// if promos ajax fails...
-		p.error(function(err) {
-			console.log('CheckoutController: promos ajax failed');
-			console.error(err);
-			$modalInstance.dismiss('cancel');
-		});
-								
-		// if promos ajax succeeds...
-		p.then(function(res) {
+		return p = $http.get('/promos/byName/' + promoCode).then(function(res) {
 			if(res.data.length > 0) {
-				console.log('we have results');
 				var thisPromo = res.data[0];
+				var changeAmount;
 	
 				if(thisPromo.effect == 'reduce') {
-					newFee = parseFloat(currentFee) - parseFloat(thisPromo.amount);
-					return newFee;
+					changeAmount = parseFloat(currentFee) - parseFloat(thisPromo.amount);
 				}
 	
 				if(thisPromo.effect == 'replace') {
-					return thisPromo.amount;
+					changeAmount = thisPromo.amount;
 				}
+
+				return {effect: thisPromo.effect, amount: changeAmount, success: true};
 			} else {
-				console.log('we DON\'T have results');
-				return 'invalid code';
+				return {success: false};
 			}
 		});
 	};
@@ -1037,7 +1028,7 @@ app.controller('CheckoutController', function(
 		var gratuity = 0;
 		var promo = 7.95;
 		if($scope.order.deliveryFee) {
-			var promo = $scope.order.deliveryFee;
+			promo = $scope.order.deliveryFee;
 		}
 		var currentTotal;
 
@@ -1048,33 +1039,28 @@ app.controller('CheckoutController', function(
 		if($scope.promo) {
 			var p = $scope.getPromo(promo, $scope.promo);
 
-			p.error(function(err) {
-				console.log('we have an error');
-				console.log(err);
-			});
+			p.then(function(feeData) {
+				if(feeData.success) {
+					$scope.validCode = true;
+					promo = feeData.amount;
 
-			p.then(function(newFee) {
-				console.log('p:');
-				console.log(p);
-//				if(newFee == 'invalid code') {
-//					$scope.invalidCode = true;
-//
-//					currentTotal = parseFloat(total) + parseFloat(gratuity);
-//					$scope.currentTotal = currentTotal;
-//				} else {
-//					console.log('newFee:' +newFee);
-//					promo = newFee;
-//
-//					currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
-//					$scope.currentTotal = currentTotal;
-//				}
+					if(feeData.effect == 'reduce') {
+						$scope.codeEffect = 'Your delivery fee has been reduced by $' + (parseFloat($scope.order.deliveryFee) - parseFloat(promo)).toFixed(2) + '!';
+					} else {
+						$scope.codeEffect = 'Your delivery fee has been reduced to $' + (parseFloat(promo)).toFixed(2) + '!';
+					}
+
+					currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+					$scope.currentTotal = currentTotal;
+				} else {
+					$scope.validCode = false;
+
+					currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+					$scope.currentTotal = currentTotal;
+				}
 			});
 		} else {
 
-			console.log('total: '+total);
-			console.log('gratuity: '+gratuity);
-			console.log('promo: '+promo);
-	
 			currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
 			$scope.currentTotal = currentTotal;
 		}

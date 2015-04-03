@@ -73,9 +73,11 @@ module.exports = {
   },
 
 	session: function(req, res) {
-		var sessionData = {};
-		sessionData.order = {};
+		var sessionData = {
+			order: {},
+		};
 		var sessionOrder = {};
+		var customerOrder = {};
 
 		// Get order for session
 		var p = Orders.find({sessionId: req.sessionID, orphaned: false});
@@ -84,44 +86,29 @@ module.exports = {
 				sessionOrder = results[0];
 			}
 
-			var customerOrder = {};
 			if(! (req.session && req.session.customerId)) {
-				return [sessionOrder, customerOrder];
+				return;
 			}
 
 			// Get order for customer
 			return Orders.find({
 				'customerId': sessionData.customerId, 'orphaned': false
 			}).sort({updatedAt: 'desc'}).then(function(results) {
-				customerOrder = results[0];
-				return [sessionOrder, customerOrder];
+				if(results.length > 0) {
+					customerOrder = results[0];
+				}
+				return;
 			});
-		}).spread(function(sessionOrder, customerOrder) {
+
+		}).then(function() {
 			// Pick which order is the most recent and attach to sessionData
 			sessionOrder.updatedAt || (sessionOrder.updatedAt = 0);
 			customerOrder.updatedAt || (customerOrder.updatedAt = 0);
+
 			if(customerOrder.updatedAt >= sessionOrder.updatedAt) {
 				sessionData.order = customerOrder;
 			} else {
 				sessionData.order = sessionOrder;
-			}
-
-			// What if neither had any data at all? AKA a new session?
-			// I *THINK* we can check for this by determining the 
-			// presence of sessionId on sessionData.order
-			// I think we instantiate a new order with the req.sessionID
-			// attached to the order as sessionData.order.sessionId
-			if(!sessionData.order.sessionId) {
-				sessionData.order.sessionId = req.sessionID;
-				Orders.create(sessionData.order);
-			}
-
-			// Also, make sure that if the session order doesn't have a customer id,
-			// and a customer id is present, we set the customer id on the session
-			// order
-			if(! sessionOrder.customerId && req.session && req.session.customerId) {
-				sessionOrder.customerId = req.session.customerId;
-				Orders.update(sessionOrder.id, {customerId: sessionOrder.customerId});
 			}
 
 			// Build rest of sessionData
@@ -133,8 +120,32 @@ module.exports = {
 				sessionData.customerId = req.session.customerId;
 			}
 
+			// What if neither had any data at all? AKA a new session?
+			// I *THINK* we can check for this by determining the 
+			// presence of sessionId on sessionData.order
+			// I think we instantiate a new order with the req.sessionID
+			// attached to the order as sessionData.order.sessionId
+			if(!sessionData.order.sessionId) {
+				sessionData.order.sessionId = req.sessionID;
+				sessionData.order.orderStatus = parseInt('1');
+				return Orders.create(sessionData.order).then(function(order) {
+					_.extend(sessionData.order, order);
+					return;
+				});
+			}
+
+		}).then(function() {
+			// Also, make sure that if the session order doesn't have a customer id,
+			// and a customer id is present, we set the customer id on the session
+			// order
+			if(! sessionOrder.customerId && req.session && req.session.customerId) {
+				sessionOrder.customerId = req.session.customerId;
+				Orders.update(sessionOrder.id, {customerId: sessionOrder.customerId});
+			}
+
 			// Send session data
 			res.json(sessionData);
+
 		}).catch(function(err) {
 			res.json({error: 'Server error'}, 500);
 			console.error(err);
