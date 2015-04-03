@@ -1,0 +1,32 @@
+<div class="modal-header">
+  <h3 class="modal-title" id="nav-away-modal-title">
+		Checkout order: {{order.id}}
+  </h3>
+</div>
+<div class="modal-body">
+	<form name="checkoutForm">
+		<div class="row no-margin">
+			<h4>Select Your Payment Method</h4>
+			<div class="radio" ng-repeat="method in order.paymentMethods">
+				<label>
+					<input type="radio" name="method" ng-value="method.id" ng-model="$parent.selMethod">
+					{{method.lastFour}}
+				</label>
+			</div>
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-md-6">
+				{{order.id}} - {{order.paymentMethods}} - {{order.updatedAt}} - {{order.customerId}} - {{order.joeblow}}
+			</div>
+		</div>
+	</form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
+    <i class="fa fa-reply"></i> &nbsp; Go Back
+  </button>
+  <button type="button" class="btn btn-success pull-right" ng-click="checkout()" ng-disabled="!selMethod">
+    <i class="fa fa-plus"></i> &nbsp; Create Account
+  </button>
+</div>

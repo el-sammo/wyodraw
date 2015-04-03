@@ -528,6 +528,18 @@ td {
 	text-align: right;
 }
 
+#checkoutLink {
+	padding-top: 8px;
+	text-align: center;
+}
+
+.checkoutLink {
+	font-size: 18px;
+	font-weight: 900;
+	color: red;
+	cursor: pointer;
+}
+
 .formError {
 	font-size: 14px;
 	font-weight: 500;

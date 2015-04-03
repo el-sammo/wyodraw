@@ -171,8 +171,6 @@ app.controller('MessageController', function($scope) {
 app.factory('navMgr', function navMgrFactory(
 	$rootScope, $location, $window, $modal
 ) {
-logger.log('test 1', {key: 'value', arr: ['one', 'two', 'three'], obj: {x: 'y'}});
-logger.error('test 2', {key: 'value', arr: ['one', 'two', 'three'], obj: {x: 'y'}});
 	var service = {
 		///
 		// Form navigation management
@@ -446,17 +444,19 @@ app.config(function($httpProvider) {
 app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, sessionMgr) {});
 
 app.factory('sessionMgr', function($rootScope, $http, $q) {
-	var p = $http.get('/customers/session');
-			
 	var service = {
-		getSessionPromise: function() {
-			p.catch(function(err) {
-				logger.log('AccountController: session ajax failed');
-				logger.error(err);
-			});
-
-			return p.then(function(sessionRes) {
+		getSession: function() {
+			return $http.get('/customers/session').then(function(sessionRes) {
+				if(! (sessionRes && sessionRes.data)) {
+					return $q.reject(
+						'Invalid session response: ' + JSON.stringify(sessionRes)
+					);
+				}
 				return sessionRes.data;
+
+			}).catch(function(err) {
+				console.error(err);
+				$q.reject(err);
 			});
 		}
 	};
@@ -487,8 +487,8 @@ app.factory('fakeAuth', function($rootScope, $http) {
 			
 		// if areas ajax fails...
 		p.error(function(err) {
-			logger.log('fakeAuthFactory: areas ajax failed');
-			logger.error(err);
+			console.log('fakeAuthFactory: areas ajax failed');
+			console.error(err);
 		});
 					
 		// if areas ajax succeeds...
@@ -675,11 +675,10 @@ app.factory('layoutMgmt', function($modal, $rootScope, $http) {
 			});
 		},
 		signUp: function(areas) {
-
 			$modal.open({
 				templateUrl: '/templates/signUp.html',
 				backdrop: true,
-				controller: 'LayoutMgmtController',
+				controller: 'SignUpController',
 				resolve: {
 					args: function() {
 						return {
@@ -688,12 +687,12 @@ app.factory('layoutMgmt', function($modal, $rootScope, $http) {
 					}
 				}
 			});
-		}
+		},
 	};
 	return service;
 });
 
-app.controller('LayoutMgmtController', function(
+app.controller('SignUpController', function(
 	args, $scope, $modalInstance, $http, $rootScope, $window
 ) {
 
@@ -705,14 +704,22 @@ app.controller('LayoutMgmtController', function(
 		$scope.selArea = _.first($scope.areas).id;
 	}
 
-	$scope.areaName = $rootScope.areaName;
-	$scope.accessAccount = $rootScope.accessAccount;
+	$scope.usernameSearch = function() {
+		$scope.validUsername = true;
 
-	$scope.credentials = {};
-
-	$scope.required = function(field) {
-		if(! $scope.submitted || field) return;
-	 	return 'error';
+		var s = $http.get('/customers/byUsername/' + $scope.username);
+					
+		// if customers ajax fails...
+		s.error(function(err) {
+			console.log('layoutMgmt: sut-customersGet ajax failed');
+			console.error(err);
+		});
+	
+		s.then(function(res) {
+			if(res.data.length > 0) {
+				$scope.validUsername = false;
+			}
+		});
 	};
 
 	$scope.isFormComplete = function() {
@@ -724,58 +731,6 @@ app.controller('LayoutMgmtController', function(
 			isComplete = isComplete && $scope[fieldName];
 		});
 		return isComplete;
-	}
-
-	$scope.createANetProfile = function(customer) {
-		var customerId = {customerId: customer.id};
-		$http.post(
-			'/customers/createANet', customerId
-		).success(function(data, status, headers, config) {
-		// if orders ajax succeeds...
-			if(status >= 400) {
-			} else if(status == 200) {
-				customer.aNetProfileId = data.customerProfileId;
-				console.log('customer:');
-				console.log(customer);
-				var s = $http.put('/customers/' + customer.id, customer);
-					
-				// if orders ajax fails...
-				s.error(function(err) {
-					logger.log('layoutMgmt: customer-put ajax failed');
-					logger.error(err);
-				});
-		 	} else {
-			}
-		}).error(function(err) {
-			// if createANet ajax fails...
-				logger.log('LayoutMgmtController: createANet ajax failed');
-				logger.error(err);
-				$modalInstance.dismiss('cancel');
-		});
-	};
-
-	$scope.submit = function(credentials) {
-		$http.post(
-			'/login', credentials
-		).success(function(data, status, headers, config) {
-		// if login ajax succeeds...
-			if(status >= 400) {
-				$rootScope.$broadcast('customerLoggedIn', data.customerId);
-				$modalInstance.dismiss('done');
-			} else if(status == 200) {
-				$rootScope.$broadcast('customerLoggedIn', data.customerId);
-				$modalInstance.dismiss('done');
-				$http.post('/mail/sendConfirmationToCustomer/'+data.customerId);
-		 	} else {
-				$rootScope.$broadcast('customerLoggedIn', data.customerId);
-				$modalInstance.dismiss('done');
-			}
-		}).error(function(err) {
-			// if orders ajax fails...
-				logger.log('LayoutMgmtController: logIn ajax failed');
-				logger.error(err);
-				$modalInstance.dismiss('cancel');
-		});
 	};
 
 	$scope.createAccount = function() {
@@ -812,20 +767,81 @@ app.controller('LayoutMgmtController', function(
 			if(status >= 400) {
 				$modalInstance.dismiss('done');
 				$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
-				$scope.createANetProfile(data);
 			} else if(status == 200) {
 				$modalInstance.dismiss('done');
 				$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
-				$scope.createANetProfile(data);
+				$http.post('/mail/sendConfirmationToCustomer/'+data.id);
 		 	} else {
 				$modalInstance.dismiss('done');
 				$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
-				$scope.createANetProfile(data);
 			}
 		}).error(function(err) {
 			// if customers ajax fails...
-				logger.log('LayoutMgmtController: customer-create ajax failed');
-				logger.error(err);
+				console.log('LayoutMgmtController: customer-create ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+		});
+	};
+
+	$scope.submit = function(credentials) {
+		$http.post(
+			'/login', credentials
+		).success(function(data, status, headers, config) {
+		// if login ajax succeeds...
+			if(status >= 400) {
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				$modalInstance.dismiss('done');
+		 	} else {
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if orders ajax fails...
+				console.log('LayoutMgmtController: logIn ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+		});
+	};
+
+});
+
+
+app.controller('LayoutMgmtController', function(
+	args, $scope, $modalInstance, $http, $rootScope, $window
+) {
+
+	$scope.areaName = $rootScope.areaName;
+	$scope.accessAccount = $rootScope.accessAccount;
+
+	$scope.credentials = {};
+
+	$scope.required = function(field) {
+		if(! $scope.submitted || field) return;
+	 	return 'error';
+	};
+
+	$scope.submit = function(credentials) {
+		$http.post(
+			'/login', credentials
+		).success(function(data, status, headers, config) {
+		// if login ajax succeeds...
+			if(status >= 400) {
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				$modalInstance.dismiss('done');
+			} else if(status == 200) {
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				$modalInstance.dismiss('done');
+		 	} else {
+				$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				$modalInstance.dismiss('done');
+			}
+		}).error(function(err) {
+			// if orders ajax fails...
+				console.log('LayoutMgmtController: logIn ajax failed');
+				console.error(err);
 				$modalInstance.dismiss('cancel');
 		});
 	};
@@ -849,8 +865,8 @@ app.controller('LayoutMgmtController', function(
 			}
 		}).error(function(err) {
 			// if customers ajax fails...
-				logger.log('LayoutMgmtController: logOut ajax failed');
-				logger.error(err);
+				console.log('LayoutMgmtController: logOut ajax failed');
+				console.error(err);
 				$modalInstance.dismiss('cancel');
 		});
 	}
@@ -868,7 +884,7 @@ app.controller('LayoutController', function(
 	$http, $routeParams, $modal, layoutMgmt,
 	$rootScope, sessionMgr
 ) {
-	var sessionPromise = sessionMgr.getSessionPromise();
+	var sessionPromise = sessionMgr.getSession();
 
 	sessionPromise.then(function(sessionData) {
 		if(sessionData.customerId) {
@@ -879,8 +895,8 @@ app.controller('LayoutController', function(
 						
 		// if areas ajax fails...
 		p.error(function(err) {
-			logger.log('layoutMgmt: areas ajax failed');
-			logger.error(err);
+			console.log('layoutMgmt: areas ajax failed');
+			console.error(err);
 		});
 								
 		// if orders ajax succeeds...
@@ -896,41 +912,7 @@ app.controller('LayoutController', function(
 	$rootScope.$on('customerLoggedIn', function(evt, args) {
 		$scope.accessAccount = true;
 		$scope.customerId = args;
-		$rootScope.customerId = args;
-
-		var sessionPromise = sessionMgr.getSessionPromise();
-
-		sessionPromise.then(function(sessionData) {
-			var r = $http.get('/orders/bySessionId/' +sessionData.sid);
-
-			// if orders ajax fails...
-			r.error(function(err) {
-				logger.log('layoutMgmt: cLI-orders-get ajax failed');
-				logger.error(err);
-			});
-									
-			// if orders ajax succeeds...
-			r.then(function(res) {
-				if(res.data.length > 0) {
-					order = res.data[0];
-					order.customerId = $rootScope.customerId;
-	
-					var s = $http.put('/orders/' + order.id, order);
-					
-					// if orders ajax fails...
-					s.error(function(err) {
-						logger.log('layoutMgmt: cLI-orders-put ajax failed');
-						logger.error(err);
-					});
-	
-					s.then(function(res) {
-						$rootScope.$broadcast('orderChanged');
-					});
-				} else {
-					$rootScope.$broadcast('orderChanged');
-				}
-			});
-		});
+		$rootScope.$broadcast('orderChanged');
 	});
 
 });
@@ -939,8 +921,22 @@ app.controller('LayoutController', function(
 // Order Management
 ///
 
-app.factory('orderMgmt', function($modal, $rootScope) {
+app.factory('orderMgmt', function($modal, $rootScope, $http) {
 	var service = {
+		checkout: function(order) {
+			$modal.open({
+				templateUrl: '/templates/checkout.html',
+				backdrop: true,
+				controller: 'CheckoutController',
+				resolve: {
+					args: function() {
+						return {
+							order: order
+						}
+					}
+				}
+			});
+		},
 		add: function(item) {
 			$modal.open({
 				templateUrl: '/templates/addItemOptions.html',
@@ -973,6 +969,41 @@ app.factory('orderMgmt', function($modal, $rootScope) {
 	return service;
 });
 
+
+app.controller('CheckoutController', function(
+	args, $scope, $modalInstance, $http, $rootScope
+) {
+	
+	if(!args.order) {
+		console.error('no args');
+		$modalInstance.dismiss('cancel');
+		return;
+	}
+
+	$scope.order = args.order;
+
+	var p = $http.get('/customers/' + $scope.order.customerId);
+		
+	// if orders ajax fails...
+	p.error(function(err) {
+		console.log('OrderMgmtController: checkout-getCustomer ajax failed');
+		console.error(err);
+		$modalInstance.dismiss('cancel');
+	});
+							
+	// if orders ajax succeeds...
+	p.then(function(res) {
+		$scope.order.paymentMethods = res.data.paymentMethods;
+	});
+
+	$scope.checkout = function() {
+		console.log('$scope.checkout() called with:');
+		console.log($scope);
+	};
+
+});
+
+
 app.controller('OrderMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope, sessionMgr, $q
 ) {
@@ -989,182 +1020,149 @@ app.controller('OrderMgmtController', function(
 	}
 
 	$scope.addItemOption = function() {
-		var sessionPromise = sessionMgr.getSessionPromise();
+		var sessionPromise = sessionMgr.getSession();
 	
 		sessionPromise.then(function(sessionData) {
-			var p;
-			if(sessionData.customerId) {
-				p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
-			} else {
-				p = $http.get('/orders/bySessionId/' + sessionData.sid);
+
+			function mergeThings(existingThing, thingToMerge) {
+				existingThing.quantity = (
+					parseInt(existingThing.quantity) + parseInt(thingToMerge.quantity)
+				);
+
+				var specInst = [];
+				existingThing.specInst && specInst.push(existingThing.specInst);
+				thingToMerge.specInst && specInst.push(thingToMerge.specInst);
+				existingThing.specInst = specInst.join('; ');
 			}
 
-			// if orders ajax fails...
-			p.catch(function(err) {
-				logger.log('OrderMgmtController: addItem-getOrder ajax failed');
-				logger.error(err);
-				$modalInstance.dismiss('cancel');
-			});
-						
-			// if orders ajax succeeds...
-			p.then(function(res) {
-				function mergeThings(existingThing, thingToMerge) {
-					existingThing.quantity = (
-						parseInt(existingThing.quantity) + parseInt(thingToMerge.quantity)
-					);
+			function buildThings(existingThings) {
+				existingThings || (existingThings = []);
 
-					var specInst = [];
-					existingThing.specInst && specInst.push(existingThing.specInst);
-					thingToMerge.specInst && specInst.push(thingToMerge.specInst);
-					existingThing.specInst = specInst.join('; ');
-				}
-
-				function buildThings(existingThings) {
-					existingThings || (existingThings = []);
-
-					var selectedOption;
-					$scope.item.options.forEach(function(option) {
-						if($scope.selOption.localeCompare(option.id)) return;
-						selectedOption = option;
-					});
-
-					var deferred = $q.defer();
-
-					newThing(selectedOption).then(function(thingToAdd) {
-						var isDuplicate = false;
-						existingThings.forEach(function(existingThing) {
-							if(existingThing.optionId.localeCompare(thingToAdd.optionId)) return;
-							isDuplicate = true;
-							mergeThings(existingThing, thingToAdd);
-						});
-
-						if(! isDuplicate) {
-							existingThings.push(thingToAdd);
-						}
-
-						deferred.resolve(existingThings);
-					}).catch(deferred.reject);
-
-					return deferred.promise;
-				}
-
-				function newThing(option) {
-					var deferred = $q.defer();
-
-					var p = $scope.getRestaurant(option.id);
-					
-					p.then(function(data) {
-						var thing = {
-							name: $scope.item.name,
-							option: option.name,
-							optionId: option.id,
-							price: option.price,
-							quantity: $scope.quantity,
-							specInst: $scope.specInst,
-							restaurantName: data.name,
-							restaurantId: data.id
-						};
-
-						deferred.resolve(thing);
-					});
-
-					p.catch(deferred.reject);
-
-					return deferred.promise;
-				}
-
-				function buildOrder(order) {
-					var deferred = $q.defer();
-
-					if(! order) {
-						if(sessionData.customerId) {
-							order = {
-								customerId: sessionData.customerId,
-								areaId: $rootScope.areaId,
-								orderStatus: parseInt(1),
-								orphaned: false
-							};
-						} else {
-							order = {
-								areaId: $rootScope.areaId,
-								orderStatus: parseInt(1),
-								sessionId: sessionData.sid,
-								orphaned: false
-							};
-						}
-					}
-
-					buildThings(order.things).then(function(things) {
-						order.things = things;
-						deferred.resolve(order);
-					}).catch(deferred.reject);
-
-					return deferred.promise;
-				}
-
-				var order = _.first(res.data);
-				var method = 'post';
-				var url = '/orders/create';
-
-				if(order) {
-					method = 'put';
-					url = '/orders/' + order.id;
-				}
-
-				buildOrder(order).then(function(order) {
-					$http[method](url, order).then(function(res) {
-						$rootScope.$broadcast('orderChanged');
-						$modalInstance.dismiss('done');
-					}).catch(function(err) {
-						logger.log('OrderMgmtController: Save order failed - ' + method + ' - ' + url);
-						logger.error(err);
-						$modalInstance.dismiss('cancel');
-					});
+				var selectedOption;
+				$scope.item.options.forEach(function(option) {
+					if($scope.selOption.localeCompare(option.id)) return;
+					selectedOption = option;
 				});
 
+				var deferred = $q.defer();
+
+				newThing(selectedOption).then(function(thingToAdd) {
+					var isDuplicate = false;
+					existingThings.forEach(function(existingThing) {
+						if(existingThing.optionId.localeCompare(thingToAdd.optionId)) return;
+						isDuplicate = true;
+						mergeThings(existingThing, thingToAdd);
+					});
+
+					if(! isDuplicate) {
+						existingThings.push(thingToAdd);
+					}
+
+					deferred.resolve(existingThings);
+				}).catch(deferred.reject);
+
+				return deferred.promise;
+			}
+
+			function newThing(option) {
+				var deferred = $q.defer();
+
+				var p = $scope.getRestaurant(option.id);
+				
+				p.then(function(data) {
+					var thing = {
+						name: $scope.item.name,
+						option: option.name,
+						optionId: option.id,
+						price: option.price,
+						quantity: $scope.quantity,
+						specInst: $scope.specInst,
+						restaurantName: data.name,
+						restaurantId: data.id
+					};
+
+					deferred.resolve(thing);
+				});
+
+				p.catch(deferred.reject);
+
+				return deferred.promise;
+			}
+
+			function buildOrder(order) {
+				var deferred = $q.defer();
+
+				if(! order.orderStatus) {
+					if(sessionData.customerId) {
+						order = {
+							customerId: sessionData.customerId,
+							areaId: $rootScope.areaId,
+							orderStatus: parseInt(1),
+							sessionId: sessionData.sid,
+							orphaned: false
+						};
+					} else {
+						order = {
+							areaId: $rootScope.areaId,
+							orderStatus: parseInt(1),
+							sessionId: sessionData.sid,
+							orphaned: false
+						};
+					}
+				}
+
+				buildThings(order.things).then(function(things) {
+					order.things = things;
+					deferred.resolve(order);
+				}).catch(deferred.reject);
+
+				return deferred.promise;
+			}
+
+			var order;
+		 	if(sessionData.order) {
+				order	= sessionData.order;
+			} else {
+				order = {};
+			}
+
+			var method = 'post';
+			var url = '/orders/create';
+
+			if(order.orderStatus) {
+				method = 'put';
+				url = '/orders/' + order.id;
+			}
+
+			buildOrder(order).then(function(order) {
+				$http[method](url, order).then(function(res) {
+					$rootScope.$broadcast('orderChanged');
+					$modalInstance.dismiss('done');
+				}).catch(function(err) {
+					console.log('OrderMgmtController: Save order failed - ' + method + ' - ' + url);
+					console.error(err);
+					$modalInstance.dismiss('cancel');
+				});
 			});
 		});
 	};
 
 	$scope.removeThing = function() {
-		var sessionPromise = sessionMgr.getSessionPromise();
+		var sessionPromise = sessionMgr.getSession();
 	
 		sessionPromise.then(function(sessionData) {
-			if(sessionData.customerId) {
-				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
-			} else {
-				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
-			}
-				
-			// if orders ajax fails...
-			p.error(function(err) {
-				logger.log('OrderMgmtController: addItem-getOrder ajax failed');
-				logger.error(err);
-				$modalInstance.dismiss('cancel');
-			});
-						
-			// if orders ajax succeeds...
-			p.then(function(res) {
-				var things = res.data[0].things;
-	
-				var holdingMap = [];
-	
-				things.forEach(function(thing) {
-					if(!thing.optionId.localeCompare($scope.thing.optionId)) {
-						thing.quantity = (parseInt(thing.quantity) - parseInt($scope.quantity));
-						if(thing.quantity > 0) {
-							holdingMap.push({
-								'name': thing.name,
-								'option': thing.option,
-								'optionId': thing.optionId,
-								'price': thing.price,
-								'quantity': thing.quantity,
-								'specInst': thing.specInst,
-								'restaurantName': thing.restaurantName,
-								'restaurantId': thing.restaurantId
-							});
-						}
-					} else {
+			sessionData || (sessionData = {});
+			sessionData.order || (sessionData.order = {});
+			sessionData.order.things || (sessionData.order.things = []);
+
+			var things = sessionData.order.things;
+
+			var holdingMap = [];
+
+			things.forEach(function(thing) {
+				if(!thing.optionId.localeCompare($scope.thing.optionId)) {
+					thing.quantity = (parseInt(thing.quantity) - parseInt($scope.quantity));
+					if(thing.quantity > 0) {
 						holdingMap.push({
 							'name': thing.name,
 							'option': thing.option,
@@ -1176,24 +1174,35 @@ app.controller('OrderMgmtController', function(
 							'restaurantId': thing.restaurantId
 						});
 					}
-				});
-		
-				res.data[0].things = holdingMap;
-		
-				var r = $http.put('/orders/' + res.data[0].id, res.data[0]);
-		
-				// if orders ajax fails...
-				r.error(function(err) {
-					logger.log('OrderMgmtController: removeOption-put ajax failed');
-					logger.error(err);
-					$modalInstance.dismiss('cancel');
-				});
-							
-				// if orders ajax succeeds...
-				r.then(function(res) {
-					$rootScope.$broadcast('orderChanged');
-					$modalInstance.dismiss('done');
-				});
+				} else {
+					holdingMap.push({
+						'name': thing.name,
+						'option': thing.option,
+						'optionId': thing.optionId,
+						'price': thing.price,
+						'quantity': thing.quantity,
+						'specInst': thing.specInst,
+						'restaurantName': thing.restaurantName,
+						'restaurantId': thing.restaurantId
+					});
+				}
+			});
+	
+			sessionData.order.things = holdingMap;
+	
+			var r = $http.put('/orders/' + sessionData.order.id, sessionData.order);
+	
+			// if orders ajax fails...
+			r.catch(function(err) {
+				console.log('OrderMgmtController: removeOption-put ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+			});
+						
+			// if orders ajax succeeds...
+			r.then(function(res) {
+				$rootScope.$broadcast('orderChanged');
+				$modalInstance.dismiss('done');
 			});
 		});
 	};
@@ -1203,8 +1212,8 @@ app.controller('OrderMgmtController', function(
 			var r = $http.get('/options/' + optionId);
 				
 			r.error(function(err) {
-				logger.log('OrderMgmtController: getRestaurantName-options ajax failed');
-				logger.error(err);
+				console.log('OrderMgmtController: getRestaurantName-options ajax failed');
+				console.error(err);
 				reject(err);
 			});
 				
@@ -1212,8 +1221,8 @@ app.controller('OrderMgmtController', function(
 				var s = $http.get('/items/' + res.data.itemId);
 					
 				s.error(function(err) {
-					logger.log('OrderMgmtController: getRestaurantName-items ajax failed');
-					logger.error(err);
+					console.log('OrderMgmtController: getRestaurantName-items ajax failed');
+					console.error(err);
 					reject(err);
 				});
 					
@@ -1221,8 +1230,8 @@ app.controller('OrderMgmtController', function(
 					var t = $http.get('/menus/' + res.data.menuId);
 						
 					t.error(function(err) {
-						logger.log('OrderMgmtController: getRestaurantName-menus ajax failed');
-						logger.error(err);
+						console.log('OrderMgmtController: getRestaurantName-menus ajax failed');
+						console.error(err);
 						reject(err);
 					});
 						
@@ -1230,8 +1239,8 @@ app.controller('OrderMgmtController', function(
 						var u = $http.get('/restaurants/' + res.data.restaurantId);
 							
 						u.error(function(err) {
-							logger.log('OrderMgmtController: getRestaurantName-restaurants ajax failed');
-							logger.error(err);
+							console.log('OrderMgmtController: getRestaurantName-restaurants ajax failed');
+							console.error(err);
 							reject(err);
 						});
 							
@@ -1301,8 +1310,8 @@ app.controller('CareersMgmtController', function(
 			}
 		}).error(function(err) {
 			// if applicants ajax fails...
-			logger.log('CareersMgmtController: applicants-create ajax failed');
-			logger.error(err);
+			console.log('CareersMgmtController: applicants-create ajax failed');
+			console.error(err);
 			$modalInstance.dismiss('cancel');
 		});
 	};
@@ -1363,8 +1372,8 @@ app.controller('TesterMgmtController', function(
 			}
 		}).error(function(err) {
 			// if applicants ajax fails...
-			logger.log('CareersMgmtController: applicants-create ajax failed');
-			logger.error(err);
+			console.log('CareersMgmtController: applicants-create ajax failed');
+			console.error(err);
 			$modalInstance.dismiss('cancel');
 		});
 	};
@@ -1396,8 +1405,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 	var t = $http.get('/stories/byAreaId/' + areaId);
 
 	t.error(function(err) {
-		logger.log('SplashController: stories ajax failed');
-		logger.error(err);
+		console.log('SplashController: stories ajax failed');
+		console.error(err);
 	});
 
 	t.then(function(res) {
@@ -1411,8 +1420,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 	var p = $http.get('/restaurants/featured/' + areaId);
 
 	p.error(function(err) {
-		logger.log('SplashController: restaurants ajax failed');
-		logger.error(err);
+		console.log('SplashController: restaurants ajax failed');
+		console.error(err);
 	});
 
 	p.then(function(res) {
@@ -1524,8 +1533,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 		var r = $http.get('/menus/byRestaurantId/' + id);
 
 		r.error(function(err) {
-			logger.log('SplashController: getItems-menus ajax failed');
-			logger.error(err);
+			console.log('SplashController: getItems-menus ajax failed');
+			console.error(err);
 		});
 
 		r.then(function(res) {
@@ -1533,8 +1542,8 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 				var s = $http.get('/items/byMenuId/' + menu.id);
 		
 				s.error(function(err) {
-					logger.log('SplashController: getItems-menus ajax failed');
-					logger.error(err);
+					console.log('SplashController: getItems-menus ajax failed');
+					console.error(err);
 				});
 		
 				s.then(function(res) {
@@ -1574,8 +1583,8 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 	var p = $http.get('/areas/' + areaId);
 
 	p.error(function(err) {
-		logger.log('AboutController: areas ajax failed');
-		logger.error(err);
+		console.log('AboutController: areas ajax failed');
+		console.error(err);
 	});
 
 	p.then(function(res) {
@@ -1597,8 +1606,8 @@ app.controller('CareersController', function($scope, $http, $routeParams, $rootS
 	var p = $http.get('/areas/' + areaId);
 
 	p.error(function(err) {
-		logger.log('CareersController: areas ajax failed');
-		logger.error(err);
+		console.log('CareersController: areas ajax failed');
+		console.error(err);
 	});
 
 	p.then(function(res) {
@@ -1618,8 +1627,8 @@ app.controller('ContactController', function($scope, $http, $routeParams, $rootS
 	var p = $http.get('/areas/' + areaId);
 
 	p.error(function(err) {
-		logger.log('ContactController: areas ajax failed');
-		logger.error(err);
+		console.log('ContactController: areas ajax failed');
+		console.error(err);
 	});
 
 	p.then(function(res) {
@@ -1658,8 +1667,8 @@ app.controller('RestaurantsController', function(
 	
 		// if restaurants ajax fails...
 		p.error(function(err) {
-			logger.log('RestaurantsController: getUglySlug-restaurants ajax failed');
-			logger.error(err);
+			console.log('RestaurantsController: getUglySlug-restaurants ajax failed');
+			console.error(err);
 		});
 	
 		// if restaurants ajax succeeds...
@@ -1672,8 +1681,8 @@ app.controller('RestaurantsController', function(
 			
 			// if menus ajax fails...
 			r.error(function(err) {
-				logger.log('RestaurantsController: getUglySlug-menus ajax failed');
-				logger.error(err);
+				console.log('RestaurantsController: getUglySlug-menus ajax failed');
+				console.error(err);
 			});
 		
 			// if menus ajax succeeds...
@@ -1693,8 +1702,8 @@ app.controller('RestaurantsController', function(
 	
 		// if restaurants ajax fails...
 		p.error(function(err) {
-			logger.log('RestaurantsController: restaurants ajax failed');
-			logger.error(err);
+			console.log('RestaurantsController: restaurants ajax failed');
+			console.error(err);
 		});
 		
 		// if restaurants ajax succeeds...
@@ -1711,8 +1720,8 @@ app.controller('RestaurantsController', function(
 				
 				// if menus ajax fails...
 				r.error(function(err) {
-					logger.log('RestaurantsController: returnMenus ajax failed');
-					logger.error(err);
+					console.log('RestaurantsController: returnMenus ajax failed');
+					console.error(err);
 				});
 			
 				// if menus ajax succeeds...
@@ -1751,8 +1760,8 @@ app.controller('RestaurantsController', function(
 	
 		// if menus ajax fails...
 		p.error(function(err) {
-			logger.log('RestaurantsController: getMenus ajax failed');
-			logger.error(err);
+			console.log('RestaurantsController: getMenus ajax failed');
+			console.error(err);
 		});
 
 		// if menus ajax succeeds...
@@ -1773,8 +1782,8 @@ app.controller('RestaurantsController', function(
 	
 		// if items ajax fails...
 		p.error(function(err) {
-			logger.log('RestaurantsController: getItems ajax failed');
-			logger.error(err);
+			console.log('RestaurantsController: getItems ajax failed');
+			console.error(err);
 		});
 
 		// if items ajax succeeds...
@@ -1786,8 +1795,8 @@ app.controller('RestaurantsController', function(
 			
 				// if options ajax fails...
 				r.error(function(err) {
-					logger.log('RestaurantsController: getItems-options ajax failed');
-					logger.error(err);
+					console.log('RestaurantsController: getItems-options ajax failed');
+					console.error(err);
 				});
 		
 				// if options ajax succeeds...
@@ -1853,8 +1862,8 @@ app.controller('RestaurantsController', function(
 	
 		// if restaurant ajax fails...
 		p.error(function(err) {
-			logger.log('RestaurantsController: showRestaurant ajax failed');
-			logger.error(err);
+			console.log('RestaurantsController: showRestaurant ajax failed');
+			console.error(err);
 		});
 
 		// if restaurant ajax succeeds...
@@ -1878,8 +1887,8 @@ app.controller('RestaurantsController', function(
 	
 		// if menu ajax fails...
 		p.error(function(err) {
-			logger.log('RestaurantsController: showMenu ajax failed');
-			logger.error(err);
+			console.log('RestaurantsController: showMenu ajax failed');
+			console.error(err);
 		});
 
 		// if menu ajax succeeds...
@@ -1939,54 +1948,38 @@ app.controller('OrderController', function(
 
 	$scope.removeItem = orderMgmt.remove;
 
+	$scope.checkout = orderMgmt.checkout;
+
 	$rootScope.$on('orderChanged', function(evt, args) {
 		$scope.updateOrder();
 	});
 
 	$scope.updateOrder = function() {
-		var sessionPromise = sessionMgr.getSessionPromise();
+		var sessionPromise = sessionMgr.getSession();
 	
 		sessionPromise.then(function(sessionData) {
-			if(sessionData.customerId) {
-				var p = $http.get('/orders/byCustomerId/' + sessionData.customerId);
-			} else if($rootScope.customerId) {
-				var p = $http.get('/orders/byCustomerId/' + $rootScope.customerId);
-			} else {
-				var p = $http.get('/orders/bySessionId/' + sessionData.sid);
-			}
-	
-			// if orders ajax fails...
-			p.error(function(err) {
-				logger.log('OrderController: updateOrder ajax failed');
-				logger.error(err);
-			});
-					
-			// if orders ajax succeeds...
-			p.then(function(res) {
-				if(res.data.length > 0) {
-					var order = res.data[0];
-					var rightNow = new Date().getTime();
-					var orderSecs = new Date(order.updatedAt).getTime();
-					var difference = rightNow - orderSecs;
-					if(difference >= 90000000) {
-						// this order is stale and the customer needs to start a new order
-						$scope.customerOrderExists = false;
-					} else {
-						// this order is fresh and we can continue using it
-						$scope.customerOrderExists = true;
-						$scope.orderStatus = parseInt(order.orderStatus);
-						$scope.things = order.things;
-						$scope.updateTotals(order);
-					}
-				} else {
-					$scope.customerOrderExists = false;
+			if(sessionData.order) {
+				var order = sessionData.order;
+				$scope.showCheckout = false;
+				$scope.orderStatus = parseInt(order.orderStatus);
+				$scope.order = order;
+				$scope.things = order.things;
+				// TODO Debugging code
+				if(sessionData.customerId == '551aa68dd3de33800d077215') {
+					$scope.showCheckout = true;
 				}
-			});
+				$scope.updateTotals(order);
+			}
 		});
 	};
 
 	$scope.updateTotals = function(order) {
-		var things = order.things;
+		var things;
+		if(order.things) {
+			things = order.things;
+		} else {
+			things = [];
+		}
 
 		var subtotal = 0;
 		var tax = 0;
@@ -1998,16 +1991,18 @@ app.controller('OrderController', function(
 		var gratuity = 0;
 		var total = 0;
 
-		things.forEach(function(thing) {
-			var lineTotal;
-
-			if(thing.quantity && thing.quantity > 1) {
-				lineTotal = parseFloat(thing.price) * thing.quantity;
-			} else {
-				lineTotal = parseFloat(thing.price);
-			}
-			subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
-		});
+		if(things.length > 0) {
+			things.forEach(function(thing) {
+				var lineTotal;
+	
+				if(thing.quantity && thing.quantity > 1) {
+					lineTotal = parseFloat(thing.price) * thing.quantity;
+				} else {
+					lineTotal = parseFloat(thing.price);
+				}
+				subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
+			});
+		}
 
 		tax = (Math.round((subtotal * taxRate) * 100) / 100);
 
@@ -2015,22 +2010,47 @@ app.controller('OrderController', function(
 			gratuity = order.gratuity;
 		}
 
-		var sessionPromise = sessionMgr.getSessionPromise();
+		var sessionPromise = sessionMgr.getSession();
 
 		sessionPromise.then(function(sessionData) {
-			var deliveryFeeTiers = [6.95, 9.95, 12.95];
-			deliveryFee = deliveryFeeTiers[0];
-
-			if(sessionData.customerId) {
-				var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
-
-				deliveryFeePromise.then(function(fee) {
+			if(sessionData.order && sessionData.order.things) {
+				var deliveryFeeTiers = [7.95, 10.95, 13.95];
+				deliveryFee = deliveryFeeTiers[0];
+	
+				if(sessionData.customerId) {
+					var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
+	
+					deliveryFeePromise.then(function(fee) {
+					
+						total = (Math.round((subtotal + tax + fee + discount + gratuity) * 100)/100);
 				
-					total = (Math.round((subtotal + tax + fee + discount + gratuity) * 100)/100);
+						$scope.subtotal = subtotal.toFixed(2);
+						$scope.tax = tax.toFixed(2);
+						$scope.deliveryFee = fee.toFixed(2);
+						$scope.discount = discount.toFixed(2);
+						$scope.gratuity = gratuity.toFixed(2);
+						$scope.total = total.toFixed(2);
+				
+						order.subtotal = subtotal;
+						order.tax = tax;
+						order.deliveryFee = $scope.deliveryFee;
+						order.discount = discount;
+						order.total = total;
+				
+						var p = $http.put('/orders/' + order.id, order);
+						
+						// if orders ajax fails...
+						p.error(function(err) {
+							console.log('OrderController: updateOrder ajax failed');
+							console.error(err);
+						});
+					});
+				} else {
+					total = (Math.round((subtotal + tax + deliveryFee + discount + gratuity) * 100)/100);
 			
 					$scope.subtotal = subtotal.toFixed(2);
 					$scope.tax = tax.toFixed(2);
-					$scope.deliveryFee = fee.toFixed(2);
+					$scope.deliveryFee = deliveryFee.toFixed(2);
 					$scope.discount = discount.toFixed(2);
 					$scope.gratuity = gratuity.toFixed(2);
 					$scope.total = total.toFixed(2);
@@ -2045,33 +2065,10 @@ app.controller('OrderController', function(
 					
 					// if orders ajax fails...
 					p.error(function(err) {
-						logger.log('OrderController: updateOrder ajax failed');
-						logger.error(err);
+						console.log('OrderController: updateOrder ajax failed');
+						console.error(err);
 					});
-				});
-			} else {
-				total = (Math.round((subtotal + tax + deliveryFee + discount + gratuity) * 100)/100);
-		
-				$scope.subtotal = subtotal.toFixed(2);
-				$scope.tax = tax.toFixed(2);
-				$scope.deliveryFee = deliveryFee.toFixed(2);
-				$scope.discount = discount.toFixed(2);
-				$scope.gratuity = gratuity.toFixed(2);
-				$scope.total = total.toFixed(2);
-		
-				order.subtotal = subtotal;
-				order.tax = tax;
-				order.deliveryFee = $scope.deliveryFee;
-				order.discount = discount;
-				order.total = total;
-		
-				var p = $http.put('/orders/' + order.id, order);
-				
-				// if orders ajax fails...
-				p.error(function(err) {
-					logger.log('OrderController: updateOrder ajax failed');
-					logger.error(err);
-				});
+				}
 			}
 		});
 	};
@@ -2087,8 +2084,8 @@ app.controller('OrderController', function(
 			var t = $http.get('/customers/' + customerId);
 					
 			t.error(function(err) {
-				logger.log('OrderController: calculateDeliveryFee-customer ajax failed');
-				logger.error(err);
+				console.log('OrderController: calculateDeliveryFee-customer ajax failed');
+				console.error(err);
 				resolve(deliveryFeeTiers[0]);
 			});
 					
@@ -2125,8 +2122,8 @@ app.controller('OrderController', function(
 			var v = $http.get('/restaurants/' + thing.restaurantId);
 					
 			v.error(function(err) {
-				logger.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
-				logger.error(err);
+				console.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
+				console.error(err);
 			});
 	
 			// TODO turn debug off / on
@@ -2253,28 +2250,20 @@ app.factory('customerSchema', function() {
 
 app.controller('AccountController', function($scope, $http, $routeParams, $rootScope, sessionMgr, $window) {
 	$('footer').show();
-	var sessionPromise = sessionMgr.getSessionPromise();
+	var sessionPromise = sessionMgr.getSession();
 	
 	sessionPromise.then(function(sessionData) {
-		if(!sessionData.customerId && !$rootScope.customerId) {
+		if(!sessionData.customerId) {
 			$window.location.href = '/';
+			return;
 		}
 
-		var customerId;
-
-		if(sessionData.customerId) {
-			customerId = sessionData.customerId;
-		} else if($rootScope.customerId) {
-			customerId = $rootScope.customerId;
-		} else {
-			logger.log('AccountController: customerId not found');
-		}
-
+		var customerId = sessionData.customerId;
 		var p = $http.get('/customers/' + customerId);
 	
 		p.error(function(err) {
-			logger.log('AccountController: customers ajax failed');
-			logger.error(err);
+			console.log('AccountController: customers ajax failed');
+			console.error(err);
 		});
 	
 		p.then(function(res) {
@@ -2284,8 +2273,8 @@ app.controller('AccountController', function($scope, $http, $routeParams, $rootS
 		var r = $http.get('/orders/byCustomerId/' + customerId);
 	
 		r.error(function(err) {
-			logger.log('AccountController: orders ajax failed');
-			logger.error(err);
+			console.log('AccountController: orders ajax failed');
+			console.error(err);
 		});
 	
 		r.then(function(res) {

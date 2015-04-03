@@ -10,7 +10,7 @@
 			<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
 				<label>
 					<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
-					{{area.name}} <font style="color: red; font-weight: 900;">(Delivery Service Starts April 2015)</font>
+					{{area.name}} <font style="color: red; font-weight: 900;">(Delivery Service Starts Monday, April 6, 2015)</font>
 				</label>
 			</div>
 		</div>
@@ -29,7 +29,8 @@
 				<label for="email">Email*</label>
 				<input type="text" name="email" class="form-control" required ng-model="email" ng-class="required(email)">
 				<label for="username">Username*</label>
-				<input type="text" name="username" class="form-control" required ng-model="username" ng-class="required(username)">
+				<input type="text" name="username" class="form-control" required ng-blur="usernameSearch()" ng-model="username" ng-class="required(username)">
+				<span class="error" ng-show="!validUsername">The username specified is already taken.</span>
 				<label for="password">Password*</label>
 				<input type="password" name="password" class="form-control" required ng-model="password" ng-class="required(password)">
 			</div>
@@ -56,5 +57,5 @@
   </button>
   <button type="button" class="btn btn-success pull-right" ng-click="createAccount()" ng-disabled="!selArea">
     <i class="fa fa-plus"></i> &nbsp; Create Account
-  </button>
+	</button>
 </div>
