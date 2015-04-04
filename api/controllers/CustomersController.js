@@ -79,8 +79,19 @@ module.exports = {
 		var sessionOrder = {};
 		var customerOrder = {};
 
+		console.log('req.sessionID: '+req.sessionID);
+
 		// Get order for session
+//		TODO: including the 'orhpaned: false' flag results in the creation
+//		of a new order UNLESS the last order for the specified id has
+//		'orphaned: true'; if the last order for the specified id
+//		doesn't have 'orphaned' set, it results in new order
+//
+//		I *THINK* this can be resolved by setting 'orphaned : false'
+//		when instantiating a new order
+//
 		var p = Orders.find({sessionId: req.sessionID, orphaned: false});
+//		var p = Orders.find({sessionId: req.sessionID});
 		p.sort({updatedAt: 'desc'}).limit(1).then(function(results) {
 			if(results.length > 0) {
 				sessionOrder = results[0];
@@ -126,8 +137,10 @@ module.exports = {
 			// I think we instantiate a new order with the req.sessionID
 			// attached to the order as sessionData.order.sessionId
 			if(!sessionData.order.sessionId) {
+				sessionData.order = {};
 				sessionData.order.sessionId = req.sessionID;
 				sessionData.order.orderStatus = parseInt('1');
+				sessionData.order.orphaned = false;
 				return Orders.create(sessionData.order).then(function(order) {
 					_.extend(sessionData.order, order);
 					return;
