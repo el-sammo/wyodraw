@@ -1200,6 +1200,13 @@ app.controller('OrderMgmtController', function(
 				order = {};
 			}
 
+			// Controls that prevent an item from being added to
+			// an order that has achieved order status 5 or more
+			if(order.orderStatus && (parseInt(order.orderStatus) > 4)) {
+				console.log('attempting to add item to completed order...');
+				$modalInstance.dismiss('cancel');
+			}
+
 			if(!order.customerId && sessionData.customerId) {
 				order.customerId = sessionData.customerId;
 			}
@@ -2019,9 +2026,6 @@ app.controller('OrderController', function(
 	// 8   = order en route
 	// 9   = order delivered
 	
-	// TODO put in controls that prevent a customer from, for instance, adding items
-	// to an order that has already been paid for
-	
 	$scope.addItem = orderMgmt.add;
 
 	$scope.removeItem = orderMgmt.remove;
@@ -2326,8 +2330,172 @@ app.factory('customerSchema', function() {
 });
 
 
-app.controller('AccountController', function($scope, $http, $routeParams, $rootScope, sessionMgr, $window) {
+///
+// Account Management
+///
+
+app.factory('accountMgmt', function($modal, $rootScope, $http) {
+	var service = {
+		add: function(customerId) {
+			$modal.open({
+				templateUrl: '/templates/addPaymentMethod.html',
+				backdrop: true,
+				controller: 'AccountController',
+				resolve: {
+					args: function() {
+						return {
+							customerId: customerId
+						}
+					}
+				}
+			});
+		},
+		remove: function(pmId) {
+			$modal.open({
+				templateUrl: '/templates/removePaymentMethod.html',
+				backdrop: true,
+				controller: 'AccountController',
+				resolve: {
+					args: function() {
+						return {
+							pmId: pmId
+						}
+					}
+				}
+			});
+		},
+	};
+	return service;
+});
+
+
+app.controller('AccountController', function(
+//	args,
+//	$modalInstance,			
+	$scope, $http, $routeParams, messenger,
+	$rootScope, sessionMgr,	$window, accountMgmt
+) {
 	$('footer').show();
+
+//	if(args.pmId) {
+//		var pmId = args.pmId;
+//	}
+
+	$scope.addPM = accountMgmt.add;
+	$scope.removePM = accountMgmt.remove;
+
+	$scope.addPaymentMethod = function() {
+		var paymentData = {};
+		var customer = $scope.customer;
+		paymentData.cardNumber = $scope.cardNumber.toString();
+		paymentData.expirationDate = $scope.year + '-' + $scope.month;
+		paymentData.cvv2 = $scope.cvv2;
+
+		if($scope.customer.aNetProfileId) {
+			paymentData.customerProfileId = customer.aNetProfileId;
+
+			var p = $http.post('/customers/createPaymentMethod', paymentData);
+		
+			p.error(function(err) {
+				console.log('AccountController: customers-createPaymentMethod ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+			});
+		
+			p.then(function(res) {
+				customer.paymentMethods.push({
+					lastFour: res.data.lastFour,
+					id: res.data.customerPaymentProfileId,
+					active: true,
+					expires: res.data.expires,
+					cvv2: res.data.cvv2
+				});
+
+				var r = $http.put('/customers/' + customer.id, customer);
+		
+				// if customers ajax fails...
+				r.catch(function(err) {
+					console.log('AccountController: customers-paymentMethods-put ajax failed');
+					console.error(err);
+					$modalInstance.dismiss('cancel');
+				});
+							
+				// if customers ajax succeeds...
+				r.then(function(res) {
+					messenger.show('The payment method has been added.', 'Success!');
+					$modalInstance.dismiss('done');
+				});
+			});
+		} else {
+			var m = $http.post('/customers/createANet', {customerId: customer.id});
+			
+			m.error(function(err) {
+				console.log('AccountController: customers-createProfileMethod ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+			});
+			
+			m.then(function(res) {
+				customer.aNetProfileId = res.data.customerProfileId;
+
+				var n = $http.put('/customers/' + customer.id, customer);
+			
+				// if customers ajax fails...
+				n.catch(function(err) {
+					console.log('AccountController: customers-aNetProfileId-put ajax failed');
+					console.error(err);
+					$modalInstance.dismiss('cancel');
+				});
+								
+				// if customers ajax succeeds...
+				n.then(function(res) {
+					paymentData.customerProfileId = customer.aNetProfileId;
+					var p = $http.post('/customers/createPaymentMethod', paymentData);
+				
+					p.error(function(err) {
+						console.log('AccountController: customers-createPaymentMethod ajax failed');
+						console.error(err);
+						$modalInstance.dismiss('cancel');
+					});
+				
+					p.then(function(res) {
+						if(!customer.paymentMethods) {
+							customer.paymentMethods = [];
+						}
+
+						customer.paymentMethods.push({
+							lastFour: res.data.lastFour,
+							id: res.data.customerPaymentProfileId,
+							active: true,
+							expires: res.data.expires,
+							cvv2: res.data.cvv2
+						});
+		
+						var r = $http.put('/customers/' + customer.id, customer);
+				
+						// if customers ajax fails...
+						r.catch(function(err) {
+							console.log('AccountController: customers-paymentMethods-put ajax failed');
+							console.error(err);
+							$modalInstance.dismiss('cancel');
+						});
+									
+						// if customers ajax succeeds...
+						r.then(function(res) {
+							messenger.show('The payment method has been added.', 'Success!');
+							$modalInstance.dismiss('done');
+						});
+					});
+				});
+			});
+		}
+	};
+
+	$scope.removePaymentMethod = function() {
+		console.log('$scope.removePaymentMethod() called with:');
+		console.log($scope);
+	};
+
 	var sessionPromise = sessionMgr.getSession();
 	
 	sessionPromise.then(function(sessionData) {

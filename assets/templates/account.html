@@ -1,5 +1,5 @@
 <div class="col-md-12" ng-controller="AccountController">
-	<div class="row" id="accountMain">
+	<div class="row" id="accountMain" ng-init="customerId = customer.id">
 		<div class="col-md-3">
 			<div class="row" id="accountHead">
 				<h3>Account Information</h3>
@@ -10,6 +10,27 @@
 				{{customer.addresses.primary.city}}, {{customer.addresses.primary.state}} {{customer.addresses.primary.zip}}<br/>
 				{{customer.phone}}<br/>
 				{{customer.email}}<br/><br/>
+			</div>
+			<br/>
+			<div class="row">
+				<div class="col-md-12">
+					<h4>Payment Methods</h4>
+				</div>
+			</div>
+			<div class="row" ng-show="customer.paymentMethods.length > 0">
+				<div class="col-md-12">
+					<div class="row" ng-repeat="method in customer.paymentMethods">
+						<div class="col-md-11 col-md-offset-1">
+							<span>Card ending in {{method.lastFour}} (expires {{method.expires.substr(5,6)}}-{{method.expires.substr(0, 4)}})</span> - <span class="managementLink" ng-click="removePM(method.id)">Remove</span><br/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br/>
+			<div class="row">
+				<div class="col-md-11 col-md-offset-1">
+					<span class="managementLink" ng-click="addPM()">Add a Payment Method</span><br/>
+				</div>
 			</div>
 		</div>
 		<div class="col-md-3 col-md-offset-1">

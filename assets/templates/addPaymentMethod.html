@@ -1,0 +1,80 @@
+<div class="modal-header">
+  <h3 class="modal-title" id="nav-away-modal-title">
+		Add a Payment Method
+  </h3>
+</div>
+<div class="modal-body">
+	<form name="addItemForm">
+		<div class="row">
+			<div class="col-md-4">
+				<span>Card Number*</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<input type="number" name="cardNumber" class="form-control" ng-model="cardNumber">
+			</div>
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-md-4">
+				<span>Expiration Month*</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<div class="select">
+					<select name="month" ng-model="month">
+						<option value="01">Jan (01)</option>
+						<option value="02">Feb (02)</option>
+						<option value="03">Mar (03)</option>
+						<option value="04">Apr (04)</option>
+						<option value="05">May (05)</option>
+						<option value="06">Jun (06)</option>
+						<option value="07">Jul (07)</option>
+						<option value="08">Aug (08)</option>
+						<option value="09">Sep (09)</option>
+						<option value="10">Oct (10)</option>
+						<option value="11">Nov (11)</option>
+						<option value="12">Dec (12)</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-md-4">
+				<span>Expiration Year*</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<div class="select">
+					<select name="year" ng-model="year">
+						<option value="2015">2015</option>
+						<option value="2016">2016</option>
+						<option value="2017">2017</option>
+						<option value="2018">2018</option>
+						<option value="2019">2019</option>
+						<option value="2020">2020</option>
+						<option value="2021">2021</option>
+						<option value="2022">2022</option>
+						<option value="2023">2023</option>
+						<option value="2024">2024</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-md-4">
+				<span>CVV2 Code*</span>
+			</div>
+			<div class="col-md-4 col-md-offset-4">
+				<input type="number" name="cvv2" class="form-control" ng-model="cvv2">
+			</div>
+		</div>
+	</form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
+    <i class="fa fa-reply"></i> &nbsp; Go Back
+  </button>
+  <button type="button" class="btn btn-success pull-right" ng-click="addPaymentMethod()">
+    <i class="fa fa-plus"></i> &nbsp; Add Method
+  </button>
+</div>

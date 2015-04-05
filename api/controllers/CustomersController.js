@@ -79,19 +79,8 @@ module.exports = {
 		var sessionOrder = {};
 		var customerOrder = {};
 
-		console.log('req.sessionID: '+req.sessionID);
-
 		// Get order for session
-//		TODO: including the 'orhpaned: false' flag results in the creation
-//		of a new order UNLESS the last order for the specified id has
-//		'orphaned: true'; if the last order for the specified id
-//		doesn't have 'orphaned' set, it results in new order
-//
-//		I *THINK* this can be resolved by setting 'orphaned : false'
-//		when instantiating a new order
-//
 		var p = Orders.find({sessionId: req.sessionID, orphaned: false});
-//		var p = Orders.find({sessionId: req.sessionID});
 		p.sort({updatedAt: 'desc'}).limit(1).then(function(results) {
 			if(results.length > 0) {
 				sessionOrder = results[0];
@@ -301,15 +290,17 @@ function createCustomerPaymentProfile(req, res, self) {
 	var customerProfileId = req.body.customerProfileId;
 	var cardNumber = req.body.cardNumber;
 	var expirationDate = req.body.expirationDate; // <-- format: YYYY-MM
+	var cvv2 = req.body.cvv2;
+	var lastFour = req.body.cardNumber.substr((req.body.cardNumber.length - 4), req.body.cardNumber.length);
 
 	var options = {
 		customerType: 'individual',
-		payment: new Authorize.Payment({
+		payment: {
 			creditCard: new Authorize.CreditCard({
 				cardNumber: cardNumber,
 				expirationDate: expirationDate
 			})
-		})
+		}
 	};
 
 	AuthorizeCIM.createCustomerPaymentProfile({
@@ -317,9 +308,10 @@ function createCustomerPaymentProfile(req, res, self) {
 		paymentProfile: options
 	}, function(err, response) {
 		if(err) {
-			return errorHandler(aNetError)();
+			console.log(err);
+			return errorHandler(err)();
 		}
-    return res.send(JSON.stringify({success: true, customerPaymentProfileId: response.customerPaymentProfileId, lastFour: req.body.cardNumber}));
+    return res.send(JSON.stringify({success: true, customerPaymentProfileId: response.customerPaymentProfileId, lastFour: lastFour, active: true, expires: expirationDate, cvv2: cvv2}));
 	});
 
   ///
