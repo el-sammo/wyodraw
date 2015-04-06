@@ -902,6 +902,16 @@ app.controller('LayoutController', function(
 		// if orders ajax succeeds...
 		p.then(function(res) {
 			$scope.areas = res.data;
+
+			var today = new Date().getDay();
+
+			today = today - 1;
+
+			if(today < 0) {
+				today = 7;
+			}
+
+			var todayHours = $scope.areas[0].deliveryHours[today];
 		});
 		
 		$scope.logIn = layoutMgmt.logIn;
@@ -971,9 +981,11 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 
 
 app.controller('CheckoutController', function(
-	args, $scope, $modalInstance, $http, $rootScope, messenger
+	args, $scope, $modalInstance, $http, $rootScope, messenger, accountMgmt
 ) {
 	
+	$scope.addPM = accountMgmt.addToCheckout;
+
 	if(!args.order) {
 		console.error('no args');
 		$modalInstance.dismiss('cancel');
@@ -1187,6 +1199,7 @@ app.controller('CheckoutController', function(
 												
 						// if orders ajax succeeds...
 						s.then(function(res) {
+							$rootScope.$broadcast('orderChanged');
 							// notify operator
 							$http.post('/mail/sendNotifyToOperator/'+'ok');
 							// notify customer
@@ -2186,14 +2199,10 @@ app.controller('OrderController', function(
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.order) {
 				var order = sessionData.order;
-				$scope.showCheckout = false;
+				$scope.showCheckout = true;
 				$scope.orderStatus = parseInt(order.orderStatus);
 				$scope.order = order;
 				$scope.things = order.things;
-				// TODO Debugging code
-				if(sessionData.customerId == '551aa68dd3de33800d077215' || sessionData.customerId == '54fccd3bfc88d90a6790ff65') {
-					$scope.showCheckout = true;
-				}
 				$scope.updateTotals(order);
 			}
 		});
@@ -2246,8 +2255,6 @@ app.controller('OrderController', function(
 			if(sessionData.order && sessionData.order.things) {
 				if(order.deliveryFee && order.deliveryFee > 0) {
 					deliveryFee = parseFloat(order.deliveryFee);
-					console.log('order before updating totals:');
-					console.log(order);
 					total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 				
 					$scope.subtotal = subtotal.toFixed(2);
@@ -2527,6 +2534,20 @@ app.factory('accountMgmt', function($modal, $rootScope, $http) {
 				}
 			});
 		},
+		addToCheckout: function(customerId) {
+			$modal.open({
+				templateUrl: '/templates/addPaymentMethodToCheckout.html',
+				backdrop: true,
+				controller: 'AccountModalController',
+				resolve: {
+					args: function() {
+						return {
+							customerId: customerId
+						}
+					}
+				}
+			});
+		},
 		remove: function(pmId) {
 			$modal.open({
 				templateUrl: '/templates/removePaymentMethod.html',
@@ -2549,7 +2570,8 @@ app.factory('accountMgmt', function($modal, $rootScope, $http) {
 app.controller('AccountModalController', function(
 	args, $modalInstance,			
 	$scope, $http, $routeParams, messenger,
-	$rootScope, sessionMgr,	$window, accountMgmt
+	$rootScope, sessionMgr,	$window, accountMgmt,
+	orderMgmt
 ) {
 
 	if(args.pmId) {
@@ -2614,7 +2636,9 @@ app.controller('AccountModalController', function(
 									
 						// if customers ajax succeeds...
 						r.then(function(res) {
+							console.log('maybe?');
 							messenger.show('The payment method has been added.', 'Success!');
+							$window.location.reload(true);
 							$modalInstance.dismiss('done');
 						});
 					});
@@ -2675,6 +2699,140 @@ app.controller('AccountModalController', function(
 								// if customers ajax succeeds...
 								r.then(function(res) {
 									messenger.show('The payment method has been added.', 'Success!');
+									$window.location.reload(true);
+									$modalInstance.dismiss('done');
+								});
+							});
+						});
+					});
+				}
+			});
+		});
+	};
+
+	$scope.addPaymentMethodToCheckout = function() {
+		var paymentData = {};
+		var sessionPromise = sessionMgr.getSession();
+		
+		sessionPromise.then(function(sessionData) {
+			if(!sessionData.customerId) {
+				$window.location.href = '/';
+				return;
+			}
+	
+			var customerId = sessionData.customerId;
+			var p = $http.get('/customers/' + customerId);
+		
+			p.error(function(err) {
+				console.log('AccountController: customers ajax failed');
+				console.error(err);
+			});
+		
+			p.then(function(res) {
+				$scope.customer = res.data;
+
+				var customer = $scope.customer;
+
+				paymentData.cardNumber = $scope.cardNumber.toString();
+				paymentData.expirationDate = $scope.year + '-' + $scope.month;
+				paymentData.cvv2 = $scope.cvv2;
+		
+				if($scope.customer.aNetProfileId) {
+					paymentData.customerProfileId = customer.aNetProfileId;
+		
+					var p = $http.post('/customers/createPaymentMethod', paymentData);
+				
+					p.error(function(err) {
+						console.log('AccountController: customers-createPaymentMethod ajax failed');
+						console.error(err);
+						$modalInstance.dismiss('cancel');
+					});
+				
+					p.then(function(res) {
+						customer.paymentMethods.push({
+							lastFour: res.data.lastFour,
+							id: res.data.customerPaymentProfileId,
+							active: true,
+							expires: res.data.expires,
+							cvv2: res.data.cvv2
+						});
+		
+						var r = $http.put('/customers/' + customer.id, customer);
+				
+						// if customers ajax fails...
+						r.catch(function(err) {
+							console.log('AccountController: customers-paymentMethods-put ajax failed');
+							console.error(err);
+							$modalInstance.dismiss('cancel');
+						});
+									
+						// if customers ajax succeeds...
+						r.then(function(res) {
+							messenger.show('The payment method has been added.', 'Success!');
+							$window.location.href = '/';
+							orderMgmt.checkout();
+							$modalInstance.dismiss('done');
+						});
+					});
+				} else {
+					var m = $http.post('/customers/createANet', {customerId: customer.id});
+					
+					m.error(function(err) {
+						console.log('AccountController: customers-createProfileMethod ajax failed');
+						console.error(err);
+						$modalInstance.dismiss('cancel');
+					});
+					
+					m.then(function(res) {
+						customer.aNetProfileId = res.data.customerProfileId;
+		
+						var n = $http.put('/customers/' + customer.id, customer);
+					
+						// if customers ajax fails...
+						n.catch(function(err) {
+							console.log('AccountController: customers-aNetProfileId-put ajax failed');
+							console.error(err);
+							$modalInstance.dismiss('cancel');
+						});
+										
+						// if customers ajax succeeds...
+						n.then(function(res) {
+							paymentData.customerProfileId = customer.aNetProfileId;
+							var p = $http.post('/customers/createPaymentMethod', paymentData);
+						
+							p.error(function(err) {
+								console.log('AccountController: customers-createPaymentMethod ajax failed');
+								console.error(err);
+								$modalInstance.dismiss('cancel');
+							});
+						
+							p.then(function(res) {
+								if(!customer.paymentMethods) {
+									customer.paymentMethods = [];
+								}
+		
+								customer.paymentMethods.push({
+									lastFour: res.data.lastFour,
+									id: res.data.customerPaymentProfileId,
+									active: true,
+									expires: res.data.expires,
+									cvv2: res.data.cvv2
+								});
+				
+								var r = $http.put('/customers/' + customer.id, customer);
+						
+								// if customers ajax fails...
+								r.catch(function(err) {
+									console.log('AccountController: customers-paymentMethods-put ajax failed');
+									console.error(err);
+									$modalInstance.dismiss('cancel');
+								});
+											
+								// if customers ajax succeeds...
+								r.then(function(res) {
+									messenger.show('The payment method has been added.', 'Success!');
+									$window.location.href = '/';
+									orderMgmt.checkout();
 									$modalInstance.dismiss('done');
 								});
 							});

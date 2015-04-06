@@ -11,7 +11,7 @@ var Promise = require('bluebird');
 
 module.exports = {
 	sendNotifyToOperator: function(req, res) {
-		var email = 'sam.barrett@gmail.com, 3072778940@vtext.com';
+		var email = 'sam.barrett@gmail.com, 3072778940@vtext.com, 3072514153@vtext.com, 3072583100@vtext.com, 3072594177@vtext.com';
 		sendMail(email, 'Order Placed!', 'placed', null);
 	},
 
@@ -109,8 +109,8 @@ function sendMail(email, subject, template, data) {
 			from: 'Grub2You <info@grub2you.com>',
 			to: email,
 			subject: subject,
-			text: 'Thanks for joining Grub2You, '+data.fName+'.  We\'re glad you found us!  Delivery service in Casper starts Monday, April 6 2015.  How about a little discount when you place your first order? Just enter promo code \'yummy\' when you place your order!',
-			html: 'Thanks for joining <b>Grub2You</b>, '+data.fName+'.  We\'re glad you found us!<br/>Delivery service in Casper starts Monday, April 6 2015.<br/>How about a little discount when you place your first order? Just enter promo code <b>\'yummy\'</b> when you place your order!',
+			text: 'Thanks for joining Grub2You, '+data.fName+'.  We\'re glad you found us!  How about a little discount when you place your first order? Just enter promo code \'yummy\' when you place your order at grub2you.com!',
+			html: 'Thanks for joining <b>Grub2You</b>, '+data.fName+'.  We\'re glad you found us!<br/>How about a little discount when you place your first order? Just enter promo code <b>\'yummy\'</b> when you place your order at <a href="grub2you.com">grub2you.com</a>!',
 		};
 	}
 

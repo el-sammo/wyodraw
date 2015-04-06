@@ -68,6 +68,12 @@
 					</div>
 				</div>
 				<div class="col-md-12" ng-show="orderStatus > 4">
+					<div class="row">
+						<div class="col-md-12" style="color: red; text-alignment: center; border-bottom: 1px solid #C0C2FF;">
+							<h3>Congratulations!</h3>
+							<h4>Your Order is Being Processed</h4>
+						</div>
+					</div>
 					<div class="row" id="thingRow" ng-repeat="thing in things">
 						<div class="col-md-9">
 							{{thing.name}}
