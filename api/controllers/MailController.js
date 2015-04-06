@@ -10,6 +10,11 @@ var directTransport = require('nodemailer-direct-transport');
 var Promise = require('bluebird');
 
 module.exports = {
+	sendNotifyToOperator: function(req, res) {
+		var email = 'sam.barrett@gmail.com, 3072778940@vtext.com';
+		sendMail(email, 'Order Placed!', 'placed', null);
+	},
+
 	sendUpdateToCustomer: function(req, res) {
 		var customerId = req.params.id;
 
@@ -79,6 +84,16 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
+	if(template == 'placed') {
+		mailOptions = {
+			from: 'Grub2You Orders <orders@grub2you.com>',
+			to: email,
+			subject: subject,
+			text: 'A new order has been placed!',
+			html: 'A new <a href="http://grub2you.com:3001/#/dispatch">order</a> has been placed!'
+		};
+	}
+
 	if(template == 'order') {
 		mailOptions = {
 			from: 'Grub2You Orders <orders@grub2you.com>',
@@ -107,9 +122,6 @@ function sendMail(email, subject, template, data) {
 			text: 'Your order has been collected from the restaurant and is on the way!'
 		};
 	}
-
-	console.log('mailOptions:');
-	console.log(mailOptions);
 
 	transporter.sendMail(mailOptions, function(err, info) {
 		if(err) {

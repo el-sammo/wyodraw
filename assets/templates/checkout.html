@@ -29,7 +29,7 @@
 		<br/>
 		<div class="row">
 			<div class="col-md-4">
-				<span class="promoLabel">Promo Code? {{validCode}}</span>
+				<span class="promoLabel">Promo Code?</span>
 			</div>
 			<div class="col-md-4 col-md-offset-4">
 				<input 
@@ -45,7 +45,12 @@
 		</div>
 		<div class="row" ng-show="validCode && codeEffect">
 			<div class="col-md-12">
-				<span class="error">{{codeEffect}}</span>
+				<span class="awesome">{{codeEffect}}</span>
+			</div>
+		</div>
+		<div class="row" ng-show="paymentFailed">
+			<div class="col-md-12">
+				<span class="error">The payment method you selected was declined. Please select another</span>
 			</div>
 		</div>
 		<br/>

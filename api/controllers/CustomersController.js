@@ -239,6 +239,7 @@ function createANetProfile(req, res, self) {
   Customers.findOne(req.body.customerId).then(function(customer) {
     if(! customer) {
 			console.log('customers ajax failed in CustomersController-createANetProfile()');
+			// TODO: what should this return?
 	 		return errorHandler(customersError)();
 		}
 
@@ -249,7 +250,7 @@ function createANetProfile(req, res, self) {
 			}
     }, function(err, response) {
 			if(err) {
-				return errorHandler(aNetError)();
+				return errorHandler(err)();
 			}
       return res.send(JSON.stringify({success: true, customerProfileId: response.customerProfileId}));
 		});

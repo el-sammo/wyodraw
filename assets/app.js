@@ -971,7 +971,7 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 
 
 app.controller('CheckoutController', function(
-	args, $scope, $modalInstance, $http, $rootScope
+	args, $scope, $modalInstance, $http, $rootScope, messenger
 ) {
 	
 	if(!args.order) {
@@ -998,6 +998,7 @@ app.controller('CheckoutController', function(
 		var paymentMethods = res.data.paymentMethods;
 		paymentMethods.push({id: 'cash', lastFour: 'Cash'});
 		$scope.order.paymentMethods = res.data.paymentMethods;
+		$scope.customer = res.data;
 	});
 
 	$scope.getPromo = function(currentFee, promoCode) {
@@ -1042,6 +1043,7 @@ app.controller('CheckoutController', function(
 			p.then(function(feeData) {
 				if(feeData.success) {
 					$scope.validCode = true;
+					$scope.promoAmount = feeData.amount;
 					promo = feeData.amount;
 
 					if(feeData.effect == 'reduce') {
@@ -1050,18 +1052,18 @@ app.controller('CheckoutController', function(
 						$scope.codeEffect = 'Your delivery fee has been reduced to $' + (parseFloat(promo)).toFixed(2) + '!';
 					}
 
-					currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
 					$scope.currentTotal = currentTotal;
 				} else {
 					$scope.validCode = false;
 
-					currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
 					$scope.currentTotal = currentTotal;
 				}
 			});
 		} else {
 
-			currentTotal = parseFloat(total) + parseFloat(gratuity) + parseFloat(promo);
+			currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
 			$scope.currentTotal = currentTotal;
 		}
 	}
@@ -1069,11 +1071,136 @@ app.controller('CheckoutController', function(
 	$scope.updateTotal();
 
 	$scope.checkout = function() {
-		console.log('$scope.checkout() called with:');
-		console.log($scope);
-		// we have $scope.order, $scope.selMethod (paymentMethodId - or 'cash'),
-		// $scope.gratuity, $scope.promo
-	};
+		$scope.paymentFailed = false;
+
+		if($scope.selMethod == 'cash') {
+			$scope.order.orderStatus = 5;
+
+			if($scope.gratuity) {
+				$scope.order.gratuity = $scope.gratuity.toFixed(2);
+			}
+
+			if($scope.promo && $scope.validCode) {
+				$scope.order.promo = $scope.promo;
+			}
+
+			$scope.order.total = $scope.currentTotal;
+
+			if($scope.promoAmount) {
+				$scope.order.discount = (parseFloat($scope.order.deliveryFee) - parseFloat($scope.promoAmount)).toFixed(2);
+			}
+
+			$scope.order.paymentMethods = 'cash';
+
+			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
+
+			// if orders ajax fails...
+			p.error(function(err) {
+				console.log('OrderMgmtController: checkout-orderUpdate ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+			});
+									
+			// if orders ajax succeeds...
+			p.then(function(res) {
+				// notify operator
+				$http.post('/mail/sendNotifyToOperator/'+'ok');
+				// notify customer
+				$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
+				$modalInstance.dismiss('done');
+				messenger.show('Your order has been received.', 'Success!');
+			});
+		} else {
+			$scope.order.orderStatus = 2;
+
+			console.log($scope);
+			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
+
+			// if orders ajax fails...
+			p.error(function(err) {
+				console.log('OrderMgmtController: checkout-orderStatusUpdate ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
+			});
+									
+			// if orders ajax succeeds...
+			p.then(function(res) {
+				var r = $http.post('/checkout/processPayment', {customer: $scope.customer, paymentMethodId: $scope.selMethod, amount: $scope.currentTotal});
+		
+				// if orders ajax fails...
+				r.error(function(err) {
+					console.log('OrderMgmtController: checkout-getCustomer ajax failed');
+					console.error(err);
+					$modalInstance.dismiss('cancel');
+				});
+										
+				// if orders ajax succeeds...
+				r.then(function(res) {
+					if(res.data.success) {
+						$scope.order.orderStatus = 5;
+
+						if($scope.gratuity) {
+							$scope.order.gratuity = $scope.gratuity.toFixed(2);
+						}
+			
+						if($scope.promo && $scope.validCode) {
+							$scope.order.promo = $scope.promo;
+						}
+			
+						$scope.order.total = $scope.currentTotal;
+			
+						if($scope.promoAmount) {
+							$scope.order.discount = (parseFloat($scope.order.deliveryFee) - parseFloat($scope.promoAmount)).toFixed(2);
+						}
+
+						$scope.order.paymentMethods = $scope.selMethod;
+
+						console.log('$scope.order:');
+						console.log($scope.order);
+
+						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
+				
+						// if orders ajax fails...
+						s.error(function(err) {
+							console.log('OrderMgmtController: checkout-updateOrder ajax failed');
+							console.error(err);
+							$modalInstance.dismiss('cancel');
+						});
+												
+						// if orders ajax succeeds...
+						s.then(function(res) {
+							// notify operator
+							$http.post('/mail/sendNotifyToOperator/'+'ok');
+							// notify customer
+							$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
+							$modalInstance.dismiss('done');
+							messenger.show('Your order has been received.', 'Success!');
+						});
+					} else {
+						$scope.order.orderStatus = 4;
+
+						console.log('$scope:');
+						console.log($scope);
+
+						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
+				
+						// if orders ajax fails...
+						s.error(function(err) {
+							console.log('OrderMgmtController: checkout-updateOrder ajax failed');
+							console.error(err);
+							$modalInstance.dismiss('cancel');
+						});
+												
+						// if orders ajax succeeds...
+						s.then(function(res) {
+							console.log('payment process FAILED');
+							$scope.paymentFailed = true;
+						});
+					}
+				});
+			});
+		}
+	}
 
 });
 
@@ -2088,8 +2215,12 @@ app.controller('OrderController', function(
 
 		tax = (Math.round((subtotal * taxRate) * 100) / 100);
 
+		if(order.discount) {
+			discount = parseFloat(order.discount);
+		}
+
 		if(order.gratuity) {
-			gratuity = order.gratuity;
+			gratuity = parseFloat(order.gratuity);
 		}
 
 		var sessionPromise = sessionMgr.getSession();
