@@ -799,7 +799,7 @@ app.controller('SignUpController', function(
 				$modalInstance.dismiss('done');
 			}
 		}).error(function(err) {
-			// if orders ajax fails...
+			// if login ajax fails...
 				console.log('LayoutMgmtController: logIn ajax failed');
 				console.error(err);
 				$modalInstance.dismiss('cancel');
@@ -839,7 +839,7 @@ app.controller('LayoutMgmtController', function(
 				$modalInstance.dismiss('done');
 			}
 		}).error(function(err) {
-			// if orders ajax fails...
+			// if login ajax fails...
 				console.log('LayoutMgmtController: logIn ajax failed');
 				console.error(err);
 				$modalInstance.dismiss('cancel');
@@ -1074,7 +1074,7 @@ app.controller('CheckoutController', function(
 		$scope.paymentFailed = false;
 
 		if($scope.selMethod == 'cash') {
-			$scope.order.orderStatus = 5;
+			$scope.order.orderStatus = parseInt(5);
 
 			if($scope.gratuity) {
 				$scope.order.gratuity = $scope.gratuity.toFixed(2);
@@ -1092,6 +1092,11 @@ app.controller('CheckoutController', function(
 
 			$scope.order.paymentMethods = 'cash';
 
+			$scope.order.areaId = $scope.customer.areaId;
+
+			console.log('$scope.order.orderStatus before update...');
+			console.log(typeof $scope.order.orderStatus);
+
 			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
 
 			// if orders ajax fails...
@@ -1103,6 +1108,10 @@ app.controller('CheckoutController', function(
 									
 			// if orders ajax succeeds...
 			p.then(function(res) {
+				console.log('$scope.order after moving to 5...');
+				console.log($scope.order);
+				console.log('$scope.order.orderStatus after update...');
+				console.log(typeof $scope.order.orderStatus);
 				// notify operator
 				$http.post('/mail/sendNotifyToOperator/'+'ok');
 				// notify customer
@@ -1111,9 +1120,8 @@ app.controller('CheckoutController', function(
 				messenger.show('Your order has been received.', 'Success!');
 			});
 		} else {
-			$scope.order.orderStatus = 2;
+			$scope.order.orderStatus = parseInt(2);
 
-			console.log($scope);
 			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
 
 			// if orders ajax fails...
@@ -1129,15 +1137,32 @@ app.controller('CheckoutController', function(
 		
 				// if orders ajax fails...
 				r.error(function(err) {
-					console.log('OrderMgmtController: checkout-getCustomer ajax failed');
+					console.log('OrderMgmtController: checkout-processPayment ajax failed');
 					console.error(err);
+					$scope.order.orderStatus = parseInt(3);
+					$scope.order.paymentMethods = $scope.selMethod;
+
+					var z = $http.put('/orders/' + $scope.order.id, $scope.order);
+				
+					// if orders ajax fails...
+					z.error(function(err) {
+						console.log('OrderMgmtController: post checkout-updateOrder ajax failed');
+						console.error(err);
+						$modalInstance.dismiss('cancel');
+					});
+												
+					// if orders ajax succeeds...
+					z.then(function(res) {
+						console.log('payment process FAILED');
+						$scope.paymentFailed = true;
+					});
 					$modalInstance.dismiss('cancel');
 				});
 										
 				// if orders ajax succeeds...
 				r.then(function(res) {
 					if(res.data.success) {
-						$scope.order.orderStatus = 5;
+						$scope.order.orderStatus = parseInt(5);
 
 						if($scope.gratuity) {
 							$scope.order.gratuity = $scope.gratuity.toFixed(2);
@@ -1155,8 +1180,7 @@ app.controller('CheckoutController', function(
 
 						$scope.order.paymentMethods = $scope.selMethod;
 
-						console.log('$scope.order:');
-						console.log($scope.order);
+						$scope.order.areaId = $scope.customer.areaId;
 
 						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
@@ -1177,10 +1201,8 @@ app.controller('CheckoutController', function(
 							messenger.show('Your order has been received.', 'Success!');
 						});
 					} else {
-						$scope.order.orderStatus = 4;
-
-						console.log('$scope:');
-						console.log($scope);
+						$scope.order.orderStatus = parseInt(4);
+						$scope.order.paymentMethods = $scope.selMethod;
 
 						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
@@ -2145,9 +2167,9 @@ app.controller('OrderController', function(
 	// < 1 = not started
 	// 1   = started (ordering)
 	// 2   = payment initiated
-	// 3   = payment accepted
+	// 3   = payment ajax call failed
 	// 4   = payment declined
-	// 5   = order completed
+	// 5   = payment accepted
 	// 6   = order ordered (at restaurant)
 	// 7   = order picked up
 	// 8   = order en route
@@ -2160,6 +2182,7 @@ app.controller('OrderController', function(
 	$scope.checkout = orderMgmt.checkout;
 
 	$rootScope.$on('orderChanged', function(evt, args) {
+		console.log('orderChanged()');
 		$scope.updateOrder();
 	});
 
@@ -2174,7 +2197,7 @@ app.controller('OrderController', function(
 				$scope.order = order;
 				$scope.things = order.things;
 				// TODO Debugging code
-				if(sessionData.customerId == '551aa68dd3de33800d077215') {
+				if(sessionData.customerId == '551aa68dd3de33800d077215' || sessionData.customerId == '54fccd3bfc88d90a6790ff65') {
 					$scope.showCheckout = true;
 				}
 				$scope.updateTotals(order);
@@ -2227,19 +2250,71 @@ app.controller('OrderController', function(
 
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.order && sessionData.order.things) {
-				var deliveryFeeTiers = [7.95, 10.95, 13.95];
-				deliveryFee = deliveryFeeTiers[0];
-	
-				if(sessionData.customerId) {
-					var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
-	
-					deliveryFeePromise.then(function(fee) {
+				if(order.deliveryFee && order.deliveryFee > 0) {
+					deliveryFee = parseFloat(order.deliveryFee);
+					console.log('order before updating totals:');
+					console.log(order);
+					total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
+				
+					$scope.subtotal = subtotal.toFixed(2);
+					$scope.tax = tax.toFixed(2);
+					$scope.deliveryFee = deliveryFee.toFixed(2);
+					$scope.discount = discount.toFixed(2);
+					$scope.gratuity = gratuity.toFixed(2);
+					$scope.total = total.toFixed(2);
+				
+					order.subtotal = subtotal;
+					order.tax = tax;
+					order.deliveryFee = $scope.deliveryFee;
+					order.discount = discount;
+					order.total = total;
+			
+					var p = $http.put('/orders/' + order.id, order);
+						
+					// if orders ajax fails...
+					p.error(function(err) {
+						console.log('OrderController: updateOrder ajax failed');
+						console.error(err);
+					});
+				} else {
+					var deliveryFeeTiers = [7.95, 10.95, 13.95];
+					deliveryFee = deliveryFeeTiers[0];
+		
+					if(sessionData.customerId) {
+						var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
+		
+						deliveryFeePromise.then(function(fee) {
+							deliveryFee = fee;
+						
+							total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 					
-						total = (Math.round((subtotal + tax + fee + discount + gratuity) * 100)/100);
+							$scope.subtotal = subtotal.toFixed(2);
+							$scope.tax = tax.toFixed(2);
+							$scope.deliveryFee = fee.toFixed(2);
+							$scope.discount = discount.toFixed(2);
+							$scope.gratuity = gratuity.toFixed(2);
+							$scope.total = total.toFixed(2);
+					
+							order.subtotal = subtotal;
+							order.tax = tax;
+							order.deliveryFee = $scope.deliveryFee;
+							order.discount = discount;
+							order.total = total;
+					
+							var p = $http.put('/orders/' + order.id, order);
+							
+							// if orders ajax fails...
+							p.error(function(err) {
+								console.log('OrderController: updateOrder ajax failed');
+								console.error(err);
+							});
+						});
+					} else {
+						total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 				
 						$scope.subtotal = subtotal.toFixed(2);
 						$scope.tax = tax.toFixed(2);
-						$scope.deliveryFee = fee.toFixed(2);
+						$scope.deliveryFee = deliveryFee.toFixed(2);
 						$scope.discount = discount.toFixed(2);
 						$scope.gratuity = gratuity.toFixed(2);
 						$scope.total = total.toFixed(2);
@@ -2257,30 +2332,7 @@ app.controller('OrderController', function(
 							console.log('OrderController: updateOrder ajax failed');
 							console.error(err);
 						});
-					});
-				} else {
-					total = (Math.round((subtotal + tax + deliveryFee + discount + gratuity) * 100)/100);
-			
-					$scope.subtotal = subtotal.toFixed(2);
-					$scope.tax = tax.toFixed(2);
-					$scope.deliveryFee = deliveryFee.toFixed(2);
-					$scope.discount = discount.toFixed(2);
-					$scope.gratuity = gratuity.toFixed(2);
-					$scope.total = total.toFixed(2);
-			
-					order.subtotal = subtotal;
-					order.tax = tax;
-					order.deliveryFee = $scope.deliveryFee;
-					order.discount = discount;
-					order.total = total;
-			
-					var p = $http.put('/orders/' + order.id, order);
-					
-					// if orders ajax fails...
-					p.error(function(err) {
-						console.log('OrderController: updateOrder ajax failed');
-						console.error(err);
-					});
+					}
 				}
 			}
 		});
@@ -2289,10 +2341,10 @@ app.controller('OrderController', function(
 	$scope.calculateDeliveryFee = function(customerId, things) {
 		return $q(function(resolve, reject) {
 			// time to fee
-			// '450': 6.95},
-			// '720': 9.95},
-			// '1050': 12.95}
-			var deliveryFeeTiers = [6.95, 9.95, 12.95];
+			// '450': 7.95},
+			// '720': 10.95},
+			// '1050': 13.95}
+			var deliveryFeeTiers = [7.95, 10.95, 13.95];
 	
 			var t = $http.get('/customers/' + customerId);
 					

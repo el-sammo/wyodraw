@@ -63,6 +63,28 @@ function captureTransaction(req, res, self) {
     	return res.send(JSON.stringify({success: false, message: dirResPcs[3]}));
 		}
 	});
+
+  ///
+  // Convenience subfunctions
+  ///
+
+  function respond(err) {
+    var isAjax = req.headers.accept.match(/application\/json/);
+    var errCode = 400;
+
+    if(err) {
+      if(isAjax) {
+        return res.send(JSON.stringify({error: err}), errCode);
+      }
+    }
+  };
+
+  function errorHandler(errMsg) {
+    return function(err) {
+      if(err) console.error(err);
+      respond(errMsg);
+    };
+  };
 }
 
 

@@ -83,7 +83,9 @@ module.exports = {
 		var p = Orders.find({sessionId: req.sessionID, orphaned: false});
 		p.sort({updatedAt: 'desc'}).limit(1).then(function(results) {
 			if(results.length > 0) {
-				sessionOrder = results[0];
+				if(parseInt(results[0].orderStatus) < 5) {
+					sessionOrder = results[0];
+				}
 			}
 
 			if(! (req.session && req.session.customerId)) {
@@ -144,7 +146,7 @@ module.exports = {
 			if(!sessionData.order.sessionId) {
 				sessionData.order = {};
 				sessionData.order.sessionId = req.sessionID;
-				sessionData.order.orderStatus = parseInt('1');
+				sessionData.order.orderStatus = parseInt(1);
 				sessionData.order.orphaned = false;
 				return Orders.create(sessionData.order).then(function(order) {
 					_.extend(sessionData.order, order);
