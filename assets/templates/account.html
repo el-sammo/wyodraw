@@ -1,4 +1,4 @@
-<div class="col-md-12" ng-controller="AccountController">
+<div class="col-md-12">
 	<div class="row" id="accountMain" ng-init="customerId = customer.id">
 		<div class="col-md-3">
 			<div class="row" id="accountHead">
@@ -21,7 +21,7 @@
 				<div class="col-md-12">
 					<div class="row" ng-repeat="method in customer.paymentMethods">
 						<div class="col-md-11 col-md-offset-1">
-							<span>Card ending in {{method.lastFour}} (expires {{method.expires.substr(5,6)}}-{{method.expires.substr(0, 4)}})</span> - <span class="managementLink" ng-click="removePM(method.id)">Remove</span><br/>
+							<span>Card ending in {{method.lastFour}} (expires {{method.expires.substr(5,6)}}-{{method.expires.substr(0, 4)}})</span><!--  - <span class="managementLink" ng-click="removePM(method.id)">Remove</span><br/> -->
 						</div>
 					</div>
 				</div>
@@ -42,7 +42,7 @@
 					<div class="col-md-4">
 						<span class="orderHistoryLink"><a href="#/orders/{{order.id}}">{{order.updatedAt}}</a></span>
 					</div>
-					<div class="col-md-4 col-md-offset-4">
+					<div class="col-md-4 col-md-offset-4" style="text-align: right;">
 						<span class="orderHistoryLink"><a href="#/orders/{{order.id}}">{{order.total}}</a></span>
 					</div>
 				</div>

@@ -43,22 +43,6 @@
 							{{deliveryFee}}
 						</div>
 					</div>
-					<div class="row" id="discountRow" ng-show="discount > 0">
-						<div class="col-md-9">
-							Discount
-						</div>
-						<div class="col-md-3" id="discount">
-							{{discount}}
-						</div>
-					</div>
-					<div class="row" id="gratuityRow" ng-show="gratuity > 0">
-						<div class="col-md-9">
-							Driver Gratuity
-						</div>
-						<div class="col-md-3" id="gratuity">
-							{{gratuity}}
-						</div>
-					</div>
 					<div class="row" id="totalRow">
 						<div class="col-md-9">
 							Total
@@ -84,9 +68,65 @@
 					</div>
 				</div>
 				<div class="col-md-12" ng-show="orderStatus > 4">
-					<div class="row">
-						<div class="col-md-12">
-							Your order is on the way!
+					<div class="row" id="thingRow" ng-repeat="thing in things">
+						<div class="col-md-9">
+							{{thing.name}}
+							<span ng-show="thing.quantity > 1"><strong>({{thing.quantity}})</strong></span>
+							<br>
+							({{thing.option}}
+							<span ng-show="thing.specInst.length > 0"> - {{thing.specInst}}</span>)
+						</div>
+						<div class="col-md-3" id="thingPrice">
+							<span ng-show="thing.quantity < 2 || !thing.quantity">{{thing.price}}</span>
+							<span ng-show="thing.quantity > 1">{{(thing.quantity * thing.price).toFixed(2)}}</span>
+						</div>
+					</div>
+					<div class="row" id="subtotalRow">
+						<div class="col-md-9">
+							Subtotal
+						</div>
+						<div class="col-md-3" id="subtotal">
+							{{subtotal}}
+						</div>
+					</div>
+					<div class="row" id="taxRow">
+						<div class="col-md-9">
+							Sales Tax
+						</div>
+						<div class="col-md-3" id="tax">
+							{{tax}}
+						</div>
+					</div>
+					<div class="row" id="deliveryFeeRow">
+						<div class="col-md-9">
+							Delivery Fee
+						</div>
+						<div class="col-md-3" id="deliveryFee">
+							{{deliveryFee}}
+						</div>
+					</div>
+					<div class="row" id="discountRow" ng-show="discount > 0">
+						<div class="col-md-9">
+							Discount
+						</div>
+						<div class="col-md-3" id="discount">
+							<font style="color: red;">-{{discount}}</font>
+						</div>
+					</div>
+					<div class="row" id="gratuityRow" ng-show="gratuity > 0">
+						<div class="col-md-9">
+							Driver Gratuity
+						</div>
+						<div class="col-md-3" id="gratuity">
+							{{gratuity}}
+						</div>
+					</div>
+					<div class="row" id="totalRow">
+						<div class="col-md-9">
+							Total
+						</div>
+						<div class="col-md-3" id="total">
+							{{total}}
 						</div>
 					</div>
 				</div>
