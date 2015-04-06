@@ -92,7 +92,7 @@ module.exports = {
 
 			// Get order for customer
 			return Orders.find({
-				'customerId': sessionData.customerId, 'orphaned': false
+				'customerId': req.session.customerId, 'orphaned': false
 			}).sort({updatedAt: 'desc'}).then(function(results) {
 				if(results.length > 0) {
 					customerOrder = results[0];
@@ -102,13 +102,29 @@ module.exports = {
 
 		}).then(function() {
 			// Pick which order is the most recent and attach to sessionData
-			sessionOrder.updatedAt || (sessionOrder.updatedAt = 0);
-			customerOrder.updatedAt || (customerOrder.updatedAt = 0);
-
-			if(customerOrder.updatedAt >= sessionOrder.updatedAt) {
-				sessionData.order = customerOrder;
+			if(sessionOrder.things) {
+				if(customerOrder.things) {
+					if(customerOrder.updatedAt >= sessionOrder.updatedAt) {
+						sessionData.order = customerOrder;
+					} else {
+						sessionData.order = sessionOrder;
+					}
+				} else {
+					sessionData.order = sessionOrder;
+				}
 			} else {
-				sessionData.order = sessionOrder;
+				if(customerOrder.things) {
+					sessionData.order = customerOrder;
+				} else {
+					sessionOrder.updatedAt || (sessionOrder.updatedAt = 0);
+					customerOrder.updatedAt || (customerOrder.updatedAt = 0);
+		
+					if(customerOrder.updatedAt >= sessionOrder.updatedAt) {
+						sessionData.order = customerOrder;
+					} else {
+						sessionData.order = sessionOrder;
+					}
+				}
 			}
 
 			// Build rest of sessionData
