@@ -1,14 +1,25 @@
 
-var app = angular.module('app', ['ngRoute', 'ui.bootstrap'])
+var app = angular.module('app', [
+	'ngRoute', 'ui.bootstrap', 
+	'angulartics', 'angulartics.google.analytics'
+]);
 var $ = jQuery;
 
 ///
 // Configuration
 ///
 
-app.config(['$httpProvider', function($httpProvider) {
-	$httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-}]);
+app.config(['$httpProvider', '$analyticsProvider',
+	function($httpProvider, $analyticsProvider) {
+		$httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+		// Records pages that don't use $state or $route
+		$analyticsProvider.firstPageview(true);
+
+		// Records full path
+		$analyticsProvider.withAutoBase(true);
+	}
+]);
 
 ///
 // Routes
@@ -302,8 +313,9 @@ app.directive('manageHeight', function($window) {
 		$(el).height(adjHt);
 	}
 
-	return function ($scope, element) {
+	return function ($scope, element, args) {
 		$scope.$watch(getWindowHeight, function(height) {
+			height = (args.manageHeight === 'order' ? height - 40 : height);
 			resizeElement(element, height);
 		}, true);
 
@@ -891,6 +903,7 @@ app.controller('LayoutController', function(
 			$scope.accessAccount = true;
 			$scope.customerId = sessionData.customerId;
 		}
+
 		var p = $http.get('/areas/');
 						
 		// if areas ajax fails...
@@ -899,9 +912,11 @@ app.controller('LayoutController', function(
 			console.error(err);
 		});
 								
-		// if orders ajax succeeds...
+		// if areas ajax succeeds...
 		p.then(function(res) {
 			$scope.areas = res.data;
+
+			var now = new Date().getHours();
 
 			var today = new Date().getDay();
 
@@ -912,6 +927,32 @@ app.controller('LayoutController', function(
 			}
 
 			var todayHours = $scope.areas[0].deliveryHours[today];
+
+			if(todayHours.start > 11) {
+				var todayStart = (parseInt(todayHours.start) - 12) + 'pm';
+			} else {
+				var todayStart = parseInt(todayHours.start) + 'am';
+			}
+
+			$scope.todayStart = todayStart;
+
+			if(todayHours.end > 11) {
+				var todayEnd = (parseInt(todayHours.end) - 12) + 'pm';
+			} else {
+				var todayEnd = parseInt(todayHours.end) + 'am';
+			}
+
+			$scope.todayEnd = todayEnd;
+
+			var starting = (parseInt(todayHours.start) - 1);
+			var ending = parseInt(todayHours.end);
+
+			$scope.currentlyAvailable = false;
+
+			if(now >= starting && now <= ending) {
+				$scope.currentlyAvailable = true;
+			}
+
 		});
 		
 		$scope.logIn = layoutMgmt.logIn;
@@ -2193,13 +2234,47 @@ app.controller('OrderController', function(
 		$scope.updateOrder();
 	});
 
+	var d = $http.get('/areas/');
+						
+	// if areas ajax fails...
+	d.error(function(err) {
+		console.log('layoutMgmt: areas ajax failed');
+		console.error(err);
+	});
+								
+	// if areas ajax succeeds...
+	d.then(function(res) {
+		$scope.areas = res.data;
+
+		var now = new Date().getHours();
+
+		var today = new Date().getDay();
+
+		today = today - 1;
+
+		if(today < 0) {
+			today = 7;
+		}
+
+		var todayHours = $scope.areas[0].deliveryHours[today];
+
+		var starting = (parseInt(todayHours.start) - 1);
+		var ending = parseInt(todayHours.end);
+
+		$scope.showCheckout = false;
+
+		if(now >= starting && now <= ending) {
+			$scope.showCheckout = true;
+		}
+
+	});
+		
 	$scope.updateOrder = function() {
 		var sessionPromise = sessionMgr.getSession();
 	
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.order) {
 				var order = sessionData.order;
-				$scope.showCheckout = true;
 				$scope.orderStatus = parseInt(order.orderStatus);
 				$scope.order = order;
 				$scope.things = order.things;
@@ -2253,8 +2328,39 @@ app.controller('OrderController', function(
 
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.order && sessionData.order.things) {
-				if(order.deliveryFee && order.deliveryFee > 0) {
-					deliveryFee = parseFloat(order.deliveryFee);
+				var deliveryFeeTiers = [7.95, 10.95, 13.95];
+				deliveryFee = deliveryFeeTiers[0];
+		
+				if(sessionData.customerId) {
+					var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
+		
+					deliveryFeePromise.then(function(fee) {
+						deliveryFee = fee;
+						
+						total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
+					
+						$scope.subtotal = subtotal.toFixed(2);
+						$scope.tax = tax.toFixed(2);
+						$scope.deliveryFee = fee.toFixed(2);
+						$scope.discount = discount.toFixed(2);
+						$scope.gratuity = gratuity.toFixed(2);
+						$scope.total = total.toFixed(2);
+					
+						order.subtotal = subtotal;
+						order.tax = tax;
+						order.deliveryFee = $scope.deliveryFee;
+						order.discount = discount;
+						order.total = total;
+					
+						var p = $http.put('/orders/' + order.id, order);
+							
+						// if orders ajax fails...
+						p.error(function(err) {
+							console.log('OrderController: updateOrder ajax failed');
+							console.error(err);
+						});
+					});
+				} else {
 					total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 				
 					$scope.subtotal = subtotal.toFixed(2);
@@ -2269,7 +2375,7 @@ app.controller('OrderController', function(
 					order.deliveryFee = $scope.deliveryFee;
 					order.discount = discount;
 					order.total = total;
-			
+				
 					var p = $http.put('/orders/' + order.id, order);
 						
 					// if orders ajax fails...
@@ -2277,63 +2383,6 @@ app.controller('OrderController', function(
 						console.log('OrderController: updateOrder ajax failed');
 						console.error(err);
 					});
-				} else {
-					var deliveryFeeTiers = [7.95, 10.95, 13.95];
-					deliveryFee = deliveryFeeTiers[0];
-		
-					if(sessionData.customerId) {
-						var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
-		
-						deliveryFeePromise.then(function(fee) {
-							deliveryFee = fee;
-						
-							total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
-					
-							$scope.subtotal = subtotal.toFixed(2);
-							$scope.tax = tax.toFixed(2);
-							$scope.deliveryFee = fee.toFixed(2);
-							$scope.discount = discount.toFixed(2);
-							$scope.gratuity = gratuity.toFixed(2);
-							$scope.total = total.toFixed(2);
-					
-							order.subtotal = subtotal;
-							order.tax = tax;
-							order.deliveryFee = $scope.deliveryFee;
-							order.discount = discount;
-							order.total = total;
-					
-							var p = $http.put('/orders/' + order.id, order);
-							
-							// if orders ajax fails...
-							p.error(function(err) {
-								console.log('OrderController: updateOrder ajax failed');
-								console.error(err);
-							});
-						});
-					} else {
-						total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
-				
-						$scope.subtotal = subtotal.toFixed(2);
-						$scope.tax = tax.toFixed(2);
-						$scope.deliveryFee = deliveryFee.toFixed(2);
-						$scope.discount = discount.toFixed(2);
-						$scope.gratuity = gratuity.toFixed(2);
-						$scope.total = total.toFixed(2);
-				
-						order.subtotal = subtotal;
-						order.tax = tax;
-						order.deliveryFee = $scope.deliveryFee;
-						order.discount = discount;
-						order.total = total;
-				
-						var p = $http.put('/orders/' + order.id, order);
-						
-						// if orders ajax fails...
-						p.error(function(err) {
-							console.log('OrderController: updateOrder ajax failed');
-							console.error(err);
-						});
-					}
 				}
 			}
 		});
@@ -2366,6 +2415,7 @@ app.controller('OrderController', function(
 				$q.all(promises).then(function(durations) {
 					var mostDriveTime = 0;
 					durations.forEach(function(duration) {
+						console.log('duration: ' +duration);
 						if(duration > mostDriveTime) {
 							mostDriveTime = duration;
 						}
