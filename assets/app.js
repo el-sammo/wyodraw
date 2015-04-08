@@ -1043,8 +1043,6 @@ app.controller('CheckoutController', function(
 	$rootScope, messenger, accountMgmt, layoutMgmt
 ) {
 
-	console.log('CheckoutController() called');
-
 	if(!$scope.order || !$scope.order.customerId) {
 		$modalInstance.dismiss('cancel');
 	}
@@ -1295,12 +1293,6 @@ app.controller('CheckoutController', function(
 			});
 		}
 	}
-
-	$scope.checkoutProhibited = function() {
-		console.log('checkoutProhibited() called');
-//		$modalInstance.dismiss('cancel');
-	}
-
 });
 
 
@@ -2312,8 +2304,6 @@ app.controller('OrderController', function(
 //			if(sessionData.order && sessionData.order.customerId == '551aa68dd3de33800d077215') {
 //				$scope.showCheckoutLogin = true;
 //			}
-			
-			console.log('$scope.showCheckout: '+$scope.showCheckout+', $scope.showCheckoutLogin: '+$scope.showCheckoutLogin+', $scope.showCheckoutProhibited: '+$scope.showCheckoutProhibited);
 		});
 	});
 		
@@ -2515,8 +2505,12 @@ app.controller('OrderController', function(
 				var data = res.data;
 				data.rows.forEach(function(row) {
 					row.elements.forEach(function(element) {
-						var duration = element.duration.value;
-						resolve(duration);
+						if(element.status == 'NOT_FOUND') {
+							resolve(parseInt(5));
+						} else {
+							var duration = element.duration.value;
+							resolve(duration);
+						}
 					});
 				});
 			}).catch(function(err) {
