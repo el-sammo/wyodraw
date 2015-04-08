@@ -32,6 +32,13 @@ input.error {
 	border: 1px solid red;
 }
 
+.noAccount {
+	font-size: 14px;
+	font-weight: 500;
+	color: blue;
+	cursor: pointer;
+}
+
 .logInSignUpLink {
 	top: -5px;
 	left: -28px;

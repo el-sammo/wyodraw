@@ -822,7 +822,8 @@ app.controller('SignUpController', function(
 
 
 app.controller('LayoutMgmtController', function(
-	args, $scope, $modalInstance, $http, $rootScope, $window
+	args, $scope, $modalInstance,
+	$http, $rootScope, $window, layoutMgmt
 ) {
 
 	$scope.areaName = $rootScope.areaName;
@@ -834,6 +835,8 @@ app.controller('LayoutMgmtController', function(
 		if(! $scope.submitted || field) return;
 	 	return 'error';
 	};
+
+	$scope.noAccount = layoutMgmt.signUp;
 
 	$scope.submit = function(credentials) {
 		$http.post(
@@ -988,6 +991,20 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 				}
 			});
 		},
+		checkoutProhibited: function(order) {
+			$modal.open({
+				templateUrl: '/templates/checkoutProhibited.html',
+				backdrop: true,
+				controller: 'CheckoutController',
+				resolve: {
+					args: function() {
+						return {
+							order: order
+						}
+					}
+				}
+			});
+		},
 		add: function(item) {
 			$modal.open({
 				templateUrl: '/templates/addItemOptions.html',
@@ -1022,9 +1039,16 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 
 
 app.controller('CheckoutController', function(
-	args, $scope, $modalInstance, $http, $rootScope, messenger, accountMgmt
+	args, $scope, $modalInstance, $http, 
+	$rootScope, messenger, accountMgmt, layoutMgmt
 ) {
-	
+
+	console.log('CheckoutController() called');
+
+	if(!$scope.order || !$scope.order.customerId) {
+		$modalInstance.dismiss('cancel');
+	}
+
 	$scope.addPM = accountMgmt.addToCheckout;
 
 	if(!args.order) {
@@ -1270,6 +1294,11 @@ app.controller('CheckoutController', function(
 				});
 			});
 		}
+	}
+
+	$scope.checkoutProhibited = function() {
+		console.log('checkoutProhibited() called');
+//		$modalInstance.dismiss('cancel');
 	}
 
 });
@@ -2205,7 +2234,7 @@ app.controller('RestaurantsController', function(
 app.controller('OrderController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
-	$rootScope, sessionMgr, $q
+	$rootScope, sessionMgr, $q, layoutMgmt
 ) {
 	$('footer').show();
 
@@ -2228,6 +2257,8 @@ app.controller('OrderController', function(
 	$scope.removeItem = orderMgmt.remove;
 
 	$scope.checkout = orderMgmt.checkout;
+	$scope.checkoutLogin = layoutMgmt.logIn;
+	$scope.checkoutProhibited = orderMgmt.checkoutProhibited;
 
 	$rootScope.$on('orderChanged', function(evt, args) {
 		console.log('orderChanged()');
@@ -2262,11 +2293,28 @@ app.controller('OrderController', function(
 		var ending = parseInt(todayHours.end);
 
 		$scope.showCheckout = false;
+		$scope.showCheckoutLogin = false;
+		$scope.showCheckoutProhibited = false;
 
-		if(now >= starting && now <= ending) {
-			$scope.showCheckout = true;
-		}
+		var sessionPromise = sessionMgr.getSession();
+	
+		sessionPromise.then(function(sessionData) {
+			if(now >= starting && now <= ending) {
+		 		if(sessionData.order && sessionData.order.customerId) {
+					$scope.showCheckout = true;
+				} else {
+					$scope.showCheckoutLogin = true;
+				}
+			} else {
+				$scope.showCheckoutProhibited = true;
+			}
 
+//			if(sessionData.order && sessionData.order.customerId == '551aa68dd3de33800d077215') {
+//				$scope.showCheckoutLogin = true;
+//			}
+			
+			console.log('$scope.showCheckout: '+$scope.showCheckout+', $scope.showCheckoutLogin: '+$scope.showCheckoutLogin+', $scope.showCheckoutProhibited: '+$scope.showCheckoutProhibited);
+		});
 	});
 		
 	$scope.updateOrder = function() {
@@ -2415,7 +2463,6 @@ app.controller('OrderController', function(
 				$q.all(promises).then(function(durations) {
 					var mostDriveTime = 0;
 					durations.forEach(function(duration) {
-						console.log('duration: ' +duration);
 						if(duration > mostDriveTime) {
 							mostDriveTime = duration;
 						}
