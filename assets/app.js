@@ -330,6 +330,9 @@ app.directive('manageHeight', function($window) {
 // Login Controller
 ///
 
+/**
+ * NOTE: This is probably not used.  See LayoutMgmtController
+ * instead.  This should be refactored.
 app.controller('LoginController', function(
 	$scope, $modalInstance, $http, $window
 ) {
@@ -350,6 +353,7 @@ app.controller('LoginController', function(
 		$window.location.href = '/login';
 	};
 });
+ */
 
 
 ///
@@ -477,7 +481,7 @@ app.factory('sessionMgr', function($rootScope, $http, $q) {
 });
 
 
-app.factory('fakeAuth', function($rootScope, $http) {
+app.factory('fakeAuth', function($rootScope, $http, clientConfig) {
 	var winLocStr = location.hostname;
 	var winLocPcs = winLocStr.split('.');
 
@@ -495,7 +499,13 @@ app.factory('fakeAuth', function($rootScope, $http) {
 		$rootScope.areaPhone = '234-GRUB';
 
 	} else {
-		var p = $http.get('/areas/byName/' + winLocPcs[0]);
+		var areaName;
+		if(clientConfig.environment == 'development') {
+			areaName = 'casper';
+		} else {
+			areaName = winLocPcs[0];
+		}
+		var p = $http.get('/areas/byName/' + areaName);
 			
 		// if areas ajax fails...
 		p.error(function(err) {
@@ -658,46 +668,25 @@ app.controller('PodController', function(args, $scope, $modalInstance) {
 
 app.factory('layoutMgmt', function($modal, $rootScope, $http) {
 	var service = {
-		logIn: function(area) {
+		logIn: function() {
 			$modal.open({
 				templateUrl: '/templates/login.html',
 				backdrop: true,
-				controller: 'LayoutMgmtController',
-				resolve: {
-					args: function() {
-						return {
-							area: area
-						}
-					}
-				}
+				controller: 'LayoutMgmtController'
 			});
 		},
-		logOut: function(area) {
+		logOut: function() {
 			$modal.open({
 				templateUrl: '/templates/logout.html',
 				backdrop: true,
-				controller: 'LayoutMgmtController',
-				resolve: {
-					args: function() {
-						return {
-							area: area
-						}
-					}
-				}
+				controller: 'LayoutMgmtController'
 			});
 		},
-		signUp: function(areas) {
+		signUp: function() {
 			$modal.open({
 				templateUrl: '/templates/signUp.html',
 				backdrop: true,
-				controller: 'SignUpController',
-				resolve: {
-					args: function() {
-						return {
-							areas: areas
-						}
-					}
-				}
+				controller: 'SignUpController'
 			});
 		},
 	};
@@ -705,19 +694,32 @@ app.factory('layoutMgmt', function($modal, $rootScope, $http) {
 });
 
 app.controller('SignUpController', function(
-	args, $scope, $modalInstance, $http, $rootScope, $window
+	$scope, $modalInstance, $http,
+	$rootScope, $window, clientConfig
 ) {
 
-	if(args.areas) {
-		$scope.areas = args.areas;
-	}
+	var b = $http.get('/areas/');
 
-	if($scope.areas && $scope.areas.length === 1) {
-		$scope.selArea = _.first($scope.areas).id;
-	}
+	// if areas ajax fails...
+	b.error(function(err) {
+		console.log('SignUpController: areas ajax failed');
+		console.error(err);
+	});
+	
+	b.then(function(res) {
+		$scope.areas = res.data;
+
+		if($scope.areas && $scope.areas.length === 1) {
+			$scope.selArea = _.first($scope.areas).id;
+		}
+	});
+
+	$scope.validUsername = true;
+
+	$scope.state = clientConfig.defaultState || 'WY';
 
 	$scope.usernameSearch = function() {
-		$scope.validUsername = true;
+		if($scope.username === '') return;
 
 		var s = $http.get('/customers/byUsername/' + $scope.username);
 					
@@ -728,9 +730,7 @@ app.controller('SignUpController', function(
 		});
 	
 		s.then(function(res) {
-			if(res.data.length > 0) {
-				$scope.validUsername = false;
-			}
+			$scope.validUsername = ! (res.data.length > 0);
 		});
 	};
 
@@ -804,6 +804,9 @@ app.controller('SignUpController', function(
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			} else if(status == 200) {
+				console.log('nope - getting here');
+				// TODO: this resolves the checkout button not being updated
+				$window.location.href = '/';
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 		 	} else {
@@ -822,9 +825,21 @@ app.controller('SignUpController', function(
 
 
 app.controller('LayoutMgmtController', function(
-	args, $scope, $modalInstance,
-	$http, $rootScope, $window, layoutMgmt
+	$scope, $modalInstance,	$http, $rootScope, $window, layoutMgmt
 ) {
+
+	var p = $http.get('/areas/');
+						
+	// if areas ajax fails...
+	p.error(function(err) {
+		console.log('layoutMgmt: areas ajax failed');
+		console.error(err);
+	});
+								
+	// if areas ajax succeeds...
+	p.then(function(res) {
+		$scope.areas = res.data;
+	});
 
 	$scope.areaName = $rootScope.areaName;
 	$scope.accessAccount = $rootScope.accessAccount;
@@ -836,7 +851,10 @@ app.controller('LayoutMgmtController', function(
 	 	return 'error';
 	};
 
-	$scope.noAccount = layoutMgmt.signUp;
+	$scope.noAccount = function() {
+		$modalInstance.dismiss('cancel');
+		layoutMgmt.signUp($scope.areas);
+	};
 
 	$scope.submit = function(credentials) {
 		$http.post(
@@ -847,6 +865,9 @@ app.controller('LayoutMgmtController', function(
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			} else if(status == 200) {
+				console.log('getting here');
+				// TODO: this resolves the checkout button not being updated
+				$window.location.href = '/';
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 		 	} else {
@@ -1040,7 +1061,8 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 
 app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
-	$rootScope, messenger, accountMgmt, layoutMgmt
+	$rootScope, messenger, accountMgmt, layoutMgmt,
+	clientConfig
 ) {
 
 	if(!$scope.order || !$scope.order.customerId) {
@@ -1055,6 +1077,7 @@ app.controller('CheckoutController', function(
 		return;
 	}
 
+	$scope.clientConfig = clientConfig;
 	$scope.order = args.order;
 	$scope.validCode = true;
 	$scope.effect;
@@ -1070,9 +1093,9 @@ app.controller('CheckoutController', function(
 							
 	// if orders ajax succeeds...
 	p.then(function(res) {
-		var paymentMethods = res.data.paymentMethods;
+		var paymentMethods = res.data.paymentMethods || [];
 		paymentMethods.push({id: 'cash', lastFour: 'Cash'});
-		$scope.order.paymentMethods = res.data.paymentMethods;
+		$scope.order.paymentMethods = paymentMethods;
 		$scope.customer = res.data;
 	});
 
@@ -2226,7 +2249,8 @@ app.controller('RestaurantsController', function(
 app.controller('OrderController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
-	$rootScope, sessionMgr, $q, layoutMgmt
+	$rootScope, sessionMgr, $q, layoutMgmt,
+	clientConfig
 ) {
 	$('footer').show();
 
@@ -2244,6 +2268,8 @@ app.controller('OrderController', function(
 	// 8   = order en route
 	// 9   = order delivered
 	
+	$scope.clientConfig = clientConfig;
+
 	$scope.addItem = orderMgmt.add;
 
 	$scope.removeItem = orderMgmt.remove;
@@ -2291,7 +2317,7 @@ app.controller('OrderController', function(
 		var sessionPromise = sessionMgr.getSession();
 	
 		sessionPromise.then(function(sessionData) {
-			if(now >= starting && now <= ending) {
+			if(clientConfig.showCheckout || (now >= starting && now <= ending)) {
 		 		if(sessionData.order && sessionData.order.customerId) {
 					$scope.showCheckout = true;
 				} else {

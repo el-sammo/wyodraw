@@ -129,24 +129,30 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-12" ng-show="orderStatus > 0 && orderStatus < 5 && things.length > 0 && showCheckout">
+				<div class="col-md-12"
+					ng-show="orderStatus > 0 && orderStatus < 5 && things.length > 0 && showCheckout"
+				>
 					<div class="row">
 						<div class="col-md-12" id="checkoutLink">
 							<span class="checkoutLink" ng-click="checkout(order)">Checkout</span>
 						</div>
 					</div>
 				</div>
-				<div class="col-md-12" ng-show="orderStatus > 0 && orderStatus < 5 && things.length > 0 && showCheckoutLogin">
+				<div class="col-md-12"
+					ng-show="orderStatus > 0 && orderStatus < 5 && things.length > 0 && showCheckoutLogin"
+				>
 					<div class="row">
 						<div class="col-md-12" id="checkoutLink">
-							<span class="checkoutLink" ng-click="checkoutLogin(order)">Checkout</span>
+							<span class="checkoutLink" ng-click="checkoutLogin()">Checkout</span>
 						</div>
 					</div>
 				</div>
-				<div class="col-md-12" ng-show="orderStatus > 0 && orderStatus < 5 && things.length > 0 && showCheckoutProhibited">
+				<div class="col-md-12"
+					ng-show="orderStatus > 0 && orderStatus < 5 && things.length > 0 && showCheckoutProhibited"
+				>
 					<div class="row">
 						<div class="col-md-12" id="checkoutLink">
-							<span class="checkoutLink" ng-click="checkoutProhibited(order)">Checkout</span>
+							<span class="checkoutLink" ng-click="checkoutProhibited()">Checkout</span>
 						</div>
 					</div>
 				</div>
