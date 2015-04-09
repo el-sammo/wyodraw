@@ -1,153 +1,193 @@
-<div class="modal-header">
+<div class="modal-header" ng-show="! step">
   <h3 class="modal-title" id="nav-away-modal-title">
-		Create an Account
+		Let us Bring the Grub2You!
+  </h3>
+</div>
+<div class="modal-header" ng-show="step === 1">
+  <h3 class="modal-title" id="nav-away-modal-title">
+		We're almost done!
   </h3>
 </div>
 <div class="modal-body">
 	<form name="createAccountForm">
-		<div class="row no-margin">
-			<h4>Select Your Area</h4>
-			<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
-				<label>
-					<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
-					{{area.name}}
-				</label>
-			</div>
-		</div>
-		<br/>
-		<div class="row" ng-show="submitted && ! isFormComplete()" class="formError">
-			<span class="error" style="left: 20px; position: relative;">All fields with an asterisk (*) are required. Please complete all required fields.</span>
-		</div>
-		<div class="row">
-			<div class="col-md-6">
-				<div class="row">
-					<div class="col-md-12">
-						<label for="fName">First Name*</label>
-						<input type="text" name="fName" class="form-control" required ng-model="fName" ng-class="required(fName)">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="lName">Last Name*</label>
-						<input type="text" name="lName" class="form-control" required ng-model="lName" ng-class="required(lName)">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="phone">Phone*</label>
-						<input type="text" name="phone" class="form-control" required ng-model="phone" ng-class="required(phone)">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="email">Email*</label>
-						<input type="text" name="email" class="form-control" required ng-model="email" ng-class="required(email)">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="username">Username*</label>
-						<input type="text" name="username" class="form-control" required ng-blur="usernameSearch()" ng-model="username" ng-class="required(username)">
-						<span class="error" ng-show="!validUsername">The username specified is already taken.</span>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="password">Password*</label>
-						<input type="password" name="password" class="form-control" required ng-model="password" ng-class="required(password)">
-					</div>
+		<div ng-show="! step">
+			<div class="row no-margin">
+				<h4>Select Your Area</h4>
+				<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
+					<label>
+						<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
+						{{area.name}}
+					</label>
 				</div>
 			</div>
-			<div class="col-md-6">
-				<div class="row">
-					<div class="col-md-12">
-						<label for="streetNumber">Address Number*</label>
-						<input type="text" name="streetNumber" class="form-control" required ng-model="streetNumber" ng-class="required(streetNumber)">
+			<br/>
+			<div class="row" ng-show="step < 1 && submitted > 0 && ! isFormComplete(0)"
+				class="formError"
+			>
+				<span class="error" style="left: 20px; position: relative;">
+					All fields with an asterisk (*) are required.
+					Please complete all required fields.
+				</span>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="row">
+						<div class="col-md-12">
+							<label for="email">Email*</label>
+							<input type="text" name="email" class="form-control" required ng-model="email"
+								ng-class="required(email, 0)"
+							>
+						</div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="streetName">Street Name*</label>
-						<input type="text" name="streetName" class="form-control" required ng-model="streetName" ng-class="required(streetName)">
+					<div class="row">
+						<div class="col-md-12">
+							<label for="username">Username*</label>
+							<input type="text" name="username" class="form-control" required
+								ng-blur="usernameSearch()" ng-model="username" ng-class="required(username, 0)"
+							>
+							<span class="error" ng-show="!validUsername">
+								The username specified is already taken.
+							</span>
+						</div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="apt">Apt / Ste:</label>
-						<input type="text" name="apt" class="form-control" ng-model="apt">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="city">City*</label>
-						<input type="text" name="city" class="form-control" required ng-model="city" ng-class="required(city)">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="state">State*</label>
-						<div class="row">
-							<div class="col-md-12 select">
-								<select class="form-control" name="state" ng-model="state">
-									<option value="AL">Alabama</option>
-									<option value="AK">Alaska</option>
-									<option value="AZ">Ariona</option>
-									<option value="AR">Arkansas</option>
-									<option value="CA">California</option>
-									<option value="CO">Colorado</option>
-									<option value="CT">Connecticut</option>
-									<option value="DE">Delaware</option>
-									<option value="FL">Florida</option>
-									<option value="GA">Georgia</option>
-									<option value="HI">Hawaii</option>
-									<option value="ID">Idaho</option>
-									<option value="IL">Illinois</option>
-									<option value="IN">Indiana</option>
-									<option value="IA">Iowa</option>
-									<option value="KS">Kansas</option>
-									<option value="KY">Kentucky</option>
-									<option value="LA">Louisiana</option>
-									<option value="ME">Maine</option>
-									<option value="MD">Maryland</option>
-									<option value="MA">Massachusetts</option>
-									<option value="MI">Michigan</option>
-									<option value="MN">Minnesota</option>
-									<option value="MS">Mississippi</option>
-									<option value="MO">Missouri</option>
-									<option value="MT">Montana</option>
-									<option value="NE">Nebraska</option>
-									<option value="NV">Nevada</option>
-									<option value="NH">New Hampshire</option>
-									<option value="NJ">New Jersey</option>
-									<option value="NM">New Mexico</option>
-									<option value="NY">New York</option>
-									<option value="NC">North Carolina</option>
-									<option value="ND">North Dakota</option>
-									<option value="OH">Ohio</option>
-									<option value="OK">Oklahoma</option>
-									<option value="OR">Oregon</option>
-									<option value="PA">Pennsylvania</option>
-									<option value="RI">Rhode Island</option>
-									<option value="SC">South Carolina</option>
-									<option value="SD">South Dakota</option>
-									<option value="TN">Tennessee</option>
-									<option value="TX">Texas</option>
-									<option value="UT">Utah</option>
-									<option value="VT">Vermont</option>
-									<option value="VA">Virginia</option>
-									<option value="WA">Washington</option>
-									<option value="WV">West Virginia</option>
-									<option value="WI">Wisconsin</option>
-									<option value="WY">Wyoming</option>
-								</select>
-							</div>
+					<div class="row">
+						<div class="col-md-12">
+							<label for="password">Password*</label>
+							<input type="password" name="password" class="form-control"
+								required ng-model="password" ng-class="required(password, 0)"
+							>
 						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<label for="zip">Zip*</label>
-						<input type="text" name="zip" class="form-control" required ng-model="zip" ng-class="required(zip)">
+			</div>
+		</div>
+		<div ng-show="step === 1">
+			<div class="row" ng-show="submitted > 1 && ! isFormComplete(1)" class="formError">
+				<span class="error" style="left: 20px; position: relative;">
+					All fields with an asterisk (*) are required.
+					Please complete all required fields.
+				</span>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="row">
+						<div class="col-md-12">
+							<label for="fName">First Name*</label>
+							<input type="text" name="fName" class="form-control" required ng-model="fName"
+								ng-class="required(fName, 1)"
+							>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<label for="lName">Last Name*</label>
+							<input type="text" name="lName" class="form-control" required ng-model="lName"
+								ng-class="required(lName, 1)"
+							>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<label for="phone">Phone*</label>
+							<input type="text" name="phone" class="form-control" required ng-model="phone"
+								ng-class="required(phone, 1)"
+							>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="row">
+						<div class="col-md-12">
+							<label for="address">Address*</label>
+							<input type="text" name="address" class="form-control" required
+								ng-model="address" ng-class="requiredAddress(address, 1)"
+							>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<label for="apt">Apt / Ste:</label>
+							<input type="text" name="apt" class="form-control" ng-model="apt">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<label for="city">City*</label>
+							<input type="text" name="city" class="form-control" required ng-model="city"
+								ng-class="required(city, 1)"
+							>
+						</div>
+					</div>
+					<!-- 
+					<div class="row">
+						<div class="col-md-12">
+							<label for="state">State*</label>
+							<div class="row">
+								<div class="col-md-12 select">
+									<select class="form-control" name="state" ng-model="state">
+										<option value="AL">Alabama</option>
+										<option value="AK">Alaska</option>
+										<option value="AZ">Ariona</option>
+										<option value="AR">Arkansas</option>
+										<option value="CA">California</option>
+										<option value="CO">Colorado</option>
+										<option value="CT">Connecticut</option>
+										<option value="DE">Delaware</option>
+										<option value="FL">Florida</option>
+										<option value="GA">Georgia</option>
+										<option value="HI">Hawaii</option>
+										<option value="ID">Idaho</option>
+										<option value="IL">Illinois</option>
+										<option value="IN">Indiana</option>
+										<option value="IA">Iowa</option>
+										<option value="KS">Kansas</option>
+										<option value="KY">Kentucky</option>
+										<option value="LA">Louisiana</option>
+										<option value="ME">Maine</option>
+										<option value="MD">Maryland</option>
+										<option value="MA">Massachusetts</option>
+										<option value="MI">Michigan</option>
+										<option value="MN">Minnesota</option>
+										<option value="MS">Mississippi</option>
+										<option value="MO">Missouri</option>
+										<option value="MT">Montana</option>
+										<option value="NE">Nebraska</option>
+										<option value="NV">Nevada</option>
+										<option value="NH">New Hampshire</option>
+										<option value="NJ">New Jersey</option>
+										<option value="NM">New Mexico</option>
+										<option value="NY">New York</option>
+										<option value="NC">North Carolina</option>
+										<option value="ND">North Dakota</option>
+										<option value="OH">Ohio</option>
+										<option value="OK">Oklahoma</option>
+										<option value="OR">Oregon</option>
+										<option value="PA">Pennsylvania</option>
+										<option value="RI">Rhode Island</option>
+										<option value="SC">South Carolina</option>
+										<option value="SD">South Dakota</option>
+										<option value="TN">Tennessee</option>
+										<option value="TX">Texas</option>
+										<option value="UT">Utah</option>
+										<option value="VT">Vermont</option>
+										<option value="VA">Virginia</option>
+										<option value="WA">Washington</option>
+										<option value="WV">West Virginia</option>
+										<option value="WI">Wisconsin</option>
+										<option value="WY">Wyoming</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+					-->
+					<div class="row">
+						<div class="col-md-12">
+							<label for="zip">Zip*</label>
+							<input type="text" name="zip" class="form-control" required
+								ng-model="zip" ng-class="required(zip, 1)"
+							>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -155,10 +195,24 @@
 	</form>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
+	<button ng-show="! step" type="button" class="btn btn-primary pull-left" 
+		ng-click="$close('discard')"
+	>
     <i class="fa fa-reply"></i> &nbsp; Go Back
   </button>
-  <button type="button" class="btn btn-success pull-right" ng-click="createAccount()" ng-disabled="!selArea">
+	<button ng-show="step === 1" type="button" class="btn btn-primary pull-left" 
+		ng-click="step = (step || 1) - 1"
+	>
+    <i class="fa fa-reply"></i> &nbsp; Go Back
+  </button>
+	<button ng-show="! step || step < 1" type="button" class="btn btn-success pull-right" 
+		ng-click="startAccount()" ng-disabled="!selArea"
+	>
+		Next &nbsp; <i class="fa fa-chevron-right"></i>
+	</button>
+	<button ng-show="step && step > 0" type="button" class="btn btn-success pull-right" 
+		ng-click="createAccount()"
+	>
     <i class="fa fa-plus"></i> &nbsp; Create Account
 	</button>
 </div>
