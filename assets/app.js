@@ -718,6 +718,20 @@ app.controller('SignUpController', function(
 
 	$scope.state = clientConfig.defaultState || 'WY';
 
+	$scope.step = 0;
+	$scope.submitted = 0;
+
+	$scope.required = function(field, step) {
+		if($scope.submitted <= step || field) return;
+	 	return 'error';
+	};
+
+	$scope.requiredAddress = function(field, step) {
+		if($scope.submitted <= step) return '';
+		if(field && isValidAddress(field)) return '';
+	 	return 'error';
+	};
+
 	$scope.usernameSearch = function() {
 		if($scope.username === '') return;
 
@@ -734,23 +748,72 @@ app.controller('SignUpController', function(
 		});
 	};
 
-	$scope.isFormComplete = function() {
+	$scope.startAccount = function() {
+		$scope.submitted = 1;
+		if(! $scope.isFormComplete(0)) return;
+
+		var customer = {
+			email: $scope.email,
+			username: $scope.username,
+			areaId: $scope.selArea
+		}
+
+		$http.post('/starterAccounts/create', customer).then(function(data) {
+			$scope.step = 1;
+		}).catch(function(err) {
+			console.log('layoutMgmt: sut-customersGet ajax failed');
+			console.error(err);
+		});
+	};
+
+	function splitAddress(address) {
+		var addrInfo = {
+			streetNumber: '',
+			streetName: ''
+		};
+		var matches = address.match(/^([0-9]+) (.+)/);
+		if(matches) {
+			addrInfo.streetNumber = matches[1];
+			addrInfo.streetName = matches[2];
+		}
+		return addrInfo;
+	}
+
+	function isValidAddress(address) {
+		if(! address) return false;
+
+		var addrInfo = splitAddress($scope.address);
+		return addrInfo.streetNumber && addrInfo.streetName;
+	};
+
+	$scope.isFormComplete = function(step) {
+		var reqFields = {
+			0: ['email', 'username', 'password'],
+			1: ['fName', 'lName', 'phone', 'address', 'city', 'state', 'zip']
+		};
+
+		if(! reqFields[step]) return true;
+
 		var isComplete = true;
-		[
-			'fName', 'lName', 'phone', 'email', 'username', 'password',
-			'streetNumber', 'streetName', 'city', 'state', 'zip',
-		].forEach(function(fieldName) {
+		reqFields[step].forEach(function(fieldName) {
 			isComplete = isComplete && $scope[fieldName];
 		});
+
+		if($scope.step > 0) {
+			isComplete = isComplete && isValidAddress($scope.address);
+		}
+
 		return isComplete;
 	};
 
 	$scope.createAccount = function() {
-		$scope.submitted = true;
+		$scope.submitted = 2;
 
-		if(! $scope.isFormComplete()) {
+		if(! $scope.isFormComplete(1)) {
 			return;
 		}
+
+		var addrInfo = splitAddress($scope.address);
 
 		var customer = {
 			areaId: $scope.selArea,
@@ -758,8 +821,8 @@ app.controller('SignUpController', function(
 			lName: $scope.lName,
 			addresses: {
 				primary: {
-					streetNumber: $scope.streetNumber,
-					streetName: $scope.streetName,
+					streetNumber: addrInfo.streetNumber,
+					streetName: addrInfo.streetName,
 					apt: $scope.apt,
 					city: $scope.city,
 					state: $scope.state,
@@ -2059,8 +2122,17 @@ app.config(function(httpInterceptorProvider) {
 
 app.controller('RestaurantsController', function(
 	$scope, $http, $routeParams,
-	$modal, orderMgmt, $rootScope
+	$modal, orderMgmt, $rootScope,
+	layoutMgmt, sessionMgr
 ) {
+	if(! $rootScope.hasPromptedSignup) {
+		sessionMgr.getSession().then(function(sessionData) {
+			$rootScope.hasPromptedSignup = true;
+			if(sessionData.customerId) return;
+			layoutMgmt.signUp();
+		});
+	}
+
 	var areaId = $rootScope.areaId;
 
 	$scope.getUglySlug = function() {
