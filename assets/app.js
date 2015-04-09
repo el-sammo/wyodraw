@@ -1,6 +1,6 @@
 
 var app = angular.module('app', [
-	'ngRoute', 'ui.bootstrap', 
+	'ngRoute', 'ui.bootstrap', 'angularPayments',
 	'angulartics', 'angulartics.google.analytics'
 ]);
 var $ = jQuery;
@@ -309,13 +309,13 @@ app.directive('manageHeight', function($window) {
 	}
 
 	function resizeElement(el, newHt) {
-		var adjHt = newHt - 342;
+		var adjHt = newHt - 330;
 		$(el).height(adjHt);
 	}
 
 	return function ($scope, element, args) {
 		$scope.$watch(getWindowHeight, function(height) {
-			height = (args.manageHeight === 'order' ? height - 40 : height);
+			height = (args.manageHeight === 'order' ? height - 52 : height);
 			resizeElement(element, height);
 		}, true);
 
@@ -804,9 +804,6 @@ app.controller('SignUpController', function(
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			} else if(status == 200) {
-				console.log('nope - getting here');
-				// TODO: this resolves the checkout button not being updated
-				$window.location.href = '/';
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 		 	} else {
@@ -865,9 +862,6 @@ app.controller('LayoutMgmtController', function(
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 			} else if(status == 200) {
-				console.log('getting here');
-				// TODO: this resolves the checkout button not being updated
-				$window.location.href = '/';
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
 		 	} else {
@@ -1062,14 +1056,12 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
-	clientConfig
+	clientConfig, payMethodMgmt
 ) {
 
 	if(!$scope.order || !$scope.order.customerId) {
 		$modalInstance.dismiss('cancel');
 	}
-
-	$scope.addPM = accountMgmt.addToCheckout;
 
 	if(!args.order) {
 		console.error('no args');
@@ -1081,6 +1073,29 @@ app.controller('CheckoutController', function(
 	$scope.order = args.order;
 	$scope.validCode = true;
 	$scope.effect;
+	$scope.payMethod = {};
+
+	function redactCC(lastFour) {
+		return 'XXXX-XXXX-XXXX-' + lastFour;
+	}
+
+	$scope.addPM = function() {
+		var paymentData = {
+			cardNumber: $scope.payMethod.cardNumber.toString(),
+			expirationDate: $scope.payMethod.year + '-' + $scope.payMethod.month,
+			cvv2: $scope.payMethod.cvv2
+		};
+
+		payMethodMgmt.addPM(paymentData).then(function(customer) {
+			var payMethod = _.last(customer.paymentMethods);
+			var pos = $scope.order.paymentMethods.length - 2;
+			$scope.order.paymentMethods.splice(pos, 0, {
+				id: payMethod.id,
+				lastFour: redactCC(payMethod.lastFour)
+			});
+			$scope.selMethod = payMethod.id;
+		});
+	};
 
 	var p = $http.get('/customers/' + $scope.order.customerId);
 		
@@ -1094,7 +1109,11 @@ app.controller('CheckoutController', function(
 	// if orders ajax succeeds...
 	p.then(function(res) {
 		var paymentMethods = res.data.paymentMethods || [];
+		paymentMethods.forEach(function(payMethod) {
+			payMethod.lastFour = redactCC(payMethod.lastFour);
+		});
 		paymentMethods.push({id: 'cash', lastFour: 'Cash'});
+		paymentMethods.push({id: 'newCard', lastFour: 'New Credit Card'});
 		$scope.order.paymentMethods = paymentMethods;
 		$scope.customer = res.data;
 	});
@@ -1322,7 +1341,6 @@ app.controller('CheckoutController', function(
 app.controller('OrderMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope, sessionMgr, $q
 ) {
-	$('footer').show();
 	$scope.item = args.item;
 	$scope.thing = args.thing;
 	$scope.specInst = '';
@@ -1583,6 +1601,74 @@ app.controller('OrderMgmtController', function(
 
 
 ///
+// Payment Method Management
+///
+
+app.factory('payMethodMgmt', function($q, $http, sessionMgr) {
+	var service = {
+		addPM: function(paymentData) {
+			var scope = {};
+
+			return sessionMgr.getSession().then(function(sessionData) {
+				if(!sessionData.customerId) {
+					// TODO Handle condition (or delete this section if it makes
+					// the most sense)
+					return;
+				}
+
+				scope.customerId = sessionData.customerId;
+				return $http.get('/customers/' + scope.customerId);
+
+			}).then(function(res) {
+				scope.customer = res.data;
+		
+				if(scope.customer.aNetProfileId) {
+					return;
+				}
+
+				return $http.post('/customers/createANet', {
+					customerId: scope.customer.id
+				}).then(function(res) {
+					scope.customer.aNetProfileId = res.data.customerProfileId;
+
+					return $http.put('/customers/' + scope.customer.id, scope.customer);
+				});
+
+			}).then(function() {
+				paymentData.customerProfileId = scope.customer.aNetProfileId;
+
+				if(! scope.customer.paymentMethods) {
+					scope.customer.paymentMethods = [];
+				}
+
+				return $http.post('/customers/createPaymentMethod', paymentData);
+
+			}).then(function(res) {
+				scope.customer.paymentMethods.push({
+					lastFour: res.data.lastFour,
+					id: res.data.customerPaymentProfileId,
+					active: true,
+					expires: res.data.expires,
+					cvv2: res.data.cvv2
+				});
+
+				return $http.put('/customers/' + scope.customer.id, scope.customer);
+
+			}).then(function(res) {
+				return scope.customer;
+
+			}).catch(function(err) {
+				console.log('payMethodMgmt: REST API call failed');
+				console.error(err);
+				return $q.reject(err);
+			});
+		}
+	};
+
+	return service;
+});
+
+///
 // Careers Management
 ///
 
@@ -1607,9 +1693,8 @@ app.factory('careersMgmt', function($modal, $rootScope) {
 });
 
 app.controller('CareersMgmtController', function(
-	args, $scope, $modalInstance, $http, $rootScope
+	args, $scope, $modalInstance, $http, $rootScope, messenger
 ) {
-	$('footer').show();
 
 	$scope.apply = function() {
 		var applicant = {
@@ -1671,7 +1756,6 @@ app.factory('testerMgmt', function($modal, $rootScope) {
 app.controller('TesterMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope, messenger
 ) {
-	$('footer').show();
 
 	$scope.apply = function() {
 		var applicant = {
@@ -1722,9 +1806,6 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 	var areaId = $rootScope.areaId;
 	var areaName = $rootScope.areaName;
 	var areaPhone = $rootScope.areaPhone;
-
-	// Hide Footer on homepage only
-	$('footer').hide();
 
 	// News Feeder
 	
@@ -1903,7 +1984,6 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 // Controllers: About
 ///
 app.controller('AboutController', function($scope, $http, $routeParams, $rootScope) {
-	$('footer').show();
 	var areaId = $rootScope.areaId;
 
 	var p = $http.get('/areas/' + areaId);
@@ -1924,7 +2004,6 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 // Controllers: Careers
 ///
 app.controller('CareersController', function($scope, $http, $routeParams, $rootScope, careersMgmt) {
-	$('footer').show();
 	var areaId = $rootScope.areaId;
 
 	$scope.apply = careersMgmt.apply;
@@ -1947,7 +2026,6 @@ app.controller('CareersController', function($scope, $http, $routeParams, $rootS
 // Controllers: Contact
 ///
 app.controller('ContactController', function($scope, $http, $routeParams, $rootScope) {
-	$('footer').show();
 	var areaId = $rootScope.areaId;
 
 	var p = $http.get('/areas/' + areaId);
@@ -1968,7 +2046,6 @@ app.controller('ContactController', function($scope, $http, $routeParams, $rootS
 // Controllers: Privacy
 ///
 app.controller('PrivacyController', function($scope, $http, $routeParams, $rootScope) {
-	$('footer').show();
 });
 
 
@@ -1984,7 +2061,6 @@ app.controller('RestaurantsController', function(
 	$scope, $http, $routeParams,
 	$modal, orderMgmt, $rootScope
 ) {
-	$('footer').show();
 	var areaId = $rootScope.areaId;
 
 	$scope.getUglySlug = function() {
@@ -2252,7 +2328,6 @@ app.controller('OrderController', function(
 	$rootScope, sessionMgr, $q, layoutMgmt,
 	clientConfig
 ) {
-	$('footer').show();
 
 	// TODO
 	// put this in a config? or what?
@@ -2274,65 +2349,71 @@ app.controller('OrderController', function(
 
 	$scope.removeItem = orderMgmt.remove;
 
-	$scope.checkout = orderMgmt.checkout;
-	$scope.checkoutLogin = layoutMgmt.logIn;
-	$scope.checkoutProhibited = orderMgmt.checkoutProhibited;
-
 	$rootScope.$on('orderChanged', function(evt, args) {
 		console.log('orderChanged()');
 		$scope.updateOrder();
 	});
 
-	var d = $http.get('/areas/');
-						
-	// if areas ajax fails...
-	d.error(function(err) {
-		console.log('layoutMgmt: areas ajax failed');
-		console.error(err);
-	});
-								
-	// if areas ajax succeeds...
-	d.then(function(res) {
-		$scope.areas = res.data;
+	///
+	// Checkout Actions
+	///
+
+	function getDeliveryHours() {
+		if($scope.deliveryHours) {
+			return $q.when($scope.deliveryHours);
+		}
+
+		// TODO Need to adjust for multiple areas
+		return $http.get('/areas/').then(function(res) {
+			$scope.areas = res.data;
+
+			// Calculate today (0 = Mon, 6 = Sun)
+			var today = new Date().getDay() - 1;
+
+			if(today < 0) {
+				today = 6;
+			}
+
+			var todayHours = $scope.areas[0].deliveryHours[today];
+
+			$scope.deliveryHours = {
+				start: (parseInt(todayHours.start) - 1),
+				end: parseInt(todayHours.end)
+			};
+
+			return $scope.deliveryHours;
+		}).catch(function(err) {
+			console.log('layoutMgmt: areas ajax failed');
+			console.error(err);
+		});
+	}
+
+	function checkoutIsProhibited() {
+		if(clientConfig.showCheckout) {
+			return $q.when(false);
+		}
 
 		var now = new Date().getHours();
 
-		var today = new Date().getDay();
+		return getDeliveryHours().then(function(deliveryHours) {
+			return (now < deliveryHours.start || now >= deliveryHours.end);
+		});
+	}
 
-		today = today - 1;
-
-		if(today < 0) {
-			today = 7;
-		}
-
-		var todayHours = $scope.areas[0].deliveryHours[today];
-
-		var starting = (parseInt(todayHours.start) - 1);
-		var ending = parseInt(todayHours.end);
-
-		$scope.showCheckout = false;
-		$scope.showCheckoutLogin = false;
-		$scope.showCheckoutProhibited = false;
-
-		var sessionPromise = sessionMgr.getSession();
-	
-		sessionPromise.then(function(sessionData) {
-			if(clientConfig.showCheckout || (now >= starting && now <= ending)) {
-		 		if(sessionData.order && sessionData.order.customerId) {
-					$scope.showCheckout = true;
-				} else {
-					$scope.showCheckoutLogin = true;
-				}
-			} else {
-				$scope.showCheckoutProhibited = true;
+	$scope.checkout = function(order) {
+		checkoutIsProhibited().then(function(isProhibited) {
+			if(isProhibited) {
+				return orderMgmt.checkoutProhibited();
 			}
 
-//			if(sessionData.order && sessionData.order.customerId == '551aa68dd3de33800d077215') {
-//				$scope.showCheckoutLogin = true;
-//			}
+			if(! (order && order.customerId)) {
+				return layoutMgmt.logIn();
+			}
+
+			orderMgmt.checkout(order);
 		});
-	});
-		
+	};
+
 	$scope.updateOrder = function() {
 		var sessionPromise = sessionMgr.getSession();
 	
@@ -2685,278 +2766,30 @@ app.factory('accountMgmt', function($modal, $rootScope, $http) {
 
 
 app.controller('AccountModalController', function(
-	args, $modalInstance,			
-	$scope, $http, $routeParams, messenger,
-	$rootScope, sessionMgr,	$window, accountMgmt,
-	orderMgmt
+	$window, $rootScope, $scope, $modalInstance, args, messenger,
+	payMethodMgmt
 ) {
 
 	if(args.pmId) {
 		var pmId = args.pmId;
 	}
 
+	$scope.payMethod = {};
+
 	$scope.addPaymentMethod = function() {
-		var paymentData = {};
-		var sessionPromise = sessionMgr.getSession();
-		
-		sessionPromise.then(function(sessionData) {
-			if(!sessionData.customerId) {
-				$window.location.href = '/';
-				return;
-			}
-	
-			var customerId = sessionData.customerId;
-			var p = $http.get('/customers/' + customerId);
-		
-			p.error(function(err) {
-				console.log('AccountController: customers ajax failed');
-				console.error(err);
-			});
-		
-			p.then(function(res) {
-				$scope.customer = res.data;
+		var paymentData = {
+			cardNumber: $scope.payMethod.cardNumber.toString(),
+			expirationDate: $scope.payMethod.year + '-' + $scope.payMethod.month,
+			cvv2: $scope.payMethod.cvv2
+		};
 
-				var customer = $scope.customer;
+		payMethodMgmt.addPM(paymentData).then(function(customer){
+			messenger.show('The payment method has been added.', 'Success!');
+			$modalInstance.dismiss('done');
 
-				paymentData.cardNumber = $scope.cardNumber.toString();
-				paymentData.expirationDate = $scope.year + '-' + $scope.month;
-				paymentData.cvv2 = $scope.cvv2;
-		
-				if($scope.customer.aNetProfileId) {
-					paymentData.customerProfileId = customer.aNetProfileId;
-		
-					var p = $http.post('/customers/createPaymentMethod', paymentData);
-				
-					p.error(function(err) {
-						console.log('AccountController: customers-createPaymentMethod ajax failed');
-						console.error(err);
-						$modalInstance.dismiss('cancel');
-					});
-				
-					p.then(function(res) {
-						customer.paymentMethods.push({
-							lastFour: res.data.lastFour,
-							id: res.data.customerPaymentProfileId,
-							active: true,
-							expires: res.data.expires,
-							cvv2: res.data.cvv2
-						});
-		
-						var r = $http.put('/customers/' + customer.id, customer);
-				
-						// if customers ajax fails...
-						r.catch(function(err) {
-							console.log('AccountController: customers-paymentMethods-put ajax failed');
-							console.error(err);
-							$modalInstance.dismiss('cancel');
-						});
-									
-						// if customers ajax succeeds...
-						r.then(function(res) {
-							console.log('maybe?');
-							messenger.show('The payment method has been added.', 'Success!');
-							$window.location.reload(true);
-							$modalInstance.dismiss('done');
-						});
-					});
-				} else {
-					var m = $http.post('/customers/createANet', {customerId: customer.id});
-					
-					m.error(function(err) {
-						console.log('AccountController: customers-createProfileMethod ajax failed');
-						console.error(err);
-						$modalInstance.dismiss('cancel');
-					});
-					
-					m.then(function(res) {
-						customer.aNetProfileId = res.data.customerProfileId;
-		
-						var n = $http.put('/customers/' + customer.id, customer);
-					
-						// if customers ajax fails...
-						n.catch(function(err) {
-							console.log('AccountController: customers-aNetProfileId-put ajax failed');
-							console.error(err);
-							$modalInstance.dismiss('cancel');
-						});
-										
-						// if customers ajax succeeds...
-						n.then(function(res) {
-							paymentData.customerProfileId = customer.aNetProfileId;
-							var p = $http.post('/customers/createPaymentMethod', paymentData);
-						
-							p.error(function(err) {
-								console.log('AccountController: customers-createPaymentMethod ajax failed');
-								console.error(err);
-								$modalInstance.dismiss('cancel');
-							});
-						
-							p.then(function(res) {
-								if(!customer.paymentMethods) {
-									customer.paymentMethods = [];
-								}
-		
-								customer.paymentMethods.push({
-									lastFour: res.data.lastFour,
-									id: res.data.customerPaymentProfileId,
-									active: true,
-									expires: res.data.expires,
-									cvv2: res.data.cvv2
-								});
-				
-								var r = $http.put('/customers/' + customer.id, customer);
-						
-								// if customers ajax fails...
-								r.catch(function(err) {
-									console.log('AccountController: customers-paymentMethods-put ajax failed');
-									console.error(err);
-									$modalInstance.dismiss('cancel');
-								});
-											
-								// if customers ajax succeeds...
-								r.then(function(res) {
-									messenger.show('The payment method has been added.', 'Success!');
-									$window.location.reload(true);
-									$modalInstance.dismiss('done');
-								});
-							});
-						});
-					});
-				}
-			});
-		});
-	};
-
-	$scope.addPaymentMethodToCheckout = function() {
-		var paymentData = {};
-		var sessionPromise = sessionMgr.getSession();
-		
-		sessionPromise.then(function(sessionData) {
-			if(!sessionData.customerId) {
-				$window.location.href = '/';
-				return;
-			}
-	
-			var customerId = sessionData.customerId;
-			var p = $http.get('/customers/' + customerId);
-		
-			p.error(function(err) {
-				console.log('AccountController: customers ajax failed');
-				console.error(err);
-			});
-		
-			p.then(function(res) {
-				$scope.customer = res.data;
-
-				var customer = $scope.customer;
-
-				paymentData.cardNumber = $scope.cardNumber.toString();
-				paymentData.expirationDate = $scope.year + '-' + $scope.month;
-				paymentData.cvv2 = $scope.cvv2;
-		
-				if($scope.customer.aNetProfileId) {
-					paymentData.customerProfileId = customer.aNetProfileId;
-		
-					var p = $http.post('/customers/createPaymentMethod', paymentData);
-				
-					p.error(function(err) {
-						console.log('AccountController: customers-createPaymentMethod ajax failed');
-						console.error(err);
-						$modalInstance.dismiss('cancel');
-					});
-				
-					p.then(function(res) {
-						customer.paymentMethods.push({
-							lastFour: res.data.lastFour,
-							id: res.data.customerPaymentProfileId,
-							active: true,
-							expires: res.data.expires,
-							cvv2: res.data.cvv2
-						});
-		
-						var r = $http.put('/customers/' + customer.id, customer);
-				
-						// if customers ajax fails...
-						r.catch(function(err) {
-							console.log('AccountController: customers-paymentMethods-put ajax failed');
-							console.error(err);
-							$modalInstance.dismiss('cancel');
-						});
-									
-						// if customers ajax succeeds...
-						r.then(function(res) {
-							messenger.show('The payment method has been added.', 'Success!');
-							$window.location.href = '/';
-							orderMgmt.checkout();
-							$modalInstance.dismiss('done');
-						});
-					});
-				} else {
-					var m = $http.post('/customers/createANet', {customerId: customer.id});
-					
-					m.error(function(err) {
-						console.log('AccountController: customers-createProfileMethod ajax failed');
-						console.error(err);
-						$modalInstance.dismiss('cancel');
-					});
-					
-					m.then(function(res) {
-						customer.aNetProfileId = res.data.customerProfileId;
-		
-						var n = $http.put('/customers/' + customer.id, customer);
-					
-						// if customers ajax fails...
-						n.catch(function(err) {
-							console.log('AccountController: customers-aNetProfileId-put ajax failed');
-							console.error(err);
-							$modalInstance.dismiss('cancel');
-						});
-										
-						// if customers ajax succeeds...
-						n.then(function(res) {
-							paymentData.customerProfileId = customer.aNetProfileId;
-							var p = $http.post('/customers/createPaymentMethod', paymentData);
-						
-							p.error(function(err) {
-								console.log('AccountController: customers-createPaymentMethod ajax failed');
-								console.error(err);
-								$modalInstance.dismiss('cancel');
-							});
-						
-							p.then(function(res) {
-								if(!customer.paymentMethods) {
-									customer.paymentMethods = [];
-								}
-		
-								customer.paymentMethods.push({
-									lastFour: res.data.lastFour,
-									id: res.data.customerPaymentProfileId,
-									active: true,
-									expires: res.data.expires,
-									cvv2: res.data.cvv2
-								});
-				
-								var r = $http.put('/customers/' + customer.id, customer);
-						
-								// if customers ajax fails...
-								r.catch(function(err) {
-									console.log('AccountController: customers-paymentMethods-put ajax failed');
-									console.error(err);
-									$modalInstance.dismiss('cancel');
-								});
-											
-								// if customers ajax succeeds...
-								r.then(function(res) {
-									messenger.show('The payment method has been added.', 'Success!');
-									$window.location.href = '/';
-									orderMgmt.checkout();
-									$modalInstance.dismiss('done');
-								});
-							});
-						});
-					});
-				}
-			});
+			$rootScope.$broadcast('customerChanged', customer);
+		}).catch(function(err) {
+			$modalInstance.dismiss('cancel');
 		});
 	};
 
@@ -2975,13 +2808,12 @@ app.controller('AccountController', function(
 	$scope, $http, $routeParams, messenger,
 	$rootScope, sessionMgr,	$window, accountMgmt
 ) {
-	$('footer').show();
 
 	$scope.addPM = accountMgmt.add;
 	$scope.removePM = accountMgmt.remove;
 
 	var sessionPromise = sessionMgr.getSession();
-	
+
 	sessionPromise.then(function(sessionData) {
 		if(!sessionData.customerId) {
 			$window.location.href = '/';
@@ -3016,13 +2848,16 @@ app.controller('AccountController', function(
 			$scope.orders = res.data;
 		});
 	});
+
+	$rootScope.$on('customerChanged', function(evt, customer) {
+		$scope.customer = customer;
+	});
 });
 
 app.controller('AccountAddController', function(
 	navMgr, pod, customerSchema,
 	$scope, $http, $routeParams, $window, $rootScope
 ) {
-	$('footer').show();
 		
 	navMgr.protect(function() { return $scope.form.$dirty; });
 	pod.podize($scope);
@@ -3057,7 +2892,6 @@ app.controller('AccountAddController', function(
 app.controller('AccountEditController', function(
 	navMgr, messenger, pod, customerSchema, $scope, $http, $routeParams, $rootScope
 ) {
-	$('footer').show();
 	navMgr.protect(function() { return $scope.form.$dirty; });
 	pod.podize($scope);
 
