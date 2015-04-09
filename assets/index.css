@@ -15,6 +15,9 @@ body {
 .no-margin {
 	margin-left: 0px!important;
 }
+.no-right-padding {
+	padding-right: 0px!important;
+}
 
 .breakbeat5 {
 	margin-bottom: 5px;
@@ -31,6 +34,47 @@ body {
 input.error {
 	border: 1px solid red;
 }
+
+.form-section {
+	padding-top: 12px;
+	border-top: 1px solid #eee;
+}
+
+/** Bootstrap overrides **/
+
+.page-header {
+	margin-top: 0px;
+	padding-top: 0px;
+}
+.page-header h1, .page-header h2, .page-header h3 {
+	margin-top: 8px;
+	margin-bottom: 8px;
+}
+
+.navbar button {
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 8px;
+}
+
+.modal {
+	background-color: rgba(0, 0, 0, .3);
+}
+
+.btn.btn-danger {
+	background-color: #f00;
+	font-weight: 900;
+}
+.btn.btn-danger:hover {
+	background-color: #c00;
+}
+
+.btn.btn-big {
+	font-size: 16pt;
+}
+
+
+/** Custom CSS **/
 
 .noAccount {
 	font-size: 14px;
@@ -90,6 +134,7 @@ footer {
 	line-height: 80px;
 	font-weight: 600;
 	font-style: normal;
+	text-decoration: none!important;
 }
 
 td {
@@ -420,20 +465,19 @@ td {
 }
 
 #restaurantsMenusPanel {
-	top: 234px;
 	background-color: #fff;
 	overflow-y: auto;
 	overflow-x: hidden;
-	position: fixed;
+	width: 100%;
+	margin-top: 172px;
 }
 
 #menuItemsPanel {
-	top: 164px;
 	border-left: 1px dotted #C0C2FF;
 	border-right: 1px dotted #C0C2FF;
 	overflow-y: auto;
 	overflow-x: hidden;
-	position: relative;
+	margin-top: 160px;
 }
 
 .menuHeader {
@@ -449,11 +493,10 @@ td {
 }
 
 #orderPanel {
-	top: 160px;
 	background-color: #fff;
 	overflow-y: auto;
 	overflow-x: hidden;
-	position: relative;
+	margin-top: 172px;
 }
 
 .orderHead {
@@ -591,27 +634,6 @@ td {
 	margin-left:-200px;
 }
 
-/** Bootstrap overrides **/
-
-.page-header {
-	margin-top: 0px;
-	padding-top: 0px;
-}
-.page-header h1, .page-header h2, .page-header h3 {
-	margin-top: 8px;
-	margin-bottom: 8px;
-}
-
-.navbar button {
-	margin-left: 5px;
-	margin-right: 5px;
-	margin-top: 8px;
-}
-
-.modal {
-	background-color: rgba(0, 0, 0, .3);
-}
-
 /** Angular Bootstrap **/
 
 .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
@@ -730,6 +752,7 @@ td {
 
 #fms-messenger .alert {
 	/* width: calc(100% - 70em); */
+	border-color: #fff;
 	width: 40em;
 	height: 40px;
 	position: fixed;
@@ -739,7 +762,8 @@ td {
 	left: calc(50% - (40em / 2));
 	z-index: 1030;
 	padding-top: 10px;
-	color: #007581;
+	background: #fff;
+	color: #000;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipses;
