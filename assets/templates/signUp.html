@@ -11,53 +11,70 @@
 <div class="modal-body">
 	<form name="createAccountForm">
 		<div ng-show="! step">
-			<div class="row no-margin">
-				<h4>Select Your Area</h4>
-				<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
-					<label>
-						<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
-						{{area.name}}
-					</label>
-				</div>
-			</div>
-			<br/>
-			<div class="row" ng-show="step < 1 && submitted > 0 && ! isFormComplete(0)"
-				class="formError"
-			>
-				<span class="error" style="left: 20px; position: relative;">
-					All fields with an asterisk (*) are required.
-					Please complete all required fields.
-				</span>
-			</div>
 			<div class="row">
 				<div class="col-md-6">
-					<div class="row">
-						<div class="col-md-12">
-							<label for="email">Email*</label>
-							<input type="text" name="email" class="form-control" required ng-model="email"
-								ng-class="required(email, 0)"
-							>
+					<div class="row no-margin">
+						<h4>Select Your Area</h4>
+						<div class="radio" ng-repeat="area in areas"> <!-- TODO change this to a select soon -->
+							<label>
+								<input type="radio" name="areaName" ng-value="area.id" ng-model="$parent.selArea">
+								{{area.name}}
+							</label>
 						</div>
+					</div>
+					<br/>
+					<div class="row" ng-show="step < 1 && submitted > 0 && ! isFormComplete(0)"
+						class="formError"
+					>
+						<span class="error" style="left: 20px; position: relative;">
+							All fields with an asterisk (*) are required.
+							Please complete all required fields.
+						</span>
 					</div>
 					<div class="row">
 						<div class="col-md-12">
-							<label for="username">Username*</label>
-							<input type="text" name="username" class="form-control" required
-								ng-blur="usernameSearch()" ng-model="username" ng-class="required(username, 0)"
-							>
-							<span class="error" ng-show="!validUsername">
-								The username specified is already taken.
-							</span>
+							<div class="row">
+								<div class="col-md-12">
+									<label for="email">Email*</label>
+									<input type="text" name="email" class="form-control" required ng-model="email"
+										ng-class="required(email, 0)"
+									>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-12">
+									<label for="username">Username*</label>
+									<input type="text" name="username" class="form-control" required
+										ng-blur="usernameSearch()" ng-model="username" ng-class="required(username, 0)"
+									>
+									<span class="error" ng-show="!validUsername">
+										The username specified is already taken.
+									</span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-12">
+									<label for="password">Password*</label>
+									<input type="password" name="password" class="form-control"
+										required ng-model="password" ng-class="required(password, 0)"
+									>
+								</div>
+							</div>
 						</div>
 					</div>
-					<div class="row">
-						<div class="col-md-12">
-							<label for="password">Password*</label>
-							<input type="password" name="password" class="form-control"
-								required ng-model="password" ng-class="required(password, 0)"
-							>
-						</div>
-					</div>
+				</div>
+				<div class="col-md-6">
+					<p class="text-muted">
+							Hungry for Italian, steaks or chops?
+					</p>
+					<p class="text-muted">
+						How about some seafood or Chinese?
+					</p>
+					<p class="text-muted">
+						Maybe you just want tacos or a burger and fries. Whatever you're craving, have us...<h3>Bring the Grub2You!</h3>
+					</p>
+					<br/>
+					<span ng-click="haveAccount()" style="font-size: 14px; font-weight: 500; color: blue; cursor: pointer;">Click here to sign in if you already have an account.</span>
 				</div>
 			</div>
 		</div>

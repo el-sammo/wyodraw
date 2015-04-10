@@ -481,6 +481,21 @@ app.factory('sessionMgr', function($rootScope, $http, $q) {
 });
 
 
+app.factory('delFeeMgmt', function($rootScope, $http, $q) {
+	// [tierOne, tierTwo, tierThree, additional]
+	// maps to
+	// [
+	// 	450 seconds or less, 
+	// 	720 seconds or less but greater than 450 seconds,
+	// 	greater than 720 seconds,
+	// 	each additional restaurant
+	// 	]
+	var service = [7.95, 10.95, 13.95, 5];
+
+	return service;
+});
+
+
 app.factory('fakeAuth', function($rootScope, $http, clientConfig) {
 	var winLocStr = location.hostname;
 	var winLocPcs = winLocStr.split('.');
@@ -666,7 +681,9 @@ app.controller('PodController', function(args, $scope, $modalInstance) {
 // Authentication Management
 ///
 
-app.factory('layoutMgmt', function($modal, $rootScope, $http) {
+app.factory('layoutMgmt', function layoutMgmtFactory(
+	$modal, $rootScope, $http
+) {
 	var service = {
 		logIn: function() {
 			$modal.open({
@@ -693,10 +710,40 @@ app.factory('layoutMgmt', function($modal, $rootScope, $http) {
 	return service;
 });
 
+
+///
+// Signup
+///
+
+app.factory('signupPrompter', function signupPrompterFactory(
+	sessionMgr, layoutMgmt
+) {
+	var hasPrompted = false;
+	var service = {
+		prompt: function() {
+			if(hasPrompted) return;
+			hasPrompted = true;
+
+			sessionMgr.getSession().then(function(sessionData) {
+				if(sessionData.customerId) return;
+				layoutMgmt.signUp();
+			});
+		}
+	};
+	return service;
+});
+
 app.controller('SignUpController', function(
 	$scope, $modalInstance, $http,
-	$rootScope, $window, clientConfig
+	$rootScope, $window, clientConfig,
+	layoutMgmt
 ) {
+
+	$scope.haveAccount = function() {
+		$modalInstance.dismiss('cancel');
+		layoutMgmt.logIn();
+	};
+
 
 	var b = $http.get('/areas/');
 
@@ -1083,6 +1130,21 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 				}
 			});
 		},
+		delFeeExp: function(things, delFee) {
+			$modal.open({
+				templateUrl: '/templates/deliveryFeeExplained.html',
+				backdrop: true,
+				controller: 'ExplainerController',
+				resolve: {
+					args: function() {
+						return {
+							things: things,
+							delFee: delFee
+						}
+					}
+				}
+			});
+		},
 		add: function(item) {
 			$modal.open({
 				templateUrl: '/templates/addItemOptions.html',
@@ -1119,7 +1181,7 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
-	clientConfig, payMethodMgmt
+	clientConfig, payMethodMgmt, delFeeMgmt
 ) {
 
 	if(!$scope.order || !$scope.order.customerId) {
@@ -1207,7 +1269,7 @@ app.controller('CheckoutController', function(
 	$scope.updateTotal = function() {
 		var total = (parseFloat($scope.order.subtotal) + parseFloat($scope.order.tax)).toFixed(2);
 		var gratuity = 0;
-		var promo = 7.95;
+		var promo = delFeeMgmt[0];
 		if($scope.order.deliveryFee) {
 			promo = $scope.order.deliveryFee;
 		}
@@ -2046,10 +2108,15 @@ app.controller('SplashController', function($scope, $http, $rootScope) {
 ///
 // Controllers: About
 ///
-app.controller('AboutController', function($scope, $http, $routeParams, $rootScope) {
+app.controller('AboutController', function($scope, $http, $routeParams, $rootScope, delFeeMgmt) {
 	var areaId = $rootScope.areaId;
 
 	var p = $http.get('/areas/' + areaId);
+
+	$scope.tierOne = '$' + delFeeMgmt[0];
+	$scope.tierTwo = '$' + delFeeMgmt[1];
+	$scope.tierThree = '$' + delFeeMgmt[2];
+	$scope.addRestaurant = '$' + (delFeeMgmt[3]).toFixed(2);
 
 	p.error(function(err) {
 		console.log('AboutController: areas ajax failed');
@@ -2113,6 +2180,66 @@ app.controller('PrivacyController', function($scope, $http, $routeParams, $rootS
 
 
 ///
+// Explainer Controller
+///
+
+app.controller('ExplainerController', function(
+	$scope, args, $http, $routeParams, $modal, orderMgmt,
+	$rootScope, sessionMgr, $q, layoutMgmt, delFeeMgmt,
+	clientConfig
+) {
+
+	if(args.things) {
+		$scope.things = args.things;
+	}
+	
+	if(args.delFee) {
+		$scope.delFee = args.delFee;
+	}
+	
+	$scope.formattedDelFee = '$' + $scope.delFee;
+
+	var rests = [];
+	$scope.things.forEach(function(thing) {
+		if(rests.indexOf(thing.restaurantName) < 0) {
+			rests.push(thing.restaurantName);
+		}
+	});
+
+	$scope.addRests = 0;
+	if(rests.length > 1) {
+		$scope.addRests = rests.length - 1;
+	}
+
+	$scope.addRestsFee = $scope.addRests * delFeeMgmt[3];
+
+	$scope.restNames = '';
+	var firstName = true;
+	rests.forEach(function(rest) {
+		if(firstName) {
+			$scope.restNames = rest;
+			firstName = false;
+		} else {
+			if(rests.indexOf(rest) < $scope.addRests) {
+				$scope.restNames = $scope.restNames + ', ' + rest;
+			} else {
+				$scope.restNames = $scope.restNames + ' and ' + rest;
+			}
+		}
+	})
+
+	$scope.calcFee = $scope.delFee - $scope.addRestsFee;
+
+	$scope.formattedAddRestsFee = '$' + ($scope.addRestsFee).toFixed(2);
+
+	$scope.tierOneFee = '$' + (delFeeMgmt[0]).toFixed(2);
+	$scope.tierTwoFee = '$' + (delFeeMgmt[1]).toFixed(2);
+	$scope.tierThreeFee = '$' + (delFeeMgmt[2]).toFixed(2);
+
+});
+
+
+///
 // Controllers: Restaurants
 ///
 
@@ -2121,17 +2248,10 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	$scope, $http, $routeParams,
-	$modal, orderMgmt, $rootScope,
-	layoutMgmt, sessionMgr
+	$scope, $http, $routeParams, $modal, orderMgmt, $rootScope,
+	signupPrompter
 ) {
-	if(! $rootScope.hasPromptedSignup) {
-		sessionMgr.getSession().then(function(sessionData) {
-			$rootScope.hasPromptedSignup = true;
-			if(sessionData.customerId) return;
-			layoutMgmt.signUp();
-		});
-	}
+	signupPrompter.prompt();
 
 	var areaId = $rootScope.areaId;
 
@@ -2398,7 +2518,7 @@ app.controller('OrderController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
 	$rootScope, sessionMgr, $q, layoutMgmt,
-	clientConfig
+	clientConfig, delFeeMgmt
 ) {
 
 	// TODO
@@ -2420,6 +2540,8 @@ app.controller('OrderController', function(
 	$scope.addItem = orderMgmt.add;
 
 	$scope.removeItem = orderMgmt.remove;
+
+	$scope.delFeeExp = orderMgmt.delFeeExp;
 
 	$rootScope.$on('orderChanged', function(evt, args) {
 		console.log('orderChanged()');
@@ -2545,20 +2667,34 @@ app.controller('OrderController', function(
 
 		sessionPromise.then(function(sessionData) {
 			if(sessionData.order && sessionData.order.things) {
-				var deliveryFeeTiers = [7.95, 10.95, 13.95];
+				var deliveryFeeTiers = delFeeMgmt;
 				deliveryFee = deliveryFeeTiers[0];
 		
 				if(sessionData.customerId) {
 					var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
 		
-					deliveryFeePromise.then(function(fee) {
-						deliveryFee = fee;
+					deliveryFeePromise.then(function(feeData) {
+						var addRestsFee = 0;
+
+						if(feeData.addRests > 0) {
+							addRestsFee = feeData.addRests * 5;
+						}
+
+						if(feeData.driveTime <= 450) {
+							deliveryFee = deliveryFeeTiers[0];
+						} else if(feeData.driveTime <= 720) {
+							deliveryFee = deliveryFeeTiers[1];
+						} else {
+							deliveryFee = deliveryFeeTiers[2];
+						}
+
+						deliveryFee = deliveryFee + addRestsFee;
 						
 						total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 					
 						$scope.subtotal = subtotal.toFixed(2);
 						$scope.tax = tax.toFixed(2);
-						$scope.deliveryFee = fee.toFixed(2);
+						$scope.deliveryFee = deliveryFee.toFixed(2);
 						$scope.discount = discount.toFixed(2);
 						$scope.gratuity = gratuity.toFixed(2);
 						$scope.total = total.toFixed(2);
@@ -2607,11 +2743,7 @@ app.controller('OrderController', function(
 
 	$scope.calculateDeliveryFee = function(customerId, things) {
 		return $q(function(resolve, reject) {
-			// time to fee
-			// '450': 7.95},
-			// '720': 10.95},
-			// '1050': 13.95}
-			var deliveryFeeTiers = [7.95, 10.95, 13.95];
+			var deliveryFeeTiers = delFeeMgmt;
 	
 			var t = $http.get('/customers/' + customerId);
 					
@@ -2625,9 +2757,18 @@ app.controller('OrderController', function(
 				var customer = res.data;
 	
 				var promises = [];
+				var rests = [];
 				things.forEach(function(thing) {
+					if(rests.indexOf(thing.restaurantId) < 0) {
+						rests.push(thing.restaurantId);
+					}
 					promises.push(driveTimePromise = $scope.getDriveTime(thing, customer));
 				});
+
+				var addRests = 0;
+				if(rests.length > 1) {
+					addRests = rests.length - 1;
+				}
 
 				$q.all(promises).then(function(durations) {
 					var mostDriveTime = 0;
@@ -2637,13 +2778,7 @@ app.controller('OrderController', function(
 						}
 					});
 
-					if(mostDriveTime <= 450) {
-						resolve(deliveryFeeTiers[0]);
-					} else if(mostDriveTime <= 720) {
-						resolve(deliveryFeeTiers[1]);
-					} else {
-						resolve(deliveryFeeTiers[2]);
-					}
+					resolve({driveTime: mostDriveTime, addRests: addRests});
 				});
 			});
 		});
