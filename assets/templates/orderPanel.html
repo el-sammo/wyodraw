@@ -35,9 +35,9 @@
 							{{tax}}
 						</div>
 					</div>
-					<div class="row" id="deliveryFeeRow">
+					<div class="row" id="deliveryFeeRow" ng-show="deliveryFee">
 						<div class="col-md-9">
-							Delivery Fee
+							Delivery Fee <span class="helpInfo" ng-click="delFeeExp(things, deliveryFee)">?</span>
 						</div>
 						<div class="col-md-3" id="deliveryFee">
 							{{deliveryFee}}

@@ -5,6 +5,7 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
+var _ = require('lodash');
 var bcrypt = require('bcrypt');
 var Promise = require('bluebird');
 
@@ -172,8 +173,46 @@ module.exports = {
 		});
   },
 
+	setConfig: function(req, res) {
+		var keyValues = req.body;
+		if(! _.isObject(keyValues) || _.size(keyValues) < 1) {
+			return res.json({error: 'No key-value pairs were given'});
+		}
+
+		var invalidCustomerId = new Error('Invalid customer ID');
+
+		var customerId = req.params.id;
+		var errorCode;
+
+		Promise.resolve().then(function() {
+			if(! customerId) {
+				errorCode = 404;
+				return Promise.reject(invalidCustomerId);
+			}
+
+			return Customers.findOne(customerId);
+
+		}).then(function(customer) {
+			if(! customer) {
+				errorCode = 404;
+				return Promise.reject(invalidCustomerId);
+			}
+
+			var config = _.extend({}, customer.config || {}, keyValues);
+			return Customers.update(customerId, {config: config});
+
+		}).then(function() {
+			res.json({success: true});
+
+		}).catch(function(err) {
+			res.json({error: err}, 500);
+		});
+	},
+
 	byUsername: function(req, res) {
-		Customers.find({username: req.params.id}).sort({fName: 'asc', lName: 'asc'}).limit(20).then(function(results) {
+		Customers.find({username: req.params.id}).sort({
+			fName: 'asc', lName: 'asc'
+		}).limit(20).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);
