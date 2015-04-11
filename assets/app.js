@@ -490,7 +490,7 @@ app.factory('delFeeMgmt', function($rootScope, $http, $q) {
 	// 	greater than 720 seconds,
 	// 	each additional restaurant
 	// 	]
-	var service = [7.95, 10.95, 13.95, 5];
+	var service = [7.95, 10.95, 13.95, 3.50];
 
 	return service;
 });
@@ -1317,6 +1317,7 @@ app.controller('CheckoutController', function(
 
 		if($scope.selMethod == 'cash') {
 			$scope.order.orderStatus = 5;
+			$scope.order.paymentAcceptedAt = new Date().getTime();
 
 			if($scope.gratuity) {
 				$scope.order.gratuity = $scope.gratuity.toFixed(2);
@@ -1399,6 +1400,7 @@ app.controller('CheckoutController', function(
 				r.then(function(res) {
 					if(res.data.success) {
 						$scope.order.orderStatus = parseInt(5);
+						$scope.order.paymentAcceptedAt = new Date().getTime();
 
 						if($scope.gratuity) {
 							$scope.order.gratuity = $scope.gratuity.toFixed(2);
