@@ -9,55 +9,67 @@ var nodemailer = require('nodemailer');
 var directTransport = require('nodemailer-direct-transport');
 var Promise = require('bluebird');
 
+var env = sails.config.environment;
+
 module.exports = {
 	sendNotifyToOperator: function(req, res) {
-		var email = 'sam.barrett@gmail.com, 3072778940@vtext.com, 3072514153@vtext.com, 3072583100@vtext.com, 3072594177@vtext.com';
-		sendMail(email, 'Order Placed!', 'placed', null);
+		if(env && env == 'production') {
+			var email = 'sam.barrett@gmail.com, 3072778940@vtext.com, 3072514153@vtext.com, 3072583100@vtext.com, 3072594177@vtext.com';
+			sendMail(email, 'Order Placed!', 'placed', null);
+		}
 	},
 
 	sendUpdateToCustomer: function(req, res) {
-		var customerId = req.params.id;
-
-		promise = Customers.find(customerId);
-
-		promise.then(function(customer) {
-			var customer = customer[0];
-			var email = customer.phone + '@vtext.com';
-			sendMail(email, 'On the Way!', 'update', customer);
-		});
+		if(env && env == 'production') {
+			var customerId = req.params.id;
+	
+			promise = Customers.find(customerId);
+	
+			promise.then(function(customer) {
+				var customer = customer[0];
+				var email = customer.phone + '@vtext.com';
+				sendMail(email, 'On the Way!', 'update', customer);
+			});
+		}
 	},
 
 	sendConfirmationToCustomer: function(req, res) {
-		var customerId = req.params.id;
-
-		promise = Customers.find(customerId);
-
-		promise.then(function(customer) {
-			var customer = customer[0];
-			sendMail(customer.email, 'Thanks for Joining Grub2You!', 'signup', customer);
-		});
+		if(env && env == 'production') {
+			var customerId = req.params.id;
+	
+			promise = Customers.find(customerId);
+	
+			promise.then(function(customer) {
+				var customer = customer[0];
+				sendMail(customer.email, 'Thanks for Joining Grub2You!', 'signup', customer);
+			});
+		}
 	},
 
 	sendOrderToCustomer: function(req, res) {
-		var customerId = req.params.id;
-
-		promise = Customers.find(customerId);
-
-		promise.then(function(customer) {
-			var customer = customer[0];
-			sendMail(customer.email, 'Thanks for Ordering!', 'order', customer);
-		});
+		if(env && env == 'production') {
+			var customerId = req.params.id;
+	
+			promise = Customers.find(customerId);
+	
+			promise.then(function(customer) {
+				var customer = customer[0];
+				sendMail(customer.email, 'Thanks for Ordering!', 'order', customer);
+			});
+		}
 	},
 
 	sendToApplicant: function(req, res) {
-		var applicantId = req.params.id;
-
-		promise = Applicants.find(applicantId);
-
-		promise.then(function(applicant) {
-			var applicant = applicant[0];
-			sendMail(applicant.email, 'Thanks for Applying!', 'apply', applicant);
-		});
+		if(env && env == 'production') {
+			var applicantId = req.params.id;
+	
+			promise = Applicants.find(applicantId);
+	
+			promise.then(function(applicant) {
+				var applicant = applicant[0];
+				sendMail(applicant.email, 'Thanks for Applying!', 'apply', applicant);
+			});
+		}
 	}
 };
 
