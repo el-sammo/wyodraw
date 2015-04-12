@@ -1051,7 +1051,7 @@ app.controller('LayoutController', function(
 			today = today - 1;
 
 			if(today < 0) {
-				today = 7;
+				today = 6;
 			}
 
 			var todayHours = $scope.areas[0].deliveryHours[today];
