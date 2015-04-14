@@ -300,23 +300,94 @@ app.factory('loginModal', function loginModalFactory($modal, $rootScope) {
 
 
 ///
-// Height Manager
+// Responsive Layout Manager
 ///
 
-app.directive('manageHeight', function($window) {
-	function getWindowHeight() {
-		return $(angular.element($window)).height();
-	}
+app.constant('bigScreenWidth', 1179);
 
-	function resizeElement(el, newHt) {
-		var adjHt = newHt - 330;
-		$(el).height(adjHt);
+app.directive('smallScreen', function($window, bigScreenWidth) {
+	function getWindowWidth() {
+		return $($window).width();
 	}
 
 	return function ($scope, element, args) {
-		$scope.$watch(getWindowHeight, function(height) {
+		$scope.$watch(getWindowWidth, function(width) {
+			if(width >= bigScreenWidth) {
+				return $(element).hide();
+			}
+			$(element).show();
+		}, true);
+
+		angular.element($window).bind('resize', function() {
+			$scope.$apply();
+		});
+	}
+});
+
+app.directive('bigScreen', function($window, bigScreenWidth) {
+	function getWindowWidth() {
+		return $($window).width();
+	}
+
+	return function ($scope, element, args) {
+		$scope.$watch(getWindowWidth, function(width) {
+			if(width < bigScreenWidth) {
+				return $(element).hide();
+			}
+			$(element).show();
+		}, true);
+
+		angular.element($window).bind('resize', function() {
+			$scope.$apply();
+		});
+	}
+});
+
+
+///
+// Height Manager
+///
+
+app.directive('manageHeight', function($window, bigScreenWidth) {
+	function getWindowHeight() {
+		return $($window).height();
+	}
+
+	function getWindowWidth() {
+		return $($window).width();
+	}
+
+	function resizeElement(el, newHt) {
+		var adjHt = newHt - 266;
+		$(el).height(adjHt);
+	}
+
+	function clearSize(el) {
+		$(el).height('');
+	}
+
+	function doNotManage() {
+		return getWindowWidth() < bigScreenWidth;
+	}
+
+	return function ($scope, element, args) {
+		function manageSize(height) {
 			height = (args.manageHeight === 'order' ? height - 52 : height);
 			resizeElement(element, height);
+		}
+
+		$scope.$watch(getWindowHeight, function(height) {
+			if(doNotManage()) return;
+			
+			manageSize(height);
+		}, true);
+
+		$scope.$watch(getWindowWidth, function(width) {
+			if(doNotManage()) {
+				return clearSize(element);
+			}
+
+			manageSize(getWindowHeight());
 		}, true);
 
 		angular.element($window).bind('resize', function() {
@@ -706,6 +777,13 @@ app.factory('layoutMgmt', function layoutMgmtFactory(
 				controller: 'SignUpController'
 			});
 		},
+		feedback: function() {
+			$modal.open({
+				templateUrl: '/templates/feedback.html',
+				backdrop: true,
+				controller: 'LayoutMgmtController'
+			});
+		}
 	};
 	return service;
 });
@@ -932,7 +1010,9 @@ app.controller('SignUpController', function(
 
 
 app.controller('LayoutMgmtController', function(
-	$scope, $modalInstance,	$http, $rootScope, $window, layoutMgmt
+	$scope, $modalInstance,	$http,
+	$rootScope, $window, layoutMgmt,
+	messenger
 ) {
 
 	var p = $http.get('/areas/');
@@ -1011,6 +1091,23 @@ app.controller('LayoutMgmtController', function(
 		});
 	}
 
+	$scope.sendFeedback = function() {
+//		TODO: finish this
+//		var feedback;
+//		feedback.feedback = $scope.feedback;
+//
+//		$http.post('/feedback/' + feedback).then(function(res) {
+//			$modalInstance.dismiss('done');
+//			messenger.show('Your feedback has been received.', 'Success!');
+//			$http.post('/mail/sendFeedbackToManagement/'+res.data.id);
+//		}).error(function(err) {
+//			// if feedback ajax fails...
+//			console.log('LayoutMgmtController: feedback ajax failed');
+//			console.error(err);
+//			$modalInstance.dismiss('cancel');
+//		});
+	}
+
 });
 
 
@@ -1086,6 +1183,7 @@ app.controller('LayoutController', function(
 		$scope.logIn = layoutMgmt.logIn;
 		$scope.logOut = layoutMgmt.logOut;
 		$scope.signUp = layoutMgmt.signUp;
+		$scope.feedback = layoutMgmt.feedback;
 	});
 
 	$rootScope.$on('customerLoggedIn', function(evt, args) {
@@ -2522,7 +2620,6 @@ app.controller('OrderController', function(
 	$rootScope, sessionMgr, $q, layoutMgmt,
 	clientConfig, delFeeMgmt
 ) {
-
 	// TODO
 	// put this in a config? or what?
 	// orderStatus map
@@ -3014,8 +3111,8 @@ app.controller('AccountModalController', function(
 
 
 app.controller('AccountController', function(
-	$scope, $http, $routeParams, messenger,
-	$rootScope, sessionMgr,	$window, accountMgmt
+	$scope, $http, messenger, $rootScope, sessionMgr,
+	$window, accountMgmt
 ) {
 
 	$scope.addPM = accountMgmt.add;

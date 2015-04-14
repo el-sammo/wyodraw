@@ -13,25 +13,38 @@
 					</div>
 					<br/>
 					<div class="row" id="itemRow" ng-repeat="item in items">
-						<div class="col-md-6">
-							<span class="itemName">{{item.name}}</span>
-							</br>
-							<span class="itemDesc">{{item.desc}}</span>
-							</br>
-							<div class="itemOptions" ng-repeat="option in item.options">
-								<span ng-show="option">{{option.name}} ({{option.price}})</span>
+						<div ng-show="item.image">
+							<div class="col-md-6 col-xs-6">
+								<div class="itemName">{{item.name}}</div>
+								<div class="itemDesc">{{item.desc}}</div>
+								<div class="itemOptions" ng-repeat="option in item.options">
+									<span ng-show="option">{{option.name}} ({{option.price}})</span>
+								</div>
+								<p class="add2Order pull-left" ng-show="item.options.length > 0" ng-click="addItem(item)">
+									Add to Order
+								</p>
+								<p class="add2Order pull-left" ng-show="item.options.length < 1">
+									Not Available
+								</p>
 							</div>
-							<span class="add2Order pull-left" ng-show="item.options.length > 0" ng-click="addItem(item)">
-								Add to Order
-								<br>
-							</span>
-							<span class="add2Order pull-left" ng-show="item.options.length < 1">
-								Not Available
-								<br>
-							</span>
+							<div class="col-md-6 col-xs-6">
+								<img ng-src="{{item.image}}" class="img-responsive">
+							</div>
 						</div>
-						<div class="col-md-6">
-							<img ng-src="{{item.image}}" class="img-responsive">
+						<div ng-show="!item.image">
+							<div class="col-md-12 col-xs-12">
+								<div class="itemName">{{item.name}}</div>
+								<div class="itemDesc">{{item.desc}}</div>
+								<div class="itemOptions" ng-repeat="option in item.options">
+									<span ng-show="option">{{option.name}} ({{option.price}})</span>
+								</div>
+								<p class="add2Order pull-left" ng-show="item.options.length > 0" ng-click="addItem(item)">
+									Add to Order
+								</p>
+								<p class="add2Order pull-left" ng-show="item.options.length < 1">
+									Not Available
+								</p>
+							</div>
 						</div>
 					</div>
 				</div>

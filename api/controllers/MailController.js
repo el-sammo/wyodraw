@@ -46,6 +46,14 @@ module.exports = {
 		}
 	},
 
+	sendFeedbackToManagement: function(req, res) {
+		if(env && env == 'production') {
+			var feedbackId = req.params.id;
+			var email = 'sam.barrett@gmail.com, sam.barrett@grub2you.com';
+			sendMail(email, 'Feedback Received!', 'feedback', feedbackId);
+		}
+	},
+
 	sendOrderToCustomer: function(req, res) {
 		if(env && env == 'production') {
 			var customerId = req.params.id;
@@ -113,6 +121,16 @@ function sendMail(email, subject, template, data) {
 			subject: subject,
 			text: 'Thanks for ordering with Grub2You!, '+data.fName+'.  A Grub2You team member will deliver your order very soon!',
 			html: 'Thanks for ordering with <b>Grub2You</b>, '+data.fName+'.  A Grub2You team member will deliver your order very soon!'
+		};
+	}
+
+	if(template == 'feedback') {
+		mailOptions = {
+			from: 'Grub2You Feedback <info@grub2you.com>',
+			to: email,
+			subject: subject,
+			text: 'Feedback has been received: '+data,
+			html: 'Feedback has been received. <a href="http://grub2you.com:3001/#/feedback/'+data+'">Click here to review the feedback</a>.'
 		};
 	}
 
