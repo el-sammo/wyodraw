@@ -3,6 +3,9 @@
 		Add <strong>{{item.name}}</strong> to Your Order
   </h3>
 </div>
+<div id="completedOrderError" ng-show="orderCompleted">
+	<span class="errorBig">You have already completed this order.</span>
+</div>
 <div class="modal-body">
 	<form name="addItemForm">
 		<h4 class="breakbeat">Select Your Option</h4>

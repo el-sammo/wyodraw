@@ -59,6 +59,26 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Account
+	///
+
+	$routeProvider.when('/account', {
+		controller: 'AccountController',
+		templateUrl: '/templates/account.html'
+	});
+
+	$routeProvider.when('/account/add', {
+		controller: 'AccountAddController',
+		templateUrl: '/templates/accountForm.html'
+	});
+
+	$routeProvider.when('/account/edit/:id', {
+		controller: 'AccountEditController',
+		templateUrl: '/templates/accountForm.html'
+	});
+
+
+	///
 	// Careers Page
 	///
 
@@ -89,6 +109,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Order
+	///
+
+	$routeProvider.when('/order/:id', {
+		controller: 'OrderDetailsController',
+		templateUrl: '/templates/orderDetails.html'
+	});
+
+
+	///
 	// Restaurants
 	///
 
@@ -111,26 +141,6 @@ app.config(function($routeProvider) {
 	$routeProvider.when('/terms', {
 		controller: 'TermsController',
 		templateUrl: '/templates/terms.html'
-	});
-
-
-	///
-	// Account
-	///
-
-	$routeProvider.when('/account/:id', {
-		controller: 'AccountController',
-		templateUrl: '/templates/account.html'
-	});
-
-	$routeProvider.when('/account/add', {
-		controller: 'AccountAddController',
-		templateUrl: '/templates/accountForm.html'
-	});
-
-	$routeProvider.when('/account/edit/:id', {
-		controller: 'AccountEditController',
-		templateUrl: '/templates/accountForm.html'
 	});
 
 
@@ -242,6 +252,46 @@ app.factory('navMgr', function navMgrFactory(
 
 
 ///
+// Querystring builder
+///
+	
+app.factory('querystring', function querystringFactory() {
+	var service = {
+		stringify: function(query, noEncode) {
+			var items = [];
+			angular.forEach(query, function(value, key) {
+				if(noEncode) {
+					items.push(key + '=' + value);
+				} else {
+					items.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+				}
+			});
+			return items.join('&');
+		}
+	};
+	return service;
+});
+
+
+///
+// Configuration managements
+///
+	
+app.factory('configMgr', function configMgrFactory() {
+	var service = {
+		config: {
+			vendors: {
+				googleMaps: {
+					key: 'AIzaSyCmRFaH2ROz5TueD8XapBCTAdBppUir_Bs'
+				}
+			}
+		},
+	};
+	return service;
+});
+
+
+///
 // Error management
 ///
 
@@ -273,29 +323,6 @@ app.factory('errMgr', function errMgrFactory($modal, $rootScope) {
 
 app.controller('ErrController', function($scope, options) {
 	$scope.options = options;
-});
-
-
-///
-// Authentication / Login management
-///
-
-app.factory('loginModal', function loginModalFactory($modal, $rootScope) {
-	var service = {
-		show: function() {
-			$modal.open({
-				templateUrl: '/templates/login.html',
-				backdrop: true,
-				controller: 'LoginController'
-			});
-		}
-	};
-
-	$rootScope.$on('httpForbidden', function() {
-		service.show();
-	});
-
-	return service;
 });
 
 
@@ -395,36 +422,6 @@ app.directive('manageHeight', function($window, bigScreenWidth) {
 		});
 	}
 });
-
-
-///
-// Login Controller
-///
-
-/**
- * NOTE: This is probably not used.  See LayoutMgmtController
- * instead.  This should be refactored.
-app.controller('LoginController', function(
-	$scope, $modalInstance, $http, $window
-) {
-
-	$scope.credentials = {};
-
-	$scope.submit = function(credentials) {
-		$http.post(
-			'/login', credentials
-		).success(function(data, status, headers, config) {
-			return $modalInstance.dismiss('done');
-		}).error(function(err) {
-			$scope.error = err.error;
-		});
-	};
-
-	$scope.cancel = function() {
-		$window.location.href = '/login';
-	};
-});
- */
 
 
 ///
@@ -528,7 +525,7 @@ app.config(function($httpProvider) {
 // Event-Based Services Loader
 ///
 
-app.controller('LoadServices', function(loginModal, errMgr, fakeAuth, sessionMgr) {});
+app.controller('LoadServices', function(errMgr, fakeAuth, sessionMgr) {});
 
 app.factory('sessionMgr', function($rootScope, $http, $q) {
 	var service = {
@@ -1092,20 +1089,17 @@ app.controller('LayoutMgmtController', function(
 	}
 
 	$scope.sendFeedback = function() {
-//		TODO: finish this
-//		var feedback;
-//		feedback.feedback = $scope.feedback;
-//
-//		$http.post('/feedback/' + feedback).then(function(res) {
-//			$modalInstance.dismiss('done');
-//			messenger.show('Your feedback has been received.', 'Success!');
-//			$http.post('/mail/sendFeedbackToManagement/'+res.data.id);
-//		}).error(function(err) {
-//			// if feedback ajax fails...
-//			console.log('LayoutMgmtController: feedback ajax failed');
-//			console.error(err);
-//			$modalInstance.dismiss('cancel');
-//		});
+		var feedback = {};
+		feedback.areaName = $scope.areaName;
+		feedback.email = $scope.email;
+		feedback.feedback = $scope.feedback;
+		feedback.name = $scope.name;
+
+		$http.post('/feedback/create', feedback).then(function(res) {
+			$modalInstance.dismiss('done');
+			messenger.show('Your feedback has been received.', 'Success!');
+			$http.post('/mail/sendFeedbackToManagement/'+res.data.id);
+		});
 	}
 
 });
@@ -1279,7 +1273,7 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
-	clientConfig, payMethodMgmt, delFeeMgmt
+	clientConfig, payMethodMgmt, delFeeMgmt, $window
 ) {
 
 	if(!$scope.order || !$scope.order.customerId) {
@@ -1452,6 +1446,7 @@ app.controller('CheckoutController', function(
 				// notify customer
 				$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
 				$modalInstance.dismiss('done');
+				$window.location.href = '#/order/' + $scope.order.id;
 				messenger.show('Your order has been received.', 'Success!');
 			});
 		} else {
@@ -1572,6 +1567,8 @@ app.controller('OrderMgmtController', function(
 	$scope.quantity = 1;
 	$scope.selOption = '';
 
+	$scope.orderCompleted = false;
+
 	// If there's only one option, auto-choose it
 	if($scope.item && $scope.item.options && $scope.item.options.length === 1) {
 		$scope.selOption = _.first($scope.item.options).id;
@@ -1688,7 +1685,8 @@ app.controller('OrderMgmtController', function(
 			// an order that has achieved order status 5 or more
 			if(order.orderStatus && (parseInt(order.orderStatus) > 4)) {
 				console.log('attempting to add item to completed order...');
-				$modalInstance.dismiss('cancel');
+				$scope.orderCompleted = true;
+				return;
 			}
 
 			if(!order.customerId && sessionData.customerId) {
@@ -2340,6 +2338,172 @@ app.controller('ExplainerController', function(
 
 
 ///
+// Controller: Order
+///
+
+app.config(function(httpInterceptorProvider) {
+	httpInterceptorProvider.register(/^\/order/);
+});
+
+app.controller('OrderDetailsController', function(
+	$scope, $http, $routeParams, $modal, orderMgmt,
+	$rootScope,	signupPrompter, sessionMgr, $q, $sce,
+	querystring, configMgr, $window
+) {
+
+	setTimeout(function() {
+		$window.location.reload();
+	}, 60000);
+
+	var sessionPromise = sessionMgr.getSession();
+
+	sessionPromise.then(function(sessionData) {
+		if(!sessionData.customerId) {
+			$window.location.href = '/';
+			return;
+		}
+
+		$scope.orderRestaurants = [];
+
+		var r = $http.get('/orders/' + $routeParams.id);
+	
+		r.error(function(err) {
+			console.log('OrderDetailsController: orders ajax failed');
+			console.error(err);
+		});
+	
+		r.then(function(res) {
+			$scope.order = res.data;
+
+			if(!$scope.order.customerId == sessionData.customerId) {
+				$window.location.href = '/';
+				return;
+			}
+
+			var statusMap = [
+				'',
+				'',
+				'',
+				'',
+				'',
+				'Payment Accepted',
+				'Placed with Restaurant(s)',
+				'Collected from Restaurant(s)',
+				'En Route to Destination',
+				'Delivered to Destination'
+			];
+
+			var currOrderStatus = parseInt($scope.order.orderStatus);
+
+			$scope.orderStatusFormatted = statusMap[currOrderStatus];
+
+			$scope.orderDate = new Date($scope.order.paymentAcceptedAt).toDateString().substr(4);
+
+			$scope.paymentAcceptedAtFormatted = new Date($scope.order.paymentAcceptedAt).toTimeString().substr(0,5);
+			$scope.placedAtFormatted = new Date($scope.order.orderPlacedAt).toTimeString().substr(0,5);
+			$scope.collectedAtFormatted = new Date($scope.order.orderCollectedAt).toTimeString().substr(0,5);
+			$scope.deliveredAtFormatted = new Date($scope.order.orderDeliveredAt).toTimeString().substr(0,5);
+
+			$scope.orderStatus = parseInt($scope.order.orderStatus);
+			$scope.paymentMethod = $scope.order.paymentMethods;
+			$scope.subtotal = parseFloat($scope.order.subtotal).toFixed(2);
+			$scope.tax = parseFloat($scope.order.tax).toFixed(2);
+			$scope.deliveryFee = parseFloat($scope.order.deliveryFee).toFixed(2);
+			$scope.gratuity = parseFloat($scope.order.gratuity).toFixed(2);
+			$scope.discount = parseFloat($scope.order.discount).toFixed(2);
+			$scope.total = '$'+parseFloat($scope.order.total).toFixed(2);
+			$scope.order.things.forEach(function(thing) {
+				$scope.getRestaurantName(thing.optionId).then(function(restaurantData) {
+					var restaurant = _.find($scope.orderRestaurants, {name: restaurantData.name});
+					if(! restaurant) {
+						restaurant = {name: restaurantData.name, phone: restaurantData.phone, items: []};
+						$scope.orderRestaurants.push(restaurant);
+					}
+					restaurant.items.push(
+						_.pick(thing, ['quantity', 'name', 'option', 'specInst'])
+					);
+				});
+			});
+
+			var r = $http.get('/customers/' + $scope.order.customerId);
+			
+			r.error(function(err) {
+				console.log('OrderDetailsController: customer ajax failed');
+				console.log(err);
+			});
+			
+			r.then(function(res) {
+				$scope.customer = res.data;
+				$scope.fName = $scope.customer.fName;
+				$scope.lName = $scope.customer.lName;
+				$scope.phone = $scope.customer.phone;
+				$scope.address = $scope.customer.addresses.primary.streetNumber+' '+$scope.customer.addresses.primary.streetName+' '+$scope.customer.addresses.primary.city;
+
+				$scope.src = $sce.trustAsResourceUrl(
+					'https://www.google.com/maps/embed/v1/place?' + querystring.stringify({
+						key: configMgr.config.vendors.googleMaps.key,
+						q: ([
+							$scope.customer.addresses.primary.streetNumber,
+							$scope.customer.addresses.primary.streetName,
+							$scope.customer.addresses.primary.city,
+							$scope.customer.addresses.primary.state,
+							$scope.customer.addresses.primary.zip
+						].join('+'))
+					})
+				);
+			});
+		});
+	});
+
+	$scope.getRestaurantName = function(optionId) {
+		return $q(function(resolve, reject) {
+			var r = $http.get('/options/' + optionId);
+				
+			r.error(function(err) {
+				console.log('OrderDetailsController: getRestaurantName-options ajax failed');
+				console.log(err);
+				reject(err);
+			});
+				
+			r.then(function(res) {
+				var s = $http.get('/items/' + res.data.itemId);
+					
+				s.error(function(err) {
+					console.log('OrderDetailsController: getRestaurantName-items ajax failed');
+					console.log(err);
+					reject(err);
+				});
+					
+				s.then(function(res) {
+					var t = $http.get('/menus/' + res.data.menuId);
+						
+					t.error(function(err) {
+						console.log('OrderDetailsController: getRestaurantName-menus ajax failed');
+						console.log(err);
+						reject(err);
+					});
+						
+					t.then(function(res) {
+						var u = $http.get('/restaurants/' + res.data.restaurantId);
+							
+						u.error(function(err) {
+							console.log('OrderDetailsController: getRestaurantName-restaurants ajax failed');
+							console.log(err);
+							reject(err);
+						});
+							
+						u.then(function(res) {
+							resolve(res.data);
+						});
+					});
+				});
+			});
+		});
+	};
+});
+
+
+///
 // Controllers: Restaurants
 ///
 
@@ -2643,7 +2807,6 @@ app.controller('OrderController', function(
 	$scope.delFeeExp = orderMgmt.delFeeExp;
 
 	$rootScope.$on('orderChanged', function(evt, args) {
-		console.log('orderChanged()');
 		$scope.updateOrder();
 	});
 
@@ -3112,11 +3275,13 @@ app.controller('AccountModalController', function(
 
 app.controller('AccountController', function(
 	$scope, $http, messenger, $rootScope, sessionMgr,
-	$window, accountMgmt
+	$window, accountMgmt, layoutMgmt
 ) {
 
 	$scope.addPM = accountMgmt.add;
 	$scope.removePM = accountMgmt.remove;
+
+	$scope.logOut = layoutMgmt.logOut;
 
 	var sessionPromise = sessionMgr.getSession();
 

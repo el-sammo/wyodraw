@@ -97,7 +97,7 @@ module.exports = {
 			return Orders.find({
 				'customerId': req.session.customerId, 'orphaned': false
 			}).sort({updatedAt: 'desc'}).then(function(results) {
-				if(results.length > 0) {
+				if(results.length > 0 && parseInt(results[0].orderStatus) < 5) {
 					customerOrder = results[0];
 				}
 				return;

@@ -637,6 +637,24 @@ td {
 	color: red;
 }
 
+.errorBig {
+	font-size: 18px;
+	font-weight: 700;
+	color: red;
+}
+
+#completedOrderError {
+	top: 0px;
+	left: 20px;
+	position: relative;
+}
+
+#orderDetailsContainer {
+	top: 172px;
+	left: 0px;
+	position: relative;
+}
+
 /** Carousel **/
 #slides_control > div {
 	top: 20px;
