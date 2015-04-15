@@ -1,9 +1,10 @@
-<nav id="fms-headbar" class="navbar navbar-default navbar-fixed-top">
+<!-- BIG Navbar -->
+<nav id="fms-headbar" class="navbar navbar-default navbar-fixed-top visible-lg-inline">
 	<div class="container-fluid">
 		<div style="top: 40px; position: relative;" ng-cloak ng-controller="LayoutController">
 	    <ul class="nav navbar-nav">
-	      <li class="navbar-brand">
-	        <a href="#/">
+	      <li class="fms-brand navbar-brand">
+					<a href="#/">
 	          <img src="/images/logo_enhanced.png">
 	        </a>
 	      </li>
@@ -16,25 +17,68 @@
 							</a>
 						</h1>
 					</span>
-					<span ng-show="accessAccount">
+					<span>
 						<h1>
-							<a href="#/account/{{customerId}}">My Account</a>
+							<a ng-show="!accessAccount" ng-click="logIn()">My Account</a>
+							<a ng-show="accessAccount" href="#/account/">My Account</a>
 						</h1>
-						<span class="logInSignUpPipe"> | </span>
-						<span ng-click="logOut()" class="logInSignUpLink">Log Out</span>
 					</span>
+
+					<!--
 					<span ng-show="!accessAccount">
 						<span ng-click="logIn()" class="logInSignUpLink">Log In</span>
 						<span class="logInSignUpPipe"> | </span>
 						<span ng-click="signUp()" class="logInSignUpLink">Sign Up</span>
 					</span>
-					<span><h1><a href="#/about/">About Grub2You</a></h1></span>
-					<span><h1><font color="red">Delivery from {{todayStart}} to {{todayEnd}} today!</font></h1></span>
+					-->
+					<span>
+						<h1 style="color: red;">
+							Delivery from {{todayStart}} to {{todayEnd}} today!
+						</h1>
+					</span>
 	      </li>
 	    </ul>
 		</div>
 	</div>
 </nav>
+<!-- /BIG Navbar -->
+
+<!-- Small Navbar -->
+<nav id="fms-headbar"
+	class="navbar navbar-default navbar-fixed-top visible-md-inline visible-sm-inline visible-xs-inline">
+	<div class="container-fluid">
+		<div ng-cloak ng-controller="LayoutController">
+	    <ul class="nav navbar-nav">
+				<li>
+					<div class="fms-brand" style="position: relative; margin-right: 18px;">
+						<a href="#/">
+							<img src="/images/logo_enhanced.png">
+						</a>
+					</div>
+					<div class="menu-item">
+						<h1>
+							<a href="#/restaurants/{{featuredMenuSlug}}">
+								Restaurants
+							</a>
+						</h1>
+					</div>
+					<div class="menu-item">
+						<h1>
+							<a ng-show="!accessAccount" ng-click="logIn()">Account</a>
+							<a ng-show="accessAccount" href="#/account/">Account</a>
+						</h1>
+					</div>
+					<div class="menu-item">
+						<h1 class="hours-of-operation">
+							{{todayStart}} to {{todayEnd}}!
+						</h1>
+					</div>
+	      </li>
+	    </ul>
+		</div>
+	</div>
+</nav>
+<!-- /Small Navbar -->
 
 <div ng-controller="MessageController" id="fms-messenger">
   <alert type="{{alertType}}" ng-show="userMessage" close="close()">
