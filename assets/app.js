@@ -89,6 +89,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Cart
+	///
+
+	$routeProvider.when('/cart', {
+		controller: 'OrderController',
+		templateUrl: '/templates/orderPanelSmall.html'
+	});
+
+
+	///
 	// Contact Page
 	///
 
@@ -130,7 +140,7 @@ app.config(function($routeProvider) {
 
 	$routeProvider.when('/restaurants/', {
 		controller: 'RestaurantsController',
-		templateUrl: '/templates/restaurants.html'
+		templateUrl: '/templates/restaurantsList.html'
 	});
 
 
@@ -332,14 +342,25 @@ app.controller('ErrController', function($scope, options) {
 
 app.constant('bigScreenWidth', 1179);
 
-app.directive('smallScreen', function($window, bigScreenWidth) {
-	function getWindowWidth() {
-		return $($window).width();
-	}
+app.factory('deviceMgr', function($window, bigScreenWidth) {
+	var service = {
+		getWindowWidth: function() {
+			return $($window).width();
+		},
 
+		isBigScreen: function(width) {
+			width || (width = service.getWindowWidth());
+			return width >= bigScreenWidth;
+		}
+	};
+
+	return service;
+});
+
+app.directive('smallScreen', function($window, deviceMgr) {
 	return function ($scope, element, args) {
-		$scope.$watch(getWindowWidth, function(width) {
-			if(width >= bigScreenWidth) {
+		$scope.$watch(deviceMgr.getWindowWidth, function(width) {
+			if(deviceMgr.isBigScreen()) {
 				return $(element).hide();
 			}
 			$(element).show();
@@ -352,13 +373,9 @@ app.directive('smallScreen', function($window, bigScreenWidth) {
 });
 
 app.directive('bigScreen', function($window, bigScreenWidth) {
-	function getWindowWidth() {
-		return $($window).width();
-	}
-
 	return function ($scope, element, args) {
-		$scope.$watch(getWindowWidth, function(width) {
-			if(width < bigScreenWidth) {
+		$scope.$watch(deviceMgr.getWindowWidth, function(width) {
+			if(! deviceMgr.isBigScreen()) {
 				return $(element).hide();
 			}
 			$(element).show();
@@ -369,11 +386,6 @@ app.directive('bigScreen', function($window, bigScreenWidth) {
 		});
 	}
 });
-
-
-///
-// Height Manager
-///
 
 app.directive('manageHeight', function($window, bigScreenWidth) {
 	function getWindowHeight() {
@@ -1006,6 +1018,56 @@ app.controller('SignUpController', function(
 });
 
 
+///
+// Slug Management
+///
+
+app.factory('slugMgr', function(
+	$rootScope, $http, $q
+) {
+	var slug;
+
+	var service = {
+		randomSlug: function() {
+			if(slug) return $q.when(slug);
+
+			var areaId = $rootScope.areaId;
+
+			// retrieve restaurants
+			return $http.get('/restaurants/byAreaId/' + areaId).then(function(res) {
+				if(slug) return slug;
+
+				// if restaurants ajax succeeds...
+				var restLength = res.data.length;
+
+				var randRestId = res.data[Math.floor((Math.random() * restLength))].id;
+
+				return $http.get('/menus/byRestaurantId/' + randRestId);
+
+			}).then(function(res) {
+				if(slug) return slug;
+
+				// if menus ajax succeeds...
+				var menuLength = res.data.length;
+
+				slug = res.data[Math.floor((Math.random() * menuLength))].slug;
+				return slug;
+
+			}).catch(function(err) {
+				// if restaurants ajax fails...
+				console.error('randomSlug error during ajax call:', err);
+			});
+		}
+	};
+
+	return service;
+});
+
+
+///
+// Layout Management
+///
+
 app.controller('LayoutMgmtController', function(
 	$scope, $modalInstance,	$http,
 	$rootScope, $window, layoutMgmt,
@@ -1116,6 +1178,16 @@ app.controller('LayoutController', function(
 	$rootScope, sessionMgr
 ) {
 	var sessionPromise = sessionMgr.getSession();
+
+	$scope.showMenu = false;
+
+	$scope.menuClicked = function(forceValue) {
+		if(! _.isUndefined(forceValue)) {
+			$scope.showMenu = forceValue;
+			return;
+		}
+		$scope.showMenu = !$scope.showMenu;
+	}
 
 	sessionPromise.then(function(sessionData) {
 		if(sessionData.customerId) {
@@ -2016,9 +2088,10 @@ app.controller('TesterMgmtController', function(
 ///
 // Controllers: Tester
 ///
-app.controller('TesterController', function($scope, $http, $rootScope, testerMgmt) {
+app.controller('TesterController', function($scope, $http, $rootScope, $q, testerMgmt) {
 	var areaId = $rootScope.areaId;
 	$scope.apply = testerMgmt.apply;
+
 });
 
 
@@ -2507,165 +2580,108 @@ app.controller('OrderDetailsController', function(
 // Controllers: Restaurants
 ///
 
+
+app.factory('restaurantsMgr', function(
+	$http, $q, $rootScope
+) {
+	var deferred;
+
+	var service = {
+		getRestaurants: function() {
+			if(deferred) {
+				return deferred.promise;
+			}
+
+			deferred = $q.defer();
+
+			var areaId = $rootScope.areaId;
+
+			// Retrieve restaurants
+			$http.get('/restaurants/byAreaId/' + areaId).then(function(res) {
+				// if restaurants ajax succeeds...
+				var allRestaurants = res.data;
+
+				var promises = [];
+
+				allRestaurants.map(function(restaurant) {
+					var p = $http.get('/menus/byRestaurantId/' + restaurant.id);
+					p.then(function(res) {
+						// if menus ajax succeeds...
+						restaurant.menus = res.data;
+					});
+					promises.push(p);
+				});
+
+				deferred.resolve($q.all(promises).then(function() {
+					return allRestaurants;
+				}));
+
+			}).catch(function(err) {
+				console.error('Error while retrieving restaurants:', err);
+				deferred.reject(err);
+			});
+
+			return deferred.promise;
+		},
+
+		getRestaurantBySlug: function(slug) {
+			return service.getRestaurants().then(function(restaurants) {
+				return _.find(restaurants, function(restaurant) {
+					return slug.match(restaurant.slug);
+				});
+			});
+		},
+
+		getMenuBySlug: function(slug) {
+			return service.getRestaurants().then(function(restaurants) {
+				// Build menu
+				var menus = _.flatten(_.pluck(restaurants, 'menus'));
+				return _.findWhere(menus, {slug: slug});
+			});
+		}
+	};
+
+	return service;
+});
+
+
 app.config(function(httpInterceptorProvider) {
 	httpInterceptorProvider.register(/^\/restaurants/);
 });
 
 app.controller('RestaurantsController', function(
-	$scope, $http, $routeParams, $modal, orderMgmt, $rootScope,
-	signupPrompter
+	$scope, $http, $routeParams, $modal, $location, $window, $q,
+	orderMgmt, signupPrompter, deviceMgr, slugMgr, restaurantsMgr
 ) {
+	if($location.path().match(/^\/$/) && ! deviceMgr.isBigScreen()) {
+		$window.location.href = '#/restaurants/';
+	}
+
 	signupPrompter.prompt();
 
-	var areaId = $rootScope.areaId;
-
-	$scope.getUglySlug = function() {
-		// retrieve restaurants
-		var p = $http.get('/restaurants/byAreaId/' + areaId);
-	
-		// if restaurants ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: getUglySlug-restaurants ajax failed');
-			console.error(err);
-		});
-	
-		// if restaurants ajax succeeds...
-		p.then(function(res) {
-			var restLength = res.data.length;
-
-			var randRestId = res.data[Math.floor((Math.random() * restLength))].id;
-
-			var r = $http.get('/menus/byRestaurantId/' + randRestId);
-			
-			// if menus ajax fails...
-			r.error(function(err) {
-				console.log('RestaurantsController: getUglySlug-menus ajax failed');
-				console.error(err);
-			});
-		
-			// if menus ajax succeeds...
-			r.then(function(res) {
-				var menuLength = res.data.length;
-
-				var elSluggo = res.data[Math.floor((Math.random() * menuLength))].slug;
-
-				$scope.buildRestMenus(elSluggo);
-			});
-		});
-	}
-
 	$scope.buildRestMenus = function(slug) {
-		// retrieve restaurants
-		var p = $http.get('/restaurants/byAreaId/' + areaId);
-	
-		// if restaurants ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: restaurants ajax failed');
-			console.error(err);
-		});
-		
-		// if restaurants ajax succeeds...
-		p.then(function(res) {
-			var allRestaurants = res.data;
-	
-			allRestaurants.map(function(restaurant) {
-				if(slug.match(restaurant.slug)) {
-					$scope.showRestaurant(restaurant.id);
-					$scope.displayRestaurant = restaurant;
-				}
-	
-				var r = $http.get('/menus/byRestaurantId/' + restaurant.id);
-				
-				// if menus ajax fails...
-				r.error(function(err) {
-					console.log('RestaurantsController: returnMenus ajax failed');
-					console.error(err);
-				});
-			
-				// if menus ajax succeeds...
-				r.then(function(res) {
-					restaurant.menus = res.data;
-					restaurant.menus.forEach(function(menu) {
-						if(menu.slug == slug) {
-							$scope.showMenu(menu.id);
-							$scope.displayMenu = menu;
-						}
-					});
-				});
-			});
-	
-			$scope.restaurantId = allRestaurants[0].id;
-			$scope.restaurantName = allRestaurants[0].name;
-			$scope.restaurantImg = allRestaurants[0].image;
-	
+		restaurantsMgr.getRestaurants().then(function(allRestaurants) {
 			$scope.restaurants = allRestaurants;
-	
-			$scope.getMenus($scope.restaurantId, true);
+			$scope.restaurantId = allRestaurants[0].id;
 		});
+		restaurantsMgr.getRestaurantBySlug(slug).then(function(restaurant) {
+			$scope.displayRestaurant = restaurant;
+			$scope.showRestaurant(restaurant.id);
+		});
+	};
+
+	var slugPromise;
+	if($routeParams.id) {
+		slugPromise = $q.when($routeParams.id);
+	} else {
+		slugPromise = slugMgr.randomSlug();
 	}
 
-	if($routeParams.id) {
-		$scope.buildRestMenus($routeParams.id);
-	} else {
-		$scope.getUglySlug();
-	}
+	slugPromise.then(function(slug) {
+		$scope.buildRestMenus(slug);
+	});
 
 	$scope.imageUrl = '/images/';
-
-	// get menus by restaurant id
-	$scope.getMenus = function(restaurantId, firstMenu) {
-		var p = $http.get('/menus/byRestaurantId/' + restaurantId);
-	
-		// if menus ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: getMenus ajax failed');
-			console.error(err);
-		});
-
-		// if menus ajax succeeds...
-		p.then(function(res) {
-			$scope.menus = res.data;
-			if(firstMenu) {
-				$scope.menuId = res.data[0].id;
-				$scope.menuName = res.data[0].name;
-				$scope.menuImg = res.data[0].image;
-			}
-			$scope.firstMenu = firstMenu;
-		});
-	};
-
-	// retrieve items by menu id (including options)
-	$scope.getItems = function(menuId) {
-		var p = $http.get('/items/byMenuId/' + menuId);
-	
-		// if items ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: getItems ajax failed');
-			console.error(err);
-		});
-
-		// if items ajax succeeds...
-		p.then(function(res) {
-			var allItems = res.data;
-
-			allItems.map(function(item) {
-				var r = $http.get('/options/byItemId/' + item.id);
-			
-				// if options ajax fails...
-				r.error(function(err) {
-					console.log('RestaurantsController: getItems-options ajax failed');
-					console.error(err);
-				});
-		
-				// if options ajax succeeds...
-				r.then(function(res) {
-					item.options = res.data;
-				});
-			});
-
-			$scope.items = allItems;
-		});
-	};
 
 	$scope.restaurantOpen = function(restaurant) {
 		var d = new Date();
@@ -2714,49 +2730,36 @@ app.controller('RestaurantsController', function(
 
 	// retrieve and display restaurant data (including menus)
 	$scope.showRestaurant = function(id) {
-		$('.hideMenuList').hide();
-		$('.hideItemList').hide();
-		var p = $http.get('/restaurants/' + id);
-	
-		// if restaurant ajax fails...
-		p.error(function(err) {
-			console.log('RestaurantsController: showRestaurant ajax failed');
-			console.error(err);
-		});
-
-		// if restaurant ajax succeeds...
-		p.then(function(res) {
-			$scope.restaurantId = res.data.id;
-			$scope.restaurantName = res.data.name;
-			$scope.restaurantImage = res.data.image;
-			$scope.getMenus($scope.restaurantId, false);
-		
-			$('#'+id).show();
-			$(window).load(function() {
-				$('#'+id).show();
-			});
-		});
-	
+		$scope.restaurantId = id;
 	};
+});
 
-	// retrieve and display menu data (including items)
-	$scope.showMenu = function(id) {
-		var p = $http.get('/menus/' + id);
-	
-		// if menu ajax fails...
-		p.error(function(err) {
+
+///
+// Menu Items
+///
+
+app.controller('MenuItemsController', function(
+	$scope, $http, $routeParams, $q, orderMgmt, slugMgr,
+	restaurantsMgr
+) {
+	$scope.addItem = orderMgmt.add;
+
+	// Retrieve and display menu data (including items)
+	function showMenu(id) {
+		$http.get('/menus/' + id).then(function(res) {
+			// if menu ajax succeeds...
+			$scope.menuId = res.data.id;
+			$scope.menuName = res.data.name;
+			getItems($scope.menuId);
+
+		}).catch(function(err) {
+			// if menu ajax fails...
 			console.log('RestaurantsController: showMenu ajax failed');
 			console.error(err);
 		});
 
-		// if menu ajax succeeds...
-		p.then(function(res) {
-			$scope.menuId = res.data.id;
-			$scope.menuName = res.data.name;
-			$scope.getItems($scope.menuId);
-		});
-	
-	};
+	}
 
 	$scope.timeFormat = function(secs) {
 		var ampm = 'am';
@@ -2771,6 +2774,49 @@ app.controller('RestaurantsController', function(
 		}
 		return hours+':'+minutes+' '+ampm;
 	};
+
+	// Retrieve items by menu id (including options)
+	function getItems(menuId) {
+		$http.get('/items/byMenuId/' + menuId).then(function(res) {
+			// if items ajax succeeds...
+			var allItems = res.data;
+
+			allItems.map(function(item) {
+				$http.get('/options/byItemId/' + item.id).then(function(res) {
+					// if options ajax succeeds...
+					item.options = res.data;
+
+				}).catch(function(err) {
+					// if options ajax fails...
+					console.log('RestaurantsController: getItems-options ajax failed');
+					console.error(err);
+				});
+			});
+
+			$scope.items = allItems;
+		}).catch(function(err) {
+			// if items ajax fails...
+			console.log('RestaurantsController: getItems ajax failed');
+			console.error(err);
+		});
+
+	};
+
+	// Get slug
+	var slugPromise;
+	if($routeParams.id) {
+		slugPromise = $q.when($routeParams.id);
+	} else {
+		slugPromise = slugMgr.randomSlug();
+	}
+
+	slugPromise.then(function(slug) {
+		return restaurantsMgr.getMenuBySlug(slug);
+
+	}).then(function(menu) {
+		$scope.displayMenu = menu;
+		showMenu(menu.id);
+	});
 });
 
 
@@ -2799,8 +2845,6 @@ app.controller('OrderController', function(
 	// 9   = order delivered
 	
 	$scope.clientConfig = clientConfig;
-
-	$scope.addItem = orderMgmt.add;
 
 	$scope.removeItem = orderMgmt.remove;
 
