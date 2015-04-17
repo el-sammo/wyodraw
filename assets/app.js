@@ -129,6 +129,16 @@ app.config(function($routeProvider) {
 
 
 	///
+	// Order (small)
+	///
+
+	$routeProvider.when('/orderSmall/:id', {
+		controller: 'OrderDetailsController',
+		templateUrl: '/templates/orderDetailsSmall.html'
+	});
+
+
+	///
 	// Restaurants
 	///
 
@@ -1071,7 +1081,7 @@ app.factory('slugMgr', function(
 app.controller('LayoutMgmtController', function(
 	$scope, $modalInstance,	$http,
 	$rootScope, $window, layoutMgmt,
-	messenger
+	messenger, deviceMgr
 ) {
 
 	var p = $http.get('/areas/');
@@ -1159,7 +1169,9 @@ app.controller('LayoutMgmtController', function(
 
 		$http.post('/feedback/create', feedback).then(function(res) {
 			$modalInstance.dismiss('done');
-			messenger.show('Your feedback has been received.', 'Success!');
+			if(deviceMgr.isBigScreen()) {
+				messenger.show('Your feedback has been received.', 'Success!');
+			}
 			$http.post('/mail/sendFeedbackToManagement/'+res.data.id);
 		});
 	}
@@ -1345,7 +1357,8 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
-	clientConfig, payMethodMgmt, delFeeMgmt, $window
+	clientConfig, payMethodMgmt, delFeeMgmt, $window,
+	deviceMgr
 ) {
 
 	if(!$scope.order || !$scope.order.customerId) {
@@ -1518,8 +1531,12 @@ app.controller('CheckoutController', function(
 				// notify customer
 				$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
 				$modalInstance.dismiss('done');
-				$window.location.href = '#/order/' + $scope.order.id;
-				messenger.show('Your order has been received.', 'Success!');
+				if(deviceMgr.isBigScreen()) {
+					$window.location.href = '#/order/' + $scope.order.id;
+					messenger.show('Your order has been received.', 'Success!');
+				} else {
+					$window.location.href = '#/orderSmall/' + $scope.order.id;
+				}
 			});
 		} else {
 			$scope.order.orderStatus = parseInt(2);

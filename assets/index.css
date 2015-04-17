@@ -328,6 +328,13 @@ td {
 	position: relative;
 }
 
+.removeFromOrderSmall {
+	color: red;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
 #aboutMain {
 	/* top: 164px; */
 	background-color: #fff;

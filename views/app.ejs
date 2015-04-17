@@ -32,7 +32,7 @@
 							<span ng-click="signUp()" class="logInSignUpLink">Sign Up</span>
 						</span>
 						-->
-						<span>
+						<span ng-show="todayStart && todayEnd">
 							<h1 style="color: red;">
 								Delivery from {{todayStart}} to {{todayEnd}} today!
 							</h1>
@@ -60,7 +60,7 @@
 								<img src="/images/logo_enhanced.png">
 							</a>
 						</div>
-						<div class="menu-item">
+						<div class="menu-item" ng-show="todayStart && todayEnd">
 							<h1 class="hours-of-operation">
 								{{todayStart}} to {{todayEnd}}!
 							</h1>
@@ -96,6 +96,9 @@
 			<a href="#/cart" ng-click="menuClicked(false)">
 				<i class="fa fa-shopping-cart"></i> &nbsp;Cart
 			</a>
+		</li>
+		<li class="list-group-item">
+			<span class="managementLink" ng-click="logOut()">Log Out</span><br/>
 		</li>
 	</ul>
 	<!-- /Small Navbar -->
