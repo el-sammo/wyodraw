@@ -571,7 +571,7 @@ app.factory('sessionMgr', function($rootScope, $http, $q) {
 });
 
 
-app.factory('delFeeMgmt', function($rootScope, $http, $q) {
+app.factory('delFeeMgmt', function($rootScope, $http) {
 	// [tierOne, tierTwo, tierThree, additional]
 	// maps to
 	// [
@@ -581,6 +581,55 @@ app.factory('delFeeMgmt', function($rootScope, $http, $q) {
 	// 	each additional restaurant
 	// 	]
 	var service = [7.95, 10.95, 13.95, 3.50];
+
+	return service;
+});
+
+
+app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig) {
+	var service = {
+		getDeliveryHours: function() {
+			var areaName;
+			var winLocStr = location.hostname;
+			var winLocPcs = winLocStr.split('.');
+		
+			if(winLocPcs[0] == 'grub2you' || winLocPcs[0] == 'www') {
+				// not an area-specific url
+			
+				// TODO
+				// get areaName
+				areaName = 'Casper';
+			} else {
+				if(clientConfig.environment == 'development') {
+					areaName = 'Casper';
+				} else {
+					areaName = winLocPcs[0];
+				}
+			}
+
+			return $http.get('/areas/byName/' + areaName).then(function(res) {
+				return getHours(res.data);
+			}).catch(function(err) {
+				console.log('hoursMgr: areas ajax failed');
+				console.error(err);
+				$q.reject(err);
+			});
+		}
+	};
+
+	var getHours = function(area) {
+		var now = new Date().getHours();
+
+		var today = new Date().getDay();
+
+		today = today - 1;
+
+		if(today < 0) {
+			today = 6;
+		}
+
+		return todayHours = area[0].deliveryHours[today];
+	};
 
 	return service;
 });
@@ -1187,7 +1236,7 @@ app.controller('LayoutMgmtController', function(
 app.controller('LayoutController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, layoutMgmt,
-	$rootScope, sessionMgr
+	$rootScope, sessionMgr, hoursMgr
 ) {
 	var sessionPromise = sessionMgr.getSession();
 
@@ -1207,61 +1256,41 @@ app.controller('LayoutController', function(
 			$scope.customerId = sessionData.customerId;
 		}
 
-		var p = $http.get('/areas/');
-						
-		// if areas ajax fails...
-		p.error(function(err) {
-			console.log('layoutMgmt: areas ajax failed');
-			console.error(err);
-		});
-								
-		// if areas ajax succeeds...
-		p.then(function(res) {
-			$scope.areas = res.data;
+		var delHoursPromise = hoursMgr.getDeliveryHours();
 
+		delHoursPromise.then(function(delHours) {
 			var now = new Date().getHours();
-
-			var today = new Date().getDay();
-
-			today = today - 1;
-
-			if(today < 0) {
-				today = 6;
-			}
-
-			var todayHours = $scope.areas[0].deliveryHours[today];
-
-			if(todayHours.start > 11) {
-				var todayStart = (parseInt(todayHours.start) - 12) + 'pm';
+	
+			if(delHours.start > 11) {
+				var todayStart = (parseInt(delHours.start) - 12) + 'pm';
 			} else {
-				var todayStart = parseInt(todayHours.start) + 'am';
+				var todayStart = parseInt(delHours.start) + 'am';
 			}
-
+	
 			$scope.todayStart = todayStart;
-
-			if(todayHours.end > 11) {
-				var todayEnd = (parseInt(todayHours.end) - 12) + 'pm';
+	
+			if(delHours.end > 11) {
+				var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
 			} else {
-				var todayEnd = parseInt(todayHours.end) + 'am';
+				var todayEnd = parseInt(delHours.end) + 'am';
 			}
-
+	
 			$scope.todayEnd = todayEnd;
-
-			var starting = (parseInt(todayHours.start) - 1);
-			var ending = parseInt(todayHours.end);
-
+	
+			var starting = (parseInt(delHours.start) - 1);
+			var ending = parseInt(delHours.end);
+	
 			$scope.currentlyAvailable = false;
-
+	
 			if(now >= starting && now <= ending) {
 				$scope.currentlyAvailable = true;
 			}
-
+			
+			$scope.logIn = layoutMgmt.logIn;
+			$scope.logOut = layoutMgmt.logOut;
+			$scope.signUp = layoutMgmt.signUp;
+			$scope.feedback = layoutMgmt.feedback;
 		});
-		
-		$scope.logIn = layoutMgmt.logIn;
-		$scope.logOut = layoutMgmt.logOut;
-		$scope.signUp = layoutMgmt.signUp;
-		$scope.feedback = layoutMgmt.feedback;
 	});
 
 	$rootScope.$on('customerLoggedIn', function(evt, args) {
@@ -1358,15 +1387,50 @@ app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
 	clientConfig, payMethodMgmt, delFeeMgmt, $window,
-	deviceMgr
+	deviceMgr, hoursMgr
 ) {
 
-	if(!$scope.order || !$scope.order.customerId) {
-		$modalInstance.dismiss('cancel');
-	}
+//	if(!$scope.order || !$scope.order.customerId) {
+//		$modalInstance.dismiss('cancel');
+//	}
 
+	var delHoursPromise = hoursMgr.getDeliveryHours();
+
+	delHoursPromise.then(function(delHours) {
+		var now = new Date().getHours();
+	
+		if(delHours.start > 11) {
+			var todayStart = (parseInt(delHours.start) - 12) + 'pm';
+			var earlyAs =  (parseInt(delHours.start) - 13) + 'pm';
+		} else {
+			var todayStart = parseInt(delHours.start) + 'am';
+			var earlyAs =  (parseInt(delHours.start) - 1) + 'am';
+		}
+
+		$scope.earlyAs = earlyAs;
+	
+		$scope.todayStart = todayStart;
+	
+		if(delHours.end > 11) {
+			var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
+		} else {
+			var todayEnd = parseInt(delHours.end) + 'am';
+		}
+	
+		$scope.todayEnd = todayEnd;
+	
+		var starting = (parseInt(delHours.start) - 1);
+		var ending = parseInt(delHours.end);
+
+		$scope.currentlyAvailable = false;
+	
+		if(now >= starting && now <= ending) {
+			$scope.currentlyAvailable = true;
+		}
+	});
+			
+	// this exists to not process futher if checkout is prohibited
 	if(!args.order) {
-		console.error('no args');
 		$modalInstance.dismiss('cancel');
 		return;
 	}
@@ -1557,25 +1621,18 @@ app.controller('CheckoutController', function(
 				// if orders ajax fails...
 				r.error(function(err) {
 					console.log('OrderMgmtController: checkout-processPayment ajax failed');
-					console.error(err);
+					// console.error(err);
 					$scope.order.orderStatus = parseInt(3);
 					$scope.order.paymentMethods = $scope.selMethod;
+					$scope.paymentFailed = true;
 
 					var z = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
 					// if orders ajax fails...
 					z.error(function(err) {
 						console.log('OrderMgmtController: post checkout-updateOrder ajax failed');
-						console.error(err);
-						$modalInstance.dismiss('cancel');
+						// console.error(err);
 					});
-												
-					// if orders ajax succeeds...
-					z.then(function(res) {
-						console.log('payment process FAILED');
-						$scope.paymentFailed = true;
-					});
-					$modalInstance.dismiss('cancel');
 				});
 										
 				// if orders ajax succeeds...
@@ -2845,7 +2902,7 @@ app.controller('OrderController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
 	$rootScope, sessionMgr, $q, layoutMgmt,
-	clientConfig, delFeeMgmt
+	clientConfig, delFeeMgmt, hoursMgr
 ) {
 	// TODO
 	// put this in a config? or what?
@@ -2875,50 +2932,31 @@ app.controller('OrderController', function(
 	// Checkout Actions
 	///
 
-	function getDeliveryHours() {
-		if($scope.deliveryHours) {
-			return $q.when($scope.deliveryHours);
-		}
+	$scope.checkout = function(order) {
+		var isProhibited = true;
 
-		// TODO Need to adjust for multiple areas
-		return $http.get('/areas/').then(function(res) {
-			$scope.areas = res.data;
-
-			// Calculate today (0 = Mon, 6 = Sun)
-			var today = new Date().getDay() - 1;
-
-			if(today < 0) {
-				today = 6;
-			}
-
-			var todayHours = $scope.areas[0].deliveryHours[today];
-
-			$scope.deliveryHours = {
-				start: (parseInt(todayHours.start) - 1),
-				end: parseInt(todayHours.end)
-			};
-
-			return $scope.deliveryHours;
-		}).catch(function(err) {
-			console.log('layoutMgmt: areas ajax failed');
-			console.error(err);
-		});
-	}
-
-	function checkoutIsProhibited() {
-		if(clientConfig.showCheckout) {
-			return $q.when(false);
-		}
+		var deliveryHours;
 
 		var now = new Date().getHours();
 
-		return getDeliveryHours().then(function(deliveryHours) {
-			return (now < deliveryHours.start || now >= deliveryHours.end);
-		});
-	}
+		var delHoursPromise = hoursMgr.getDeliveryHours();
 
-	$scope.checkout = function(order) {
-		checkoutIsProhibited().then(function(isProhibited) {
+		delHoursPromise.then(function(delHours) {
+			var now = new Date().getHours();
+
+			deliveryHours = {
+				start: (parseInt(delHours.start) - 1),
+				end: parseInt(delHours.end)
+			};
+
+			if(now < deliveryHours.start || now >= deliveryHours.end) {
+				isProhibited = true;
+			}
+
+			if(clientConfig.showCheckout) {
+				isProhibited = false;
+			}
+
 			if(isProhibited) {
 				return orderMgmt.checkoutProhibited();
 			}
