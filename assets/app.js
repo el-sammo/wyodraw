@@ -2170,187 +2170,6 @@ app.controller('TesterController', function($scope, $http, $rootScope, $q, teste
 
 
 ///
-// Controllers: Splash
-///
-app.controller('SplashController', function($scope, $http, $rootScope) {
-	var areaId = $rootScope.areaId;
-	var areaName = $rootScope.areaName;
-	var areaPhone = $rootScope.areaPhone;
-
-	// News Feeder
-	
-	var t = $http.get('/stories/byAreaId/' + areaId);
-
-	t.error(function(err) {
-		console.log('SplashController: stories ajax failed');
-		console.error(err);
-	});
-
-	t.then(function(res) {
-		$scope.stories = res.data;
-	});
-
-	// Carousel
-	// http://codepen.io/Fabiano/pen/LACzk
-  $scope.myInterval = 3000;
-
-	var p = $http.get('/restaurants/featured/' + areaId);
-
-	p.error(function(err) {
-		console.log('SplashController: restaurants ajax failed');
-		console.error(err);
-	});
-
-	p.then(function(res) {
-		var setIds = {};
-		$scope.featuredRestaurants = [];
-		$scope.restaurants = res.data;
-
-		$scope.restaurants.forEach(function(restaurant, idx) {
-			// TODO these values need to come from a config
-			var rotatorMin = 1;
-			var rotatorMax = 3;
-
-			// only do this for featured restaurants
-
-			if(restaurant.featured && restaurant.featured === 'true') {
-				restaurant.rotatorPanel = Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
-				$scope.getItems(restaurant.id, function(err, featuredItems) {
-					var counter = 0;
-					restaurant.itemImage1 = '';
-					restaurant.itemId1 = '';
-					restaurant.menuSlug1 = '';
-					restaurant.itemImage2 = '';
-					restaurant.itemId2 = '';
-					restaurant.menuSlug2 = '';
-					restaurant.itemImage3 = '';
-					restaurant.itemId3 = '';
-					restaurant.menuSlug3 = '';
-					restaurant.itemImage4 = '';
-					restaurant.itemId4 = '';
-					restaurant.menuSlug4 = '';
-					restaurant.itemImage5 = '';
-					restaurant.itemId5 = '';
-					restaurant.menuSlug5 = '';
-					restaurant.itemImage6 = '';
-					restaurant.itemId6 = '';
-					restaurant.menuSlug6 = '';
-					restaurant.itemImage7 = '';
-					restaurant.itemId7 = '';
-					restaurant.menuSlug7 = '';
-					restaurant.itemImage8 = '';
-					restaurant.itemId8 = '';
-					restaurant.menuSlug8 = '';
-					restaurant.itemImage9 = '';
-					restaurant.itemId9 = '';
-					restaurant.menuSlug9 = '';
-					restaurant.itemImage10 = '';
-					restaurant.itemId10 = '';
-					restaurant.menuSlug10 = '';
-					if(featuredItems.length > 9) {
-						featuredItems.forEach(function(item) {
-							counter ++;
-							if(counter < 11) {
-								if(restaurant.itemImage1.length < 1) {
-									restaurant.itemImage1 = item.itemImage;
-									restaurant.itemId1 = item.itemId;
-									restaurant.menuSlug1 = item.menuSlug;
-								} else if(restaurant.itemImage2.length < 1) {
-									restaurant.itemImage2 = item.itemImage;
-									restaurant.itemId2 = item.itemId;
-									restaurant.menuSlug2 = item.menuSlug;
-								} else if(restaurant.itemImage3.length < 1) {
-									restaurant.itemImage3 = item.itemImage;
-									restaurant.itemId3 = item.itemId;
-									restaurant.menuSlug3 = item.menuSlug;
-								} else if(restaurant.itemImage4.length < 1) {
-									restaurant.itemImage4 = item.itemImage;
-									restaurant.itemId4 = item.itemId;
-									restaurant.menuSlug4 = item.menuSlug;
-								} else if(restaurant.itemImage5.length < 1) {
-									restaurant.itemImage5 = item.itemImage;
-									restaurant.itemId5 = item.itemId;
-									restaurant.menuSlug5 = item.menuSlug;
-								} else if(restaurant.itemImage6.length < 1) {
-									restaurant.itemImage6 = item.itemImage;
-									restaurant.itemId6 = item.itemId;
-									restaurant.menuSlug6 = item.menuSlug;
-								} else if(restaurant.itemImage7.length < 1) {
-									restaurant.itemImage7 = item.itemImage;
-									restaurant.itemId7 = item.itemId;
-									restaurant.menuSlug7 = item.menuSlug;
-								} else if(restaurant.itemImage8.length < 1) {
-									restaurant.itemImage8 = item.itemImage;
-									restaurant.itemId8 = item.itemId;
-									restaurant.menuSlug8 = item.menuSlug;
-								} else if(restaurant.itemImage9.length < 1) {
-									restaurant.itemImage9 = item.itemImage;
-									restaurant.itemId9 = item.itemId;
-									restaurant.menuSlug9 = item.menuSlug;
-								} else {
-									restaurant.itemImage10 = item.itemImage;
-									restaurant.itemId10 = item.itemId;
-									restaurant.menuSlug10 = item.menuSlug;
-								}
-							}
-						});
-						restaurant.featuredItems = featuredItems;
-						if(! setIds[restaurant.id]) {
-							$scope.featuredRestaurants.push(restaurant);
-							setIds[restaurant.id] = true;
-						}
-					}
-				});
-			}
-		});
-	});
-
-	$scope.getItems = function(id, callback) {
-		var frItems = [];
-		var r = $http.get('/menus/byRestaurantId/' + id);
-
-		r.error(function(err) {
-			console.log('SplashController: getItems-menus ajax failed');
-			console.error(err);
-		});
-
-		r.then(function(res) {
-			res.data.map(function(menu) {
-				var s = $http.get('/items/byMenuId/' + menu.id);
-		
-				s.error(function(err) {
-					console.log('SplashController: getItems-menus ajax failed');
-					console.error(err);
-				});
-		
-				s.then(function(res) {
-					res.data.forEach(function(item) {
-						if(item.image) {
-							frItems.push({'itemId': item.id, 'itemImage': item.image, 'menuSlug': menu.slug});
-						}
-					});
-					if(frItems.length > 9) {
-						var tempArray = frItems;
-						var randex;
-						var counter = 0;
-						var outArray = [];
-						while(counter < 10) {
-							randex = Math.floor(Math.random() * (tempArray.length - 0)) + 0;
-							outArray.push(tempArray[randex]);
-							tempArray.splice(randex, 1);
-							counter ++;
-						}
-
-						callback(null, outArray);
-					}
-				});
-			});
-		});
-	};
-});
-
-
-///
 // Controllers: About
 ///
 app.controller('AboutController', function($scope, $http, $routeParams, $rootScope, delFeeMgmt) {
@@ -2851,7 +2670,7 @@ app.controller('MenuItemsController', function(
 
 	// Retrieve items by menu id (including options)
 	function getItems(menuId) {
-		$http.get('/items/byMenuId/' + menuId).then(function(res) {
+		$http.get('/items/activeByMenuId/' + menuId).then(function(res) {
 			// if items ajax succeeds...
 			var allItems = res.data;
 
@@ -3410,12 +3229,16 @@ app.controller('AccountController', function(
 		});
 	
 		r.then(function(res) {
-			res.data.map(function(order) {
-				order.updatedAt = order.updatedAt.substr(0,10);
-				order.total = parseFloat(order.total).toFixed(2);
+			var completedHistory = [];
+			res.data.forEach(function(order) {
+				if(order.orderStatus > 4) {
+					order.updatedAt = order.updatedAt.substr(0,10);
+					order.total = parseFloat(order.total).toFixed(2);
+					completedHistory.push(order);
+				}
 			});
 	
-			$scope.orders = res.data;
+			$scope.orders = completedHistory;
 		});
 	});
 
