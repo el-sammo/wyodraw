@@ -20,10 +20,10 @@
 								<div class="itemOptions" ng-repeat="option in item.options">
 									<span ng-show="option">{{option.name}} ({{option.price}})</span>
 								</div>
-								<p class="add2Order pull-left" ng-show="item.options.length > 0" ng-click="addItem(item)">
+								<p class="add2Order pull-left" ng-show="item.options.length > 0 && item.active" ng-click="addItem(item)">
 									Add to Order
 								</p>
-								<p class="add2Order pull-left" ng-show="item.options.length < 1">
+								<p class="add2Order pull-left" ng-show="item.options.length < 1 || !item.active">
 									Not Available
 								</p>
 							</div>

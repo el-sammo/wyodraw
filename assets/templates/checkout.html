@@ -5,6 +5,11 @@
 </div>
 <div class="modal-body">
 	<form name="checkoutForm">
+		<div class="row" ng-show="paymentFailed">
+			<div class="col-md-12">
+				<span class="error"><strong>The payment method you selected was declined. Please select another</strong>.</span><br/>
+			</div>
+		</div>
 		<div class="row no-margin">
 			<h4>Select Your Payment Method</h4>
 			<div class="radio" ng-repeat="method in order.paymentMethods">
@@ -51,11 +56,6 @@
 			<div class="row" ng-show="validCode && codeEffect">
 				<div class="col-md-12">
 					<span class="awesome">{{codeEffect}}</span>
-				</div>
-			</div>
-			<div class="row" ng-show="paymentFailed">
-				<div class="col-md-12">
-					<span class="error">The payment method you selected was declined. Please select another</span>
 				</div>
 			</div>
 			<br/>

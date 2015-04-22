@@ -571,7 +571,7 @@ app.factory('sessionMgr', function($rootScope, $http, $q) {
 });
 
 
-app.factory('delFeeMgmt', function($rootScope, $http, $q) {
+app.factory('delFeeMgmt', function($rootScope, $http) {
 	// [tierOne, tierTwo, tierThree, additional]
 	// maps to
 	// [
@@ -581,6 +581,55 @@ app.factory('delFeeMgmt', function($rootScope, $http, $q) {
 	// 	each additional restaurant
 	// 	]
 	var service = [7.95, 10.95, 13.95, 3.50];
+
+	return service;
+});
+
+
+app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig) {
+	var service = {
+		getDeliveryHours: function() {
+			var areaName;
+			var winLocStr = location.hostname;
+			var winLocPcs = winLocStr.split('.');
+		
+			if(winLocPcs[0] == 'grub2you' || winLocPcs[0] == 'www') {
+				// not an area-specific url
+			
+				// TODO
+				// get areaName
+				areaName = 'Casper';
+			} else {
+				if(clientConfig.environment == 'development') {
+					areaName = 'Casper';
+				} else {
+					areaName = winLocPcs[0];
+				}
+			}
+
+			return $http.get('/areas/byName/' + areaName).then(function(res) {
+				return getHours(res.data);
+			}).catch(function(err) {
+				console.log('hoursMgr: areas ajax failed');
+				console.error(err);
+				$q.reject(err);
+			});
+		}
+	};
+
+	var getHours = function(area) {
+		var now = new Date().getHours();
+
+		var today = new Date().getDay();
+
+		today = today - 1;
+
+		if(today < 0) {
+			today = 6;
+		}
+
+		return todayHours = area[0].deliveryHours[today];
+	};
 
 	return service;
 });
@@ -1187,7 +1236,7 @@ app.controller('LayoutMgmtController', function(
 app.controller('LayoutController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, layoutMgmt,
-	$rootScope, sessionMgr
+	$rootScope, sessionMgr, hoursMgr
 ) {
 	var sessionPromise = sessionMgr.getSession();
 
@@ -1207,61 +1256,41 @@ app.controller('LayoutController', function(
 			$scope.customerId = sessionData.customerId;
 		}
 
-		var p = $http.get('/areas/');
-						
-		// if areas ajax fails...
-		p.error(function(err) {
-			console.log('layoutMgmt: areas ajax failed');
-			console.error(err);
-		});
-								
-		// if areas ajax succeeds...
-		p.then(function(res) {
-			$scope.areas = res.data;
+		var delHoursPromise = hoursMgr.getDeliveryHours();
 
+		delHoursPromise.then(function(delHours) {
 			var now = new Date().getHours();
-
-			var today = new Date().getDay();
-
-			today = today - 1;
-
-			if(today < 0) {
-				today = 6;
-			}
-
-			var todayHours = $scope.areas[0].deliveryHours[today];
-
-			if(todayHours.start > 11) {
-				var todayStart = (parseInt(todayHours.start) - 12) + 'pm';
+	
+			if(delHours.start > 11) {
+				var todayStart = (parseInt(delHours.start) - 12) + 'pm';
 			} else {
-				var todayStart = parseInt(todayHours.start) + 'am';
+				var todayStart = parseInt(delHours.start) + 'am';
 			}
-
+	
 			$scope.todayStart = todayStart;
-
-			if(todayHours.end > 11) {
-				var todayEnd = (parseInt(todayHours.end) - 12) + 'pm';
+	
+			if(delHours.end > 11) {
+				var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
 			} else {
-				var todayEnd = parseInt(todayHours.end) + 'am';
+				var todayEnd = parseInt(delHours.end) + 'am';
 			}
-
+	
 			$scope.todayEnd = todayEnd;
-
-			var starting = (parseInt(todayHours.start) - 1);
-			var ending = parseInt(todayHours.end);
-
+	
+			var starting = (parseInt(delHours.start) - 1);
+			var ending = parseInt(delHours.end);
+	
 			$scope.currentlyAvailable = false;
-
+	
 			if(now >= starting && now <= ending) {
 				$scope.currentlyAvailable = true;
 			}
-
+			
+			$scope.logIn = layoutMgmt.logIn;
+			$scope.logOut = layoutMgmt.logOut;
+			$scope.signUp = layoutMgmt.signUp;
+			$scope.feedback = layoutMgmt.feedback;
 		});
-		
-		$scope.logIn = layoutMgmt.logIn;
-		$scope.logOut = layoutMgmt.logOut;
-		$scope.signUp = layoutMgmt.signUp;
-		$scope.feedback = layoutMgmt.feedback;
 	});
 
 	$rootScope.$on('customerLoggedIn', function(evt, args) {
@@ -1358,15 +1387,50 @@ app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
 	clientConfig, payMethodMgmt, delFeeMgmt, $window,
-	deviceMgr
+	deviceMgr, hoursMgr
 ) {
 
-	if(!$scope.order || !$scope.order.customerId) {
-		$modalInstance.dismiss('cancel');
-	}
+//	if(!$scope.order || !$scope.order.customerId) {
+//		$modalInstance.dismiss('cancel');
+//	}
 
+	var delHoursPromise = hoursMgr.getDeliveryHours();
+
+	delHoursPromise.then(function(delHours) {
+		var now = new Date().getHours();
+	
+		if(delHours.start > 11) {
+			var todayStart = (parseInt(delHours.start) - 12) + 'pm';
+			var earlyAs =  (parseInt(delHours.start) - 13) + 'pm';
+		} else {
+			var todayStart = parseInt(delHours.start) + 'am';
+			var earlyAs =  (parseInt(delHours.start) - 1) + 'am';
+		}
+
+		$scope.earlyAs = earlyAs;
+	
+		$scope.todayStart = todayStart;
+	
+		if(delHours.end > 11) {
+			var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
+		} else {
+			var todayEnd = parseInt(delHours.end) + 'am';
+		}
+	
+		$scope.todayEnd = todayEnd;
+	
+		var starting = (parseInt(delHours.start) - 1);
+		var ending = parseInt(delHours.end);
+
+		$scope.currentlyAvailable = false;
+	
+		if(now >= starting && now <= ending) {
+			$scope.currentlyAvailable = true;
+		}
+	});
+			
+	// this exists to not process futher if checkout is prohibited
 	if(!args.order) {
-		console.error('no args');
 		$modalInstance.dismiss('cancel');
 		return;
 	}
@@ -1557,25 +1621,18 @@ app.controller('CheckoutController', function(
 				// if orders ajax fails...
 				r.error(function(err) {
 					console.log('OrderMgmtController: checkout-processPayment ajax failed');
-					console.error(err);
+					// console.error(err);
 					$scope.order.orderStatus = parseInt(3);
 					$scope.order.paymentMethods = $scope.selMethod;
+					$scope.paymentFailed = true;
 
 					var z = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
 					// if orders ajax fails...
 					z.error(function(err) {
 						console.log('OrderMgmtController: post checkout-updateOrder ajax failed');
-						console.error(err);
-						$modalInstance.dismiss('cancel');
+						// console.error(err);
 					});
-												
-					// if orders ajax succeeds...
-					z.then(function(res) {
-						console.log('payment process FAILED');
-						$scope.paymentFailed = true;
-					});
-					$modalInstance.dismiss('cancel');
 				});
 										
 				// if orders ajax succeeds...
@@ -2113,187 +2170,6 @@ app.controller('TesterController', function($scope, $http, $rootScope, $q, teste
 
 
 ///
-// Controllers: Splash
-///
-app.controller('SplashController', function($scope, $http, $rootScope) {
-	var areaId = $rootScope.areaId;
-	var areaName = $rootScope.areaName;
-	var areaPhone = $rootScope.areaPhone;
-
-	// News Feeder
-	
-	var t = $http.get('/stories/byAreaId/' + areaId);
-
-	t.error(function(err) {
-		console.log('SplashController: stories ajax failed');
-		console.error(err);
-	});
-
-	t.then(function(res) {
-		$scope.stories = res.data;
-	});
-
-	// Carousel
-	// http://codepen.io/Fabiano/pen/LACzk
-  $scope.myInterval = 3000;
-
-	var p = $http.get('/restaurants/featured/' + areaId);
-
-	p.error(function(err) {
-		console.log('SplashController: restaurants ajax failed');
-		console.error(err);
-	});
-
-	p.then(function(res) {
-		var setIds = {};
-		$scope.featuredRestaurants = [];
-		$scope.restaurants = res.data;
-
-		$scope.restaurants.forEach(function(restaurant, idx) {
-			// TODO these values need to come from a config
-			var rotatorMin = 1;
-			var rotatorMax = 3;
-
-			// only do this for featured restaurants
-
-			if(restaurant.featured && restaurant.featured === 'true') {
-				restaurant.rotatorPanel = Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
-				$scope.getItems(restaurant.id, function(err, featuredItems) {
-					var counter = 0;
-					restaurant.itemImage1 = '';
-					restaurant.itemId1 = '';
-					restaurant.menuSlug1 = '';
-					restaurant.itemImage2 = '';
-					restaurant.itemId2 = '';
-					restaurant.menuSlug2 = '';
-					restaurant.itemImage3 = '';
-					restaurant.itemId3 = '';
-					restaurant.menuSlug3 = '';
-					restaurant.itemImage4 = '';
-					restaurant.itemId4 = '';
-					restaurant.menuSlug4 = '';
-					restaurant.itemImage5 = '';
-					restaurant.itemId5 = '';
-					restaurant.menuSlug5 = '';
-					restaurant.itemImage6 = '';
-					restaurant.itemId6 = '';
-					restaurant.menuSlug6 = '';
-					restaurant.itemImage7 = '';
-					restaurant.itemId7 = '';
-					restaurant.menuSlug7 = '';
-					restaurant.itemImage8 = '';
-					restaurant.itemId8 = '';
-					restaurant.menuSlug8 = '';
-					restaurant.itemImage9 = '';
-					restaurant.itemId9 = '';
-					restaurant.menuSlug9 = '';
-					restaurant.itemImage10 = '';
-					restaurant.itemId10 = '';
-					restaurant.menuSlug10 = '';
-					if(featuredItems.length > 9) {
-						featuredItems.forEach(function(item) {
-							counter ++;
-							if(counter < 11) {
-								if(restaurant.itemImage1.length < 1) {
-									restaurant.itemImage1 = item.itemImage;
-									restaurant.itemId1 = item.itemId;
-									restaurant.menuSlug1 = item.menuSlug;
-								} else if(restaurant.itemImage2.length < 1) {
-									restaurant.itemImage2 = item.itemImage;
-									restaurant.itemId2 = item.itemId;
-									restaurant.menuSlug2 = item.menuSlug;
-								} else if(restaurant.itemImage3.length < 1) {
-									restaurant.itemImage3 = item.itemImage;
-									restaurant.itemId3 = item.itemId;
-									restaurant.menuSlug3 = item.menuSlug;
-								} else if(restaurant.itemImage4.length < 1) {
-									restaurant.itemImage4 = item.itemImage;
-									restaurant.itemId4 = item.itemId;
-									restaurant.menuSlug4 = item.menuSlug;
-								} else if(restaurant.itemImage5.length < 1) {
-									restaurant.itemImage5 = item.itemImage;
-									restaurant.itemId5 = item.itemId;
-									restaurant.menuSlug5 = item.menuSlug;
-								} else if(restaurant.itemImage6.length < 1) {
-									restaurant.itemImage6 = item.itemImage;
-									restaurant.itemId6 = item.itemId;
-									restaurant.menuSlug6 = item.menuSlug;
-								} else if(restaurant.itemImage7.length < 1) {
-									restaurant.itemImage7 = item.itemImage;
-									restaurant.itemId7 = item.itemId;
-									restaurant.menuSlug7 = item.menuSlug;
-								} else if(restaurant.itemImage8.length < 1) {
-									restaurant.itemImage8 = item.itemImage;
-									restaurant.itemId8 = item.itemId;
-									restaurant.menuSlug8 = item.menuSlug;
-								} else if(restaurant.itemImage9.length < 1) {
-									restaurant.itemImage9 = item.itemImage;
-									restaurant.itemId9 = item.itemId;
-									restaurant.menuSlug9 = item.menuSlug;
-								} else {
-									restaurant.itemImage10 = item.itemImage;
-									restaurant.itemId10 = item.itemId;
-									restaurant.menuSlug10 = item.menuSlug;
-								}
-							}
-						});
-						restaurant.featuredItems = featuredItems;
-						if(! setIds[restaurant.id]) {
-							$scope.featuredRestaurants.push(restaurant);
-							setIds[restaurant.id] = true;
-						}
-					}
-				});
-			}
-		});
-	});
-
-	$scope.getItems = function(id, callback) {
-		var frItems = [];
-		var r = $http.get('/menus/byRestaurantId/' + id);
-
-		r.error(function(err) {
-			console.log('SplashController: getItems-menus ajax failed');
-			console.error(err);
-		});
-
-		r.then(function(res) {
-			res.data.map(function(menu) {
-				var s = $http.get('/items/byMenuId/' + menu.id);
-		
-				s.error(function(err) {
-					console.log('SplashController: getItems-menus ajax failed');
-					console.error(err);
-				});
-		
-				s.then(function(res) {
-					res.data.forEach(function(item) {
-						if(item.image) {
-							frItems.push({'itemId': item.id, 'itemImage': item.image, 'menuSlug': menu.slug});
-						}
-					});
-					if(frItems.length > 9) {
-						var tempArray = frItems;
-						var randex;
-						var counter = 0;
-						var outArray = [];
-						while(counter < 10) {
-							randex = Math.floor(Math.random() * (tempArray.length - 0)) + 0;
-							outArray.push(tempArray[randex]);
-							tempArray.splice(randex, 1);
-							counter ++;
-						}
-
-						callback(null, outArray);
-					}
-				});
-			});
-		});
-	};
-});
-
-
-///
 // Controllers: About
 ///
 app.controller('AboutController', function($scope, $http, $routeParams, $rootScope, delFeeMgmt) {
@@ -2794,7 +2670,7 @@ app.controller('MenuItemsController', function(
 
 	// Retrieve items by menu id (including options)
 	function getItems(menuId) {
-		$http.get('/items/byMenuId/' + menuId).then(function(res) {
+		$http.get('/items/activeByMenuId/' + menuId).then(function(res) {
 			// if items ajax succeeds...
 			var allItems = res.data;
 
@@ -2845,7 +2721,7 @@ app.controller('OrderController', function(
 	navMgr, pod, $scope,
 	$http, $routeParams, $modal, orderMgmt,
 	$rootScope, sessionMgr, $q, layoutMgmt,
-	clientConfig, delFeeMgmt
+	clientConfig, delFeeMgmt, hoursMgr
 ) {
 	// TODO
 	// put this in a config? or what?
@@ -2875,50 +2751,31 @@ app.controller('OrderController', function(
 	// Checkout Actions
 	///
 
-	function getDeliveryHours() {
-		if($scope.deliveryHours) {
-			return $q.when($scope.deliveryHours);
-		}
+	$scope.checkout = function(order) {
+		var isProhibited = true;
 
-		// TODO Need to adjust for multiple areas
-		return $http.get('/areas/').then(function(res) {
-			$scope.areas = res.data;
-
-			// Calculate today (0 = Mon, 6 = Sun)
-			var today = new Date().getDay() - 1;
-
-			if(today < 0) {
-				today = 6;
-			}
-
-			var todayHours = $scope.areas[0].deliveryHours[today];
-
-			$scope.deliveryHours = {
-				start: (parseInt(todayHours.start) - 1),
-				end: parseInt(todayHours.end)
-			};
-
-			return $scope.deliveryHours;
-		}).catch(function(err) {
-			console.log('layoutMgmt: areas ajax failed');
-			console.error(err);
-		});
-	}
-
-	function checkoutIsProhibited() {
-		if(clientConfig.showCheckout) {
-			return $q.when(false);
-		}
+		var deliveryHours;
 
 		var now = new Date().getHours();
 
-		return getDeliveryHours().then(function(deliveryHours) {
-			return (now < deliveryHours.start || now >= deliveryHours.end);
-		});
-	}
+		var delHoursPromise = hoursMgr.getDeliveryHours();
 
-	$scope.checkout = function(order) {
-		checkoutIsProhibited().then(function(isProhibited) {
+		delHoursPromise.then(function(delHours) {
+			var now = new Date().getHours();
+
+			deliveryHours = {
+				start: (parseInt(delHours.start) - 1),
+				end: parseInt(delHours.end)
+			};
+
+			if(now < deliveryHours.start || now >= deliveryHours.end) {
+				isProhibited = true;
+			}
+
+			if(clientConfig.showCheckout) {
+				isProhibited = false;
+			}
+
 			if(isProhibited) {
 				return orderMgmt.checkoutProhibited();
 			}
@@ -3372,12 +3229,16 @@ app.controller('AccountController', function(
 		});
 	
 		r.then(function(res) {
-			res.data.map(function(order) {
-				order.updatedAt = order.updatedAt.substr(0,10);
-				order.total = parseFloat(order.total).toFixed(2);
+			var completedHistory = [];
+			res.data.forEach(function(order) {
+				if(order.orderStatus > 4) {
+					order.updatedAt = order.updatedAt.substr(0,10);
+					order.total = parseFloat(order.total).toFixed(2);
+					completedHistory.push(order);
+				}
 			});
 	
-			$scope.orders = res.data;
+			$scope.orders = completedHistory;
 		});
 	});
 
