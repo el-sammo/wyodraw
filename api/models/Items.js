@@ -21,6 +21,10 @@ module.exports = {
 		menuId: {
       type: 'string',
       required: true
+    },
+		active: {
+      type: 'boolean',
+      required: true
 		}
   },
 
