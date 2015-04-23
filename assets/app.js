@@ -25,7 +25,7 @@ app.config(['$httpProvider', '$analyticsProvider',
 // Routes
 ///
 
-app.config(function($routeProvider) {
+app.config(function($routeProvider, $locationProvider) {
 	///
 	// Tester Page
 	///
@@ -171,6 +171,77 @@ app.config(function($routeProvider) {
 	$routeProvider.otherwise({
 		redirectTo: '/'
 	});
+
+
+	///
+	// HTML5 Routing (no hash)
+	///
+	
+	$locationProvider.html5Mode(true);
+});
+
+
+///
+// Search Engine Optimization
+///
+
+app.service('seo', function() {
+	var pages = {
+		default: {
+			title: 'Restaurant Delivery',
+			description: '',
+			// Prepend global keywords for all pages
+			keywords: ['grub2you']
+		},
+		careers: {
+			title: 'Careers',
+			description: '',
+			keywords: []
+		}
+	};
+
+	var properties;
+	var service = {
+		title: function() {
+			return properties.title;
+		},
+		description: function() {
+			return properties.description;
+		},
+		keywords: function() {
+			// Final global keywords for all pages
+			var keywords = angular.copy(properties.keywords);
+			keywords = keywords.concat([
+				'grub to you', 'grubtoyou', 'grub 2 you'
+			]);
+			return keywords.join(', ');
+		},
+		reset: function() {
+			service.setPage('default');
+		},
+		setTitle: function(title) {
+			properties.title = 'Grub2You - ' + title;
+		},
+		setDescription: function(description) {
+			properties.description = description;
+		},
+		appendKeywords: function(keywords) {
+			if(! _.isArray(keywords)) {
+				keywords = [keywords];
+			}
+			properties.keywords = properties.keywords.concat(keywords);
+		},
+		setPage: function(page) {
+			properties = angular.copy(pages[page] || pages.default);
+			properties.title = 'Grub2You - ' + properties.title;
+		}
+	};
+	service.reset();
+	return service;
+});
+
+app.controller('SeoController', function($scope, seo) {
+	$scope.seo = seo;
 });
 
 
@@ -586,26 +657,12 @@ app.factory('delFeeMgmt', function($rootScope, $http) {
 });
 
 
-app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig) {
+app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig, areaMgmt) {
 	var service = {
 		getDeliveryHours: function() {
-			var areaName;
-			var winLocStr = location.hostname;
-			var winLocPcs = winLocStr.split('.');
-		
-			if(winLocPcs[0] == 'grub2you' || winLocPcs[0] == 'www') {
-				// not an area-specific url
-			
-				// TODO
-				// get areaName
-				areaName = 'Casper';
-			} else {
-				if(clientConfig.environment == 'development') {
-					areaName = 'Casper';
-				} else {
-					areaName = winLocPcs[0];
-				}
-			}
+			var area = areaMgmt.getArea();
+
+			var areaName = area.name;
 
 			return $http.get('/areas/byName/' + areaName).then(function(res) {
 				return getHours(res.data);
@@ -634,47 +691,72 @@ app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig) {
 	return service;
 });
 
+app.factory('areaMgmt', function($rootScope) {
+	var service = {
+		getArea: function() {
+			/**
+			 * TODO - Make areas work, and test thoroughly
+			 *
+				var winLocStr = location.hostname;
+				var winLocPcs = winLocStr.split('.');
 
-app.factory('fakeAuth', function($rootScope, $http, clientConfig) {
-	var winLocStr = location.hostname;
-	var winLocPcs = winLocStr.split('.');
+				if(winLocPcs[0] === 'grub2you' || winLocPcs[0] === 'www') {
+					// not an area-specific url
+				
+					// TODO
+					// get areaId
+					$rootScope.areaId = '54b32e4c3756f5d15ad4ca49';
+					// TODO
+					// get areaName
+					$rootScope.areaName = 'Casper';
+					// TODO
+					// get areaPhone
+					$rootScope.areaPhone = '234-GRUB';
 
-	if(winLocPcs[0] == 'grub2you' || winLocPcs[0] == 'www') {
-		// not an area-specific url
-	
-		// TODO
-		// get areaId
-		$rootScope.areaId = '54b32e4c3756f5d15ad4ca49';
-		// TODO
-		// get areaName
-		$rootScope.areaName = 'Casper';
-		// TODO
-		// get areaPhone
-		$rootScope.areaPhone = '234-GRUB';
+				} else {
+					var areaName;
+					if(clientConfig.environment == 'development') {
+						areaName = 'casper';
+					} else {
+						areaName = winLocPcs[0];
+					}
+					var p = $http.get('/areas/byName/' + areaName);
+						
+					// if areas ajax fails...
+					p.error(function(err) {
+						console.log('fakeAuthFactory: areas ajax failed');
+						console.error(err);
+					});
+								
+					// if areas ajax succeeds...
+					p.then(function(res) {
+						$rootScope.areaId = res.data[0].id;
+						$rootScope.areaName = res.data[0].name;
+						$rootScope.areaPhone = res.data[0].phone;
+					});
 
-	} else {
-		var areaName;
-		if(clientConfig.environment == 'development') {
-			areaName = 'casper';
-		} else {
-			areaName = winLocPcs[0];
+				}
+			*/
+
+			var area = {
+				id: '54b32e4c3756f5d15ad4ca49',
+				name: 'Casper',
+				phone: '234-GRUB'
+			};
+
+			$rootScope.areaId = area.id;
+			$rootScope.areaName = area.name;
+			$rootScope.areaPhone = area.phone;
+
+			return area;
 		}
-		var p = $http.get('/areas/byName/' + areaName);
-			
-		// if areas ajax fails...
-		p.error(function(err) {
-			console.log('fakeAuthFactory: areas ajax failed');
-			console.error(err);
-		});
-					
-		// if areas ajax succeeds...
-		p.then(function(res) {
-			$rootScope.areaId = res.data[0].id;
-			$rootScope.areaName = res.data[0].name;
-			$rootScope.areaPhone = res.data[0].phone;
-		});
+	};
 
-	}
+	return service;
+});
+
+app.factory('fakeAuth', function($rootScope, $http, clientConfig, areaMgmt) {
+	areaMgmt.getArea();
 
 	var corporate = {
 		phone: '- - -',
@@ -1596,10 +1678,10 @@ app.controller('CheckoutController', function(
 				$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
 				$modalInstance.dismiss('done');
 				if(deviceMgr.isBigScreen()) {
-					$window.location.href = '#/order/' + $scope.order.id;
+					$window.location.href = '/app/order/' + $scope.order.id;
 					messenger.show('Your order has been received.', 'Success!');
 				} else {
-					$window.location.href = '#/orderSmall/' + $scope.order.id;
+					$window.location.href = '/app/orderSmall/' + $scope.order.id;
 				}
 			});
 		} else {
@@ -2037,6 +2119,7 @@ app.factory('payMethodMgmt', function($q, $http, sessionMgr) {
 	return service;
 });
 
+
 ///
 // Careers Management
 ///
@@ -2064,7 +2147,6 @@ app.factory('careersMgmt', function($modal, $rootScope) {
 app.controller('CareersMgmtController', function(
 	args, $scope, $modalInstance, $http, $rootScope, messenger
 ) {
-
 	$scope.apply = function() {
 		var applicant = {
 			fName: $scope.fName,
@@ -2197,7 +2279,11 @@ app.controller('AboutController', function($scope, $http, $routeParams, $rootSco
 ///
 // Controllers: Careers
 ///
-app.controller('CareersController', function($scope, $http, $routeParams, $rootScope, careersMgmt) {
+app.controller('CareersController', function(
+	$scope, $http, $routeParams, $rootScope, careersMgmt, seo
+) {
+	seo.setPage('careers');
+
 	var areaId = $rootScope.areaId;
 
 	$scope.apply = careersMgmt.apply;
@@ -2543,11 +2629,12 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('RestaurantsController', function(
-	$scope, $http, $routeParams, $modal, $location, $window, $q,
-	orderMgmt, signupPrompter, deviceMgr, slugMgr, restaurantsMgr
+	$rootScope, $scope, $http, $routeParams, $modal, $location, $window, $q,
+	orderMgmt, signupPrompter, deviceMgr, slugMgr, restaurantsMgr,
+	seo
 ) {
 	if($location.path().match(/^\/$/) && ! deviceMgr.isBigScreen()) {
-		$window.location.href = '#/restaurants/';
+		$window.location.href = '/app/restaurants/';
 	}
 
 	signupPrompter.prompt();
@@ -2558,6 +2645,40 @@ app.controller('RestaurantsController', function(
 			$scope.restaurantId = allRestaurants[0].id;
 		});
 		restaurantsMgr.getRestaurantBySlug(slug).then(function(restaurant) {
+			restaurant || (restaurant = {});
+
+			// Manage search engine optimization for restaurants
+			seo.reset();
+			seo.setTitle(restaurant.name);
+			seo.setDescription(
+				'Delivery from ' + restaurant.name + ' in ' + $rootScope.areaName
+			);
+
+			// Build and set SEO keywords
+			seo.appendKeywords([
+				restaurant.name,
+				'delivery from ' + restaurant.name,
+			]);
+
+			if(restaurant.cuisine) {
+				seo.appendKeywords(restaurant.cuisine);
+
+				var split = restaurant.cuisine.split(' ');
+				if(split.length > 1) {
+					seo.appendKeywords(split);
+				}
+			}
+
+			seo.appendKeywords([
+				$rootScope.areaName,
+				$rootScope.areaName + ' restaurant delivery',
+				$rootScope.areaName + ' food delivery',
+				'restaurant',
+				'restaurant delivery',
+				'food',
+				'food delivery',
+			]);
+
 			$scope.displayRestaurant = restaurant;
 			$scope.showRestaurant(restaurant.id);
 		});
@@ -2634,7 +2755,7 @@ app.controller('RestaurantsController', function(
 
 app.controller('MenuItemsController', function(
 	$scope, $http, $routeParams, $q, orderMgmt, slugMgr,
-	restaurantsMgr
+	restaurantsMgr, seo
 ) {
 	$scope.addItem = orderMgmt.add;
 
@@ -2673,6 +2794,7 @@ app.controller('MenuItemsController', function(
 		$http.get('/items/activeByMenuId/' + menuId).then(function(res) {
 			// if items ajax succeeds...
 			var allItems = res.data;
+			var keywords = [];
 
 			allItems.map(function(item) {
 				$http.get('/options/byItemId/' + item.id).then(function(res) {
@@ -2684,7 +2806,12 @@ app.controller('MenuItemsController', function(
 					console.log('RestaurantsController: getItems-options ajax failed');
 					console.error(err);
 				});
+
+				keywords.push(item.name);
 			});
+
+			// Add keywords for search engine optimization
+			seo.appendKeywords(keywords);
 
 			$scope.items = allItems;
 		}).catch(function(err) {
@@ -2752,7 +2879,7 @@ app.controller('OrderController', function(
 	///
 
 	$scope.checkout = function(order) {
-		var isProhibited = true;
+		var isProhibited = false;
 
 		var deliveryHours;
 
@@ -2772,6 +2899,8 @@ app.controller('OrderController', function(
 				isProhibited = true;
 			}
 
+			// clientConfig.showCheckout just overrides this logic in 
+			// development environments
 			if(clientConfig.showCheckout) {
 				isProhibited = false;
 			}
@@ -3273,12 +3402,12 @@ app.controller('AccountAddController', function(
 			if(status >= 400) return;
 
 			navMgr.protect(false);
-			$window.location.href = '#/account/' + data.id;
+			$window.location.href = '/app/account/' + data.id;
 		});
 	};
 
 	$scope.cancel = function cancel() {
-		navMgr.cancel('#/');
+		navMgr.cancel('/app/');
 	};
 });
 
@@ -3315,7 +3444,7 @@ app.controller('AccountEditController', function(
 	};
 
 	$scope.cancel = function cancel() {
-		navMgr.cancel('#/account/' +$routeParams.id);
+		navMgr.cancel('/app/account/' +$routeParams.id);
 	};
 });
 

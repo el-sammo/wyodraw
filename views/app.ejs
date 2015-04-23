@@ -5,14 +5,14 @@
 			<div style="top: 40px; position: relative;">
 				<ul class="nav navbar-nav">
 					<li class="fms-brand navbar-brand">
-						<a href="#/">
+						<a href="/app/">
 							<img src="/images/logo_enhanced.png">
 						</a>
 					</li>
 					<li>
 						<span>
 							<h1>
-								<a href="#/">
+								<a href="/app/">
 									<span ng-show="areaName">{{areaName}} </span>
 									Restaurants
 								</a>
@@ -21,7 +21,7 @@
 						<span>
 							<h1>
 								<a ng-show="!accessAccount" ng-click="logIn()">My Account</a>
-								<a ng-show="accessAccount" href="#/account/">My Account</a>
+								<a ng-show="accessAccount" href="/app/account/">My Account</a>
 							</h1>
 						</span>
 
@@ -56,7 +56,7 @@
 				<ul class="nav navbar-nav">
 					<li>
 						<div class="fms-brand" style="position: relative; margin-right: 18px;">
-							<a href="#/">
+							<a href="/app/">
 								<img src="/images/logo_enhanced.png">
 							</a>
 						</div>
@@ -80,7 +80,7 @@
 		class="list-group visible-md-inline visible-sm-inline visible-xs-inline"
 	>
 		<li class="list-group-item">
-			<a href="#/restaurants/{{featuredMenuSlug}}" ng-click="menuClicked(false)">
+			<a href="/app/restaurants/{{featuredMenuSlug}}" ng-click="menuClicked(false)">
 				Restaurants
 			</a>
 		</li>
@@ -88,12 +88,12 @@
 			<a ng-show="!accessAccount" style="cursor: pointer;"
 				ng-click="logIn(); menuClicked(false)"
 			>Account</a>
-			<a ng-show="accessAccount" href="#/account/" ng-click="menuClicked(false)">
+			<a ng-show="accessAccount" href="/app/account/" ng-click="menuClicked(false)">
 				Account
 			</a>
 		</li>
 		<li class="list-group-item">
-			<a href="#/cart" ng-click="menuClicked(false)">
+			<a href="/app/cart" ng-click="menuClicked(false)">
 				<i class="fa fa-shopping-cart"></i> &nbsp;Cart
 			</a>
 		</li>
@@ -119,12 +119,12 @@
 
 <nav class="navbar navbar-default navbar-fixed-bottom" ng-controller="LayoutController">
 	<div class="container">
-		<a href="#/about" class="footerLink">Grub2You Story</a>
+		<a href="/app/about" class="footerLink">Grub2You Story</a>
 		<span class="footerLink" style="cursor: pointer;" ng-click="feedback()">Feedback</span>
-		<a href="#/careers" class="footerLink">Careers</a>
-		<a href="#/terms" class="footerLink">Terms</a>
-		<a href="#/privacy" class="footerLink">Privacy Policy</a>
-		<a href="#/contact" class="footerLink">Contact Us</a>
+		<a href="/app/careers" class="footerLink">Careers</a>
+		<a href="/app/terms" class="footerLink">Terms</a>
+		<a href="/app/privacy" class="footerLink">Privacy Policy</a>
+		<a href="/app/contact" class="footerLink">Contact Us</a>
 	</div>
 </nav>
 
