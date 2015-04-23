@@ -33,9 +33,10 @@ module.exports.routes = {
   ***************************************************************************/
   '/login': 'Customers.login',
 
-  '/': {
-    view: 'app'
-  },
+  // Application routes
+  '/': '/app/',
+  '/app/*': { view: 'app' },
+  '/app': { view: 'app' },
 
   // Media / Images
   'GET /images/:collection/:id/:field/:version': 'ImagesController.show',

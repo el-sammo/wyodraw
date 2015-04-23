@@ -18,7 +18,7 @@
 					<div class="row" ng-repeat="menu in restaurant.menus">
 						<div>
 							<a class="menuLink" style="text-decoration: none;"
-								ng-init="menuSlug = menu.slug" href="#/restaurants/{{menuSlug}}"
+								ng-init="menuSlug = menu.slug" href="/app/restaurants/{{menuSlug}}"
 							>
 								{{menu.name}}
 							</a>
