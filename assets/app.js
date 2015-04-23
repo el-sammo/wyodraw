@@ -1637,6 +1637,7 @@ app.controller('CheckoutController', function(
 
 	$scope.checkout = function() {
 		$scope.paymentFailed = false;
+		$scope.order.specDelInstr = $scope.specDelInstr;
 
 		if($scope.selMethod == 'cash') {
 			$scope.order.orderStatus = 5;
