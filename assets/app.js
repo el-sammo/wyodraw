@@ -1638,6 +1638,7 @@ app.controller('CheckoutController', function(
 	$scope.checkout = function() {
 		$scope.paymentFailed = false;
 		$scope.order.specDelInstr = $scope.specDelInstr;
+		$scope.order.areaId = $rootScope.areaId;
 
 		if($scope.selMethod == 'cash') {
 			$scope.order.orderStatus = 5;
@@ -1659,8 +1660,6 @@ app.controller('CheckoutController', function(
 			}
 
 			$scope.order.paymentMethods = 'cash';
-
-			$scope.order.areaId = $scope.customer.areaId;
 
 			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
 
@@ -1703,13 +1702,15 @@ app.controller('CheckoutController', function(
 			p.then(function(res) {
 				var r = $http.post('/checkout/processPayment', {customer: $scope.customer, paymentMethodId: $scope.selMethod, amount: $scope.currentTotal});
 		
-				// if orders ajax fails...
+				// if payment ajax fails...
 				r.error(function(err) {
 					console.log('OrderMgmtController: checkout-processPayment ajax failed');
 					// console.error(err);
 					$scope.order.orderStatus = parseInt(3);
 					$scope.order.paymentMethods = $scope.selMethod;
 					$scope.paymentFailed = true;
+
+					// TODO: send an aggressive alert to op/mngr notifying of payment failure
 
 					var z = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
@@ -1720,7 +1721,7 @@ app.controller('CheckoutController', function(
 					});
 				});
 										
-				// if orders ajax succeeds...
+				// if payment ajax succeeds...
 				r.then(function(res) {
 					if(res.data.success) {
 						$scope.order.orderStatus = parseInt(5);
@@ -1741,8 +1742,6 @@ app.controller('CheckoutController', function(
 						}
 
 						$scope.order.paymentMethods = $scope.selMethod;
-
-						$scope.order.areaId = $scope.customer.areaId;
 
 						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
@@ -1769,6 +1768,8 @@ app.controller('CheckoutController', function(
 
 						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
+						// TODO: send an aggressive alert to op/mngr notifying of payment failure
+
 						// if orders ajax fails...
 						s.error(function(err) {
 							console.log('OrderMgmtController: checkout-updateOrder ajax failed');
