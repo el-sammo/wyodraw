@@ -1483,15 +1483,18 @@ app.controller('CheckoutController', function(
 	
 		if(delHours.start > 11) {
 			var todayStart = (parseInt(delHours.start) - 12) + 'pm';
+			var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
 			var earlyAs =  (parseInt(delHours.start) - 13) + 'pm';
 		} else {
 			var todayStart = parseInt(delHours.start) + 'am';
+			var todayEnd = parseInt(delHours.end) + 'am';
 			var earlyAs =  (parseInt(delHours.start) - 1) + 'am';
 		}
 
 		$scope.earlyAs = earlyAs;
 	
 		$scope.todayStart = todayStart;
+		$scope.todayEnd = todayEnd;
 	
 		if(delHours.end > 11) {
 			var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
