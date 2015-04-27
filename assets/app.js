@@ -1511,7 +1511,7 @@ app.controller('CheckoutController', function(
 		}
 	});
 			
-	// this exists to not process futher if checkout is prohibited
+	// this exists to not process further if checkout is prohibited
 	if(!args.order) {
 		$modalInstance.dismiss('cancel');
 		return;
@@ -1641,6 +1641,7 @@ app.controller('CheckoutController', function(
 
 		if($scope.selMethod == 'cash') {
 			$scope.order.orderStatus = 5;
+			$scope.order.paymentInitiatedAt = new Date().getTime();
 			$scope.order.paymentAcceptedAt = new Date().getTime();
 
 			if($scope.gratuity) {
@@ -1687,6 +1688,7 @@ app.controller('CheckoutController', function(
 			});
 		} else {
 			$scope.order.orderStatus = parseInt(2);
+			$scope.order.paymentInitiatedAt = new Date().getTime();
 
 			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
 
