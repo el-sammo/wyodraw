@@ -1,7 +1,7 @@
 <form class="form-horizontal">
 	<div class="modal-header">
 		<h4 class="modal-title" id="sd-login-modal-title">
-			Please sign in...
+			Please sign in... here
 		</h4>
 	</div>
 	<div class="modal-body" id="sd-login-modal">
@@ -25,6 +25,11 @@
 					type="password" class="form-control" placeholder="Password"
 					name="password" ng-model="credentials.password"
 				>
+			</div>
+		</div>
+		<div class="form-group" ng-show="badCreds">
+			<div class="col-sm-12">
+				<span class="error">Log In Failed: Please Try Again</span>
 			</div>
 		</div>
 	</div>

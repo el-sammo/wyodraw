@@ -1216,6 +1216,8 @@ app.controller('LayoutMgmtController', function(
 ) {
 
 	var p = $http.get('/areas/');
+
+	$scope.badCreds = false;
 						
 	// if areas ajax fails...
 	p.error(function(err) {
@@ -1260,9 +1262,7 @@ app.controller('LayoutMgmtController', function(
 			}
 		}).error(function(err) {
 			// if login ajax fails...
-				console.log('LayoutMgmtController: logIn ajax failed');
-				console.error(err);
-				$modalInstance.dismiss('cancel');
+				$scope.badCreds = true;
 		});
 	};
 
