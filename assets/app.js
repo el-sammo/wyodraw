@@ -1706,13 +1706,12 @@ app.controller('CheckoutController', function(
 		
 				// if payment ajax fails...
 				r.error(function(err) {
-					console.log('OrderMgmtController: checkout-processPayment ajax failed');
-					// console.error(err);
 					$scope.order.orderStatus = parseInt(3);
 					$scope.order.paymentMethods = $scope.selMethod;
 					$scope.paymentFailed = true;
 
-					// TODO: send an aggressive alert to op/mngr notifying of payment failure
+					// send an aggressive alert to op/mngr notifying of payment failure
+					$http.post('/mail/sendFailToOperator/'+$scope.order.id);
 
 					var z = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
@@ -1770,7 +1769,8 @@ app.controller('CheckoutController', function(
 
 						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
 				
-						// TODO: send an aggressive alert to op/mngr notifying of payment failure
+						// send an aggressive alert to op/mngr notifying of payment failure
+						$http.post('/mail/sendFailToOperator/'+$scope.order.id);
 
 						// if orders ajax fails...
 						s.error(function(err) {
