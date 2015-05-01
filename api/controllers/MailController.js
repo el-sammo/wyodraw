@@ -19,6 +19,14 @@ module.exports = {
 		}
 	},
 
+	sendFailToOperator: function(req, res) {
+		if(env && env == 'production') {
+			var email = 'sam.barrett@gmail.com, 3072778940@vtext.com';
+			var orderId = req.params.id;
+			sendMail(email, 'Payment Failed!', 'failed', orderId);
+		}
+	},
+
 	sendUpdateToCustomer: function(req, res) {
 		if(env && env == 'production') {
 			var customerId = req.params.id;
@@ -159,6 +167,15 @@ function sendMail(email, subject, template, data) {
 			to: email,
 			subject: subject,
 			text: 'Your order has been collected from the restaurant and is on the way!'
+		};
+	}
+
+	if(template == 'failed') {
+		mailOptions = {
+			from: 'Grub2You <info@grub2you.com>',
+			to: email,
+			subject: subject,
+			text: 'Payment for the following order failed:  http://grub2you.com:3001/#/orderDetails/'+data
 		};
 	}
 
