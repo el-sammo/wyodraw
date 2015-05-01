@@ -1642,10 +1642,10 @@ app.controller('CheckoutController', function(
 		$scope.paymentFailed = false;
 		$scope.order.specDelInstr = $scope.specDelInstr;
 		$scope.order.areaId = $rootScope.areaId;
+		$scope.order.paymentInitiatedAt = new Date().getTime();
 
 		if($scope.selMethod == 'cash') {
 			$scope.order.orderStatus = 5;
-			$scope.order.paymentInitiatedAt = new Date().getTime();
 			$scope.order.paymentAcceptedAt = new Date().getTime();
 
 			if($scope.gratuity) {
@@ -1690,7 +1690,6 @@ app.controller('CheckoutController', function(
 			});
 		} else {
 			$scope.order.orderStatus = parseInt(2);
-			$scope.order.paymentInitiatedAt = new Date().getTime();
 
 			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
 
