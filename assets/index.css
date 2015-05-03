@@ -282,6 +282,10 @@ td {
 	cursor: pointer;
 }
 
+.smallRestsMenusPanel {
+	height: 96px;
+}
+
 .menuLink {
 	font-size: 12px;
 	padding-left: 10px;
@@ -494,7 +498,6 @@ td {
 	overflow-y: auto;
 	overflow-x: hidden;
 	width: 100%;
-	/* margin-top: 172px; */
 }
 
 #menuItemsPanel {
