@@ -989,6 +989,11 @@ app.controller('SignUpController', function(
 		}
 	});
 
+	$scope.dyk = 'You can order from multiple restaurants on the same order? One person wants steak, another Italian and yet another ribs? We can deliver an order from any combination of restaurants!';
+	$http.get('/dyk/').then(function(res) {
+		$scope.dyk = res.data[Math.floor((Math.random() * res.data.length))].dykContent;
+	});
+
 	$scope.validUsername = true;
 
 	$scope.state = clientConfig.defaultState || 'WY';
