@@ -14,14 +14,14 @@ var env = sails.config.environment;
 module.exports = {
 	sendNotifyToOperator: function(req, res) {
 		if(env && env == 'production') {
-			var email = 'sam.barrett@gmail.com, 3072778940@vtext.com, 3072514153@vtext.com, 3072583100@vtext.com, 3072594177@vtext.com';
+			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
 			sendMail(email, 'Order Placed!', 'placed', null);
 		}
 	},
 
 	sendFailToOperator: function(req, res) {
 		if(env && env == 'production') {
-			var email = 'sam.barrett@gmail.com, 3072778940@vtext.com';
+			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
 			var orderId = req.params.id;
 			sendMail(email, 'Payment Failed!', 'failed', orderId);
 		}
@@ -57,7 +57,7 @@ module.exports = {
 	sendFeedbackToManagement: function(req, res) {
 		if(env && env == 'production') {
 			var feedbackId = req.params.id;
-			var email = 'sam.barrett@gmail.com, sam.barrett@grub2you.com';
+			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
 			sendMail(email, 'Feedback Received!', 'feedback', feedbackId);
 		}
 	},
