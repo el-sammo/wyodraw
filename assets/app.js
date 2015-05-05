@@ -1142,7 +1142,7 @@ app.controller('SignUpController', function(
 		$http.post(
 			'/login', credentials
 		).success(function(data, status, headers, config) {
-		// if login ajax succeeds...
+			// if login ajax succeeds...
 			if(status >= 400) {
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
@@ -1155,9 +1155,9 @@ app.controller('SignUpController', function(
 			}
 		}).error(function(err) {
 			// if login ajax fails...
-				console.log('LayoutMgmtController: logIn ajax failed');
-				console.error(err);
-				$modalInstance.dismiss('cancel');
+			console.log('LayoutMgmtController: logIn ajax failed');
+			console.error(err);
+			$modalInstance.dismiss('cancel');
 		});
 	};
 
@@ -1254,7 +1254,7 @@ app.controller('LayoutMgmtController', function(
 		$http.post(
 			'/login', credentials
 		).success(function(data, status, headers, config) {
-		// if login ajax succeeds...
+			// if login ajax succeeds...
 			if(status >= 400) {
 				$rootScope.$broadcast('customerLoggedIn', data.customerId);
 				$modalInstance.dismiss('done');
@@ -1266,8 +1266,9 @@ app.controller('LayoutMgmtController', function(
 				$modalInstance.dismiss('done');
 			}
 		}).error(function(err) {
+			console.log('we were NOT successful here - 1');
 			// if login ajax fails...
-				$scope.badCreds = true;
+			$scope.badCreds = true;
 		});
 	};
 
