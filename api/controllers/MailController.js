@@ -14,7 +14,7 @@ var env = sails.config.environment;
 module.exports = {
 	sendNotifyToOperator: function(req, res) {
 		if(env && env == 'production') {
-			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
+			var email = 'sam.barrett@gmail.com';
 			sendMail(email, 'Order Placed!', 'placed', null);
 		}
 	},
