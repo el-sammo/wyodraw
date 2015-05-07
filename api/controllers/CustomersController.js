@@ -22,6 +22,7 @@ var AuthorizeCIM = new _AuthorizeCIM(sails.config.authorizeNet);
 
 module.exports = {
   createANet: function(req, res) {
+		console.log('createANet() called with: '+req.body.customerId);
     var isAjax = req.headers.accept.match(/application\/json/);
 
 		if(req.body && req.body.customerId) {
@@ -30,6 +31,7 @@ module.exports = {
   },
 
 	createPaymentMethod: function(req, res) {
+		console.log('createPaymentMethod() called with aNetProfileId: '+req.body.customerProfileId);
     var isAjax = req.headers.accept.match(/application\/json/);
 
 		if(req.body && req.body.customerProfileId && req.body.cardNumber && req.body.expirationDate) {
@@ -310,7 +312,7 @@ function processLogin(req, res, self) {
 function createANetProfile(req, res, self) {
   Customers.findOne(req.body.customerId).then(function(customer) {
     if(! customer) {
-			console.log('customers ajax failed in CustomersController-createANetProfile()');
+			console.log('customers ajax failed in CustomersController-createANetProfile() for CustomerID '+req.body.customerId);
 			// TODO: what should this return?
 	 		return errorHandler(customersError)();
 		}
@@ -322,6 +324,7 @@ function createANetProfile(req, res, self) {
 			}
     }, function(err, response) {
 			if(err) {
+				console.log('AuthorizeCIM.createCustomerProfile() FAILED for customerId: '+customer.id)
 				return errorHandler(err)();
 			}
       return res.send(JSON.stringify({success: true, customerProfileId: response.customerProfileId}));
@@ -352,8 +355,11 @@ function createANetProfile(req, res, self) {
   };
 
   function errorHandler(errMsg) {
+		console.log(errMsg);
     return function(err) {
-      if(err) console.error(err);
+      if(err) {
+				console.error(err);
+			}
       respond(errMsg);
     };
   };
@@ -381,6 +387,7 @@ function createCustomerPaymentProfile(req, res, self) {
 		paymentProfile: options
 	}, function(err, response) {
 		if(err) {
+			console.log('AuthorizeCIM.createCustomerPaymentProfile() FAILED for customerProfileId: '+customerProfileId)
 			console.log(err);
 			return errorHandler(err)();
 		}
@@ -411,6 +418,7 @@ function createCustomerPaymentProfile(req, res, self) {
   };
 
   function errorHandler(errMsg) {
+		console.log(errMsg);
     return function(err) {
       if(err) console.error(err);
       respond(errMsg);

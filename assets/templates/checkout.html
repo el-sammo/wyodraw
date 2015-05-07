@@ -68,7 +68,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="form-section">
+		<div class="form-section" ng-show="selMethod !== 'newCard'">
 			<div class="row">
 				<div class="col-md-4">
 					<span class="gratuityLabel">Delivery Instructions?</span>
@@ -96,7 +96,7 @@
 		<button type="button" class="btn btn-primary pull-left" ng-click="selMethod = ''">
 			<i class="fa fa-reply"></i> &nbsp; Go Back
 		</button>
-		<button type="button" class="btn btn-success pull-right" ng-click="addPM()" ng-disabled="!selMethod">
+		<button type="button" class="btn btn-success pull-right" ng-click="addPM()" ng-disabled="!selMethod || !payMethod.cardNumber || !payMethod.month || !payMethod.year || !payMethod.cvv2">
 		 	Next &nbsp; <i class="fa fa-chevron-right"></i>
 		</button>
 	</div>

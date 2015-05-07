@@ -1475,7 +1475,7 @@ app.controller('CheckoutController', function(
 	args, $scope, $modalInstance, $http, 
 	$rootScope, messenger, accountMgmt, layoutMgmt,
 	clientConfig, payMethodMgmt, delFeeMgmt, $window,
-	deviceMgr, hoursMgr
+	deviceMgr, hoursMgr, bigScreenWidth
 ) {
 
 //	if(!$scope.order || !$scope.order.customerId) {
@@ -1551,6 +1551,20 @@ app.controller('CheckoutController', function(
 				lastFour: redactCC(payMethod.lastFour)
 			});
 			$scope.selMethod = payMethod.id;
+		}).catch(function(err) {
+			if(err.duplicateCustomerProfile && err.duplicateCustomerProfileId > 0) {
+				$scope.customer.aNetProfileId = err.duplicateCustomerProfileId;
+				$http.put('/customers/' + $scope.customer.id, $scope.customer).then($scope.addPM);
+			}
+			if(err.duplicatePaymentProfile) {
+				if($($window).width() > bigScreenWidth) {
+					console.log('showBig');
+					$window.location.href = '/app/';
+				} else {
+					console.log('showSmall');
+					$window.location.href = '/app/cart/';
+				}
+			}
 		});
 	};
 
@@ -2095,7 +2109,9 @@ app.factory('payMethodMgmt', function($q, $http, sessionMgr) {
 					scope.customer.aNetProfileId = res.data.customerProfileId;
 
 					return $http.put('/customers/' + scope.customer.id, scope.customer);
+					// assuming that customers update was successful - no catch for ajax failure
 				});
+				// assuming that createANet was successful - no catch for aNet failure
 
 			}).then(function() {
 				paymentData.customerProfileId = scope.customer.aNetProfileId;
@@ -2105,6 +2121,7 @@ app.factory('payMethodMgmt', function($q, $http, sessionMgr) {
 				}
 
 				return $http.post('/customers/createPaymentMethod', paymentData);
+				// assuming that createPaymentMethod was successful - no catch for aNet failure
 
 			}).then(function(res) {
 				scope.customer.paymentMethods.push({
@@ -2116,13 +2133,21 @@ app.factory('payMethodMgmt', function($q, $http, sessionMgr) {
 				});
 
 				return $http.put('/customers/' + scope.customer.id, scope.customer);
+				// assuming that customers update was successful - no catch for ajax failure
 
 			}).then(function(res) {
 				return scope.customer;
 
 			}).catch(function(err) {
-				console.log('payMethodMgmt: REST API call failed');
-				console.error(err);
+				if(err.data.error.message.match(/duplicate record with ID/)) {
+					var msgPcs = err.data.error.message.split('ID');
+					var customerProfileId = parseInt(msgPcs[1]);
+					err.duplicateCustomerProfile = true;
+					err.duplicateCustomerProfileId = customerProfileId;
+				}
+				if(err.data.error.message.match(/duplicate customer payment profile/)) {
+					err.duplicatePaymentProfile = true;
+				}
 				return $q.reject(err);
 			});
 		}
