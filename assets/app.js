@@ -1697,7 +1697,7 @@ app.controller('CheckoutController', function(
 			p.then(function(res) {
 				$rootScope.$broadcast('orderChanged');
 				// notify operator
-				$http.post('/mail/sendNotifyToOperator/'+'ok');
+				$http.post('/mail/sendNotifyToOperator/'+$scope.order.customerId);
 				// notify customer
 				$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
 				$modalInstance.dismiss('done');
@@ -1777,10 +1777,16 @@ app.controller('CheckoutController', function(
 						s.then(function(res) {
 							$rootScope.$broadcast('orderChanged');
 							// notify operator
-							$http.post('/mail/sendNotifyToOperator/'+'ok');
+							$http.post('/mail/sendNotifyToOperator/'+$scope.order.customerId);
 							// notify customer
 							$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
 							$modalInstance.dismiss('done');
+							if(deviceMgr.isBigScreen()) {
+								$window.location.href = '/app/order/' + $scope.order.id;
+								messenger.show('Your order has been received.', 'Success!');
+							} else {
+								$window.location.href = '/app/orderSmall/' + $scope.order.id;
+							}
 							messenger.show('Your order has been received.', 'Success!');
 						});
 					} else {

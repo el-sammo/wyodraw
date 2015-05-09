@@ -10,17 +10,19 @@ var directTransport = require('nodemailer-direct-transport');
 var Promise = require('bluebird');
 
 var env = sails.config.environment;
+env = 'production';
 
 module.exports = {
 	sendNotifyToOperator: function(req, res) {
-		if(env && env == 'production') {
-			var email = 'sam.barrett@gmail.com';
-			sendMail(email, 'Order Placed!', 'placed', null);
+		if(env && env === 'production') {
+			var customerId = req.params.id;
+			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
+			sendMail(email, 'Order Placed!', 'placed', customerId);
 		}
 	},
 
 	sendFailToOperator: function(req, res) {
-		if(env && env == 'production') {
+		if(env && env === 'production') {
 			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
 			var orderId = req.params.id;
 			sendMail(email, 'Payment Failed!', 'failed', orderId);
@@ -28,7 +30,7 @@ module.exports = {
 	},
 
 	sendUpdateToCustomer: function(req, res) {
-		if(env && env == 'production') {
+		if(env && env === 'production') {
 			var customerId = req.params.id;
 	
 			promise = Customers.find(customerId);
@@ -42,7 +44,7 @@ module.exports = {
 	},
 
 	sendConfirmationToCustomer: function(req, res) {
-		if(env && env == 'production') {
+		if(env && env === 'production') {
 			var customerId = req.params.id;
 	
 			promise = Customers.find(customerId);
@@ -55,7 +57,7 @@ module.exports = {
 	},
 
 	sendFeedbackToManagement: function(req, res) {
-		if(env && env == 'production') {
+		if(env && env === 'production') {
 			var feedbackId = req.params.id;
 			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
 			sendMail(email, 'Feedback Received!', 'feedback', feedbackId);
@@ -63,7 +65,7 @@ module.exports = {
 	},
 
 	sendOrderToCustomer: function(req, res) {
-		if(env && env == 'production') {
+		if(env && env === 'production') {
 			var customerId = req.params.id;
 	
 			promise = Customers.find(customerId);
@@ -76,7 +78,7 @@ module.exports = {
 	},
 
 	sendToApplicant: function(req, res) {
-		if(env && env == 'production') {
+		if(env && env === 'production') {
 			var applicantId = req.params.id;
 	
 			promise = Applicants.find(applicantId);
@@ -180,11 +182,14 @@ function sendMail(email, subject, template, data) {
 	}
 
 	transporter.sendMail(mailOptions, function(err, info) {
+
 		if(err) {
+			console.log('mailFail:');
+			console.log(err);
 			return p.reject(err);
 		}
 
-		console.log('message sent');
+		console.log(template+' message sent');
 		p.resolve(info);
 	});
 
