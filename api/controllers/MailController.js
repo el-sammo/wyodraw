@@ -10,7 +10,6 @@ var directTransport = require('nodemailer-direct-transport');
 var Promise = require('bluebird');
 
 var env = sails.config.environment;
-env = 'production';
 
 module.exports = {
 	sendNotifyToOperator: function(req, res) {
