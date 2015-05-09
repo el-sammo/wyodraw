@@ -1472,8 +1472,8 @@ app.factory('orderMgmt', function($modal, $rootScope, $http) {
 
 
 app.controller('CheckoutController', function(
-	args, $scope, $modalInstance, $http, 
-	$rootScope, messenger, accountMgmt, layoutMgmt,
+	$scope, $modalInstance, $http, $rootScope, $location,
+	$timeout, args, messenger, accountMgmt, layoutMgmt,
 	clientConfig, payMethodMgmt, delFeeMgmt, $window,
 	deviceMgr, hoursMgr, bigScreenWidth
 ) {
@@ -1545,8 +1545,8 @@ app.controller('CheckoutController', function(
 
 		payMethodMgmt.addPM(paymentData).then(function(customer) {
 			var payMethod = _.last(customer.paymentMethods);
-			var pos = $scope.order.paymentMethods.length - 2;
-			$scope.order.paymentMethods.splice(pos, 0, {
+			var pos = $scope.checkoutPaymentMethods.length - 2;
+			$scope.checkoutPaymentMethods.splice(pos, 0, {
 				id: payMethod.id,
 				lastFour: redactCC(payMethod.lastFour)
 			});
@@ -1585,7 +1585,8 @@ app.controller('CheckoutController', function(
 		});
 		paymentMethods.push({id: 'cash', lastFour: 'Cash'});
 		paymentMethods.push({id: 'newCard', lastFour: 'New Credit Card'});
-		$scope.order.paymentMethods = paymentMethods;
+		$scope.checkoutPaymentMethods = paymentMethods;
+
 		$scope.customer = res.data;
 	});
 
@@ -1781,12 +1782,13 @@ app.controller('CheckoutController', function(
 							// notify customer
 							$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
 							$modalInstance.dismiss('done');
+
+							var redirectTo = '/orderSmall/' + $scope.order.id;
 							if(deviceMgr.isBigScreen()) {
-								$window.location.href = '/app/order/' + $scope.order.id;
-								messenger.show('Your order has been received.', 'Success!');
-							} else {
-								$window.location.href = '/app/orderSmall/' + $scope.order.id;
+								redirectTo = '/order/' + $scope.order.id;
 							}
+
+							$location.path(redirectTo);
 							messenger.show('Your order has been received.', 'Success!');
 						});
 					} else {
@@ -2441,114 +2443,119 @@ app.config(function(httpInterceptorProvider) {
 });
 
 app.controller('OrderDetailsController', function(
-	$scope, $http, $routeParams, $modal, orderMgmt,
-	$rootScope,	signupPrompter, sessionMgr, $q, $sce,
+	$scope, $http, $routeParams, $modal, $timeout, $rootScope,
+	orderMgmt, signupPrompter, sessionMgr, $q, $sce,
 	querystring, configMgr, $window
 ) {
 
-	setTimeout(function() {
-		$window.location.reload();
-	}, 60000);
+	function refreshData() {
+		var sessionPromise = sessionMgr.getSession();
 
-	var sessionPromise = sessionMgr.getSession();
-
-	sessionPromise.then(function(sessionData) {
-		if(!sessionData.customerId) {
-			$window.location.href = '/';
-			return;
-		}
-
-		$scope.orderRestaurants = [];
-
-		var r = $http.get('/orders/' + $routeParams.id);
-	
-		r.error(function(err) {
-			console.log('OrderDetailsController: orders ajax failed');
-			console.error(err);
-		});
-	
-		r.then(function(res) {
-			$scope.order = res.data;
-
-			if(!$scope.order.customerId == sessionData.customerId) {
+		sessionPromise.then(function(sessionData) {
+			/*
+			if(!sessionData.customerId) {
 				$window.location.href = '/';
 				return;
 			}
+			*/
 
-			var statusMap = [
-				'',
-				'',
-				'',
-				'',
-				'',
-				'Payment Accepted',
-				'Placed with Restaurant(s)',
-				'Collected from Restaurant(s)',
-				'En Route to Destination',
-				'Delivered to Destination'
-			];
+			$scope.orderRestaurants = [];
 
-			var currOrderStatus = parseInt($scope.order.orderStatus);
+			var r = $http.get('/orders/' + $routeParams.id);
+		
+			r.error(function(err) {
+				console.log('OrderDetailsController: orders ajax failed');
+				console.error(err);
+			});
+		
+			r.then(function(res) {
+				$scope.order = res.data;
 
-			$scope.orderStatusFormatted = statusMap[currOrderStatus];
+				if(!$scope.order.customerId == sessionData.customerId) {
+					$window.location.href = '/';
+					return;
+				}
 
-			$scope.orderDate = new Date($scope.order.paymentAcceptedAt).toDateString().substr(4);
+				var statusMap = [
+					'',
+					'',
+					'',
+					'',
+					'',
+					'Payment Accepted',
+					'Placed with Restaurant(s)',
+					'Collected from Restaurant(s)',
+					'En Route to Destination',
+					'Delivered to Destination'
+				];
 
-			$scope.paymentAcceptedAtFormatted = new Date($scope.order.paymentAcceptedAt).toTimeString().substr(0,5);
-			$scope.placedAtFormatted = new Date($scope.order.orderPlacedAt).toTimeString().substr(0,5);
-			$scope.collectedAtFormatted = new Date($scope.order.orderCollectedAt).toTimeString().substr(0,5);
-			$scope.deliveredAtFormatted = new Date($scope.order.orderDeliveredAt).toTimeString().substr(0,5);
+				var currOrderStatus = parseInt($scope.order.orderStatus);
 
-			$scope.orderStatus = parseInt($scope.order.orderStatus);
-			$scope.paymentMethod = $scope.order.paymentMethods;
-			$scope.subtotal = parseFloat($scope.order.subtotal).toFixed(2);
-			$scope.tax = parseFloat($scope.order.tax).toFixed(2);
-			$scope.deliveryFee = parseFloat($scope.order.deliveryFee).toFixed(2);
-			$scope.gratuity = parseFloat($scope.order.gratuity).toFixed(2);
-			$scope.discount = parseFloat($scope.order.discount).toFixed(2);
-			$scope.total = '$'+parseFloat($scope.order.total).toFixed(2);
-			$scope.order.things.forEach(function(thing) {
-				$scope.getRestaurantName(thing.optionId).then(function(restaurantData) {
-					var restaurant = _.find($scope.orderRestaurants, {name: restaurantData.name});
-					if(! restaurant) {
-						restaurant = {name: restaurantData.name, phone: restaurantData.phone, items: []};
-						$scope.orderRestaurants.push(restaurant);
-					}
-					restaurant.items.push(
-						_.pick(thing, ['quantity', 'name', 'option', 'specInst'])
+				$scope.orderStatusFormatted = statusMap[currOrderStatus];
+
+				$scope.orderDate = new Date($scope.order.paymentAcceptedAt).toDateString().substr(4);
+
+				$scope.paymentAcceptedAtFormatted = new Date($scope.order.paymentAcceptedAt).toTimeString().substr(0,5);
+				$scope.placedAtFormatted = new Date($scope.order.orderPlacedAt).toTimeString().substr(0,5);
+				$scope.collectedAtFormatted = new Date($scope.order.orderCollectedAt).toTimeString().substr(0,5);
+				$scope.deliveredAtFormatted = new Date($scope.order.orderDeliveredAt).toTimeString().substr(0,5);
+
+				$scope.orderStatus = parseInt($scope.order.orderStatus);
+				$scope.paymentMethod = $scope.order.paymentMethods;
+				$scope.subtotal = parseFloat($scope.order.subtotal).toFixed(2);
+				$scope.tax = parseFloat($scope.order.tax).toFixed(2);
+				$scope.deliveryFee = parseFloat($scope.order.deliveryFee).toFixed(2);
+				$scope.gratuity = parseFloat($scope.order.gratuity).toFixed(2);
+				$scope.discount = parseFloat($scope.order.discount).toFixed(2);
+				$scope.total = '$'+parseFloat($scope.order.total).toFixed(2);
+				$scope.order.things.forEach(function(thing) {
+					$scope.getRestaurantName(thing.optionId).then(function(restaurantData) {
+						var restaurant = _.find($scope.orderRestaurants, {name: restaurantData.name});
+						if(! restaurant) {
+							restaurant = {name: restaurantData.name, phone: restaurantData.phone, items: []};
+							$scope.orderRestaurants.push(restaurant);
+						}
+						restaurant.items.push(
+							_.pick(thing, ['quantity', 'name', 'option', 'specInst'])
+						);
+					});
+				});
+
+				var r = $http.get('/customers/' + $scope.order.customerId);
+				
+				r.error(function(err) {
+					console.log('OrderDetailsController: customer ajax failed');
+					console.log(err);
+				});
+				
+				r.then(function(res) {
+					$scope.customer = res.data;
+					$scope.fName = $scope.customer.fName;
+					$scope.lName = $scope.customer.lName;
+					$scope.phone = $scope.customer.phone;
+					$scope.address = $scope.customer.addresses.primary.streetNumber+' '+$scope.customer.addresses.primary.streetName+' '+$scope.customer.addresses.primary.city;
+
+					$scope.src = $sce.trustAsResourceUrl(
+						'https://www.google.com/maps/embed/v1/place?' + querystring.stringify({
+							key: configMgr.config.vendors.googleMaps.key,
+							q: ([
+								$scope.customer.addresses.primary.streetNumber,
+								$scope.customer.addresses.primary.streetName,
+								$scope.customer.addresses.primary.city,
+								$scope.customer.addresses.primary.state,
+								$scope.customer.addresses.primary.zip
+							].join('+'))
+						})
 					);
 				});
 			});
-
-			var r = $http.get('/customers/' + $scope.order.customerId);
-			
-			r.error(function(err) {
-				console.log('OrderDetailsController: customer ajax failed');
-				console.log(err);
-			});
-			
-			r.then(function(res) {
-				$scope.customer = res.data;
-				$scope.fName = $scope.customer.fName;
-				$scope.lName = $scope.customer.lName;
-				$scope.phone = $scope.customer.phone;
-				$scope.address = $scope.customer.addresses.primary.streetNumber+' '+$scope.customer.addresses.primary.streetName+' '+$scope.customer.addresses.primary.city;
-
-				$scope.src = $sce.trustAsResourceUrl(
-					'https://www.google.com/maps/embed/v1/place?' + querystring.stringify({
-						key: configMgr.config.vendors.googleMaps.key,
-						q: ([
-							$scope.customer.addresses.primary.streetNumber,
-							$scope.customer.addresses.primary.streetName,
-							$scope.customer.addresses.primary.city,
-							$scope.customer.addresses.primary.state,
-							$scope.customer.addresses.primary.zip
-						].join('+'))
-					})
-				);
-			});
 		});
-	});
+
+		$timeout(function() {
+			refreshData();
+		}, 6000);
+	}
+	refreshData();
 
 	$scope.getRestaurantName = function(optionId) {
 		return $q(function(resolve, reject) {

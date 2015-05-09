@@ -12,7 +12,7 @@
 		</div>
 		<div class="row no-margin">
 			<h4>Select Your Payment Method</h4>
-			<div class="radio" ng-repeat="method in order.paymentMethods">
+			<div class="radio" ng-repeat="method in checkoutPaymentMethods">
 				<label>
 					<input type="radio" name="method" ng-value="method.id" ng-model="$parent.selMethod">
 					{{method.lastFour}}
