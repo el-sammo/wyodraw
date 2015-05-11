@@ -1467,7 +1467,7 @@ app.controller('CheckoutController', function(
 			}
 			
 			$scope.todayEnd = todayEnd;
-			
+
 			var starting = (parseInt(hours.start) - 1);
 			var ending = parseInt(hours.end);
 			
@@ -1475,7 +1475,7 @@ app.controller('CheckoutController', function(
 				$scope.currentlyAvailable = true;
 			}
 		});
-	
+
 	});
 			
 	// this exists to not process further if checkout is prohibited
@@ -2887,7 +2887,7 @@ app.controller('OrderController', function(
 	///
 
 	$scope.checkout = function(order) {
-		var isProhibited = false;
+		var isProhibited = true;
 
 		var now = new Date().getHours();
 
@@ -2914,8 +2914,8 @@ app.controller('OrderController', function(
 				var starting = (parseInt(hours.start) - 1);
 				var ending = parseInt(hours.end);
 
-				if(now < starting || now >= ending) {
-					isProhibited = true;
+				if(now >= starting && now < ending) {
+					isProhibited = false;
 				}
 
 			});
