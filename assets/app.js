@@ -661,11 +661,10 @@ app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig, areaMgmt) 
 	var service = {
 		getDeliveryHours: function() {
 			var area = areaMgmt.getArea();
-
 			var areaName = area.name;
 
 			return $http.get('/areas/byName/' + areaName).then(function(res) {
-				return getHours(res.data);
+				return getHours(res.data[0]);
 			}).catch(function(err) {
 				console.log('hoursMgr: areas ajax failed');
 				console.error(err);
@@ -675,17 +674,9 @@ app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig, areaMgmt) 
 	};
 
 	var getHours = function(area) {
-		var now = new Date().getHours();
+			var today = new Date().getDay();
 
-		var today = new Date().getDay();
-
-		today = today - 1;
-
-		if(today < 0) {
-			today = 6;
-		}
-
-		return todayHours = area[0].deliveryHours[today];
+		return todayHours = area.hours[today];
 	};
 
 	return service;
@@ -1344,41 +1335,10 @@ app.controller('LayoutController', function(
 			$scope.customerId = sessionData.customerId;
 		}
 
-		var delHoursPromise = hoursMgr.getDeliveryHours();
-
-		delHoursPromise.then(function(delHours) {
-			var now = new Date().getHours();
-	
-			if(delHours.start > 11) {
-				var todayStart = (parseInt(delHours.start) - 12) + 'pm';
-			} else {
-				var todayStart = parseInt(delHours.start) + 'am';
-			}
-	
-			$scope.todayStart = todayStart;
-	
-			if(delHours.end > 11) {
-				var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
-			} else {
-				var todayEnd = parseInt(delHours.end) + 'am';
-			}
-	
-			$scope.todayEnd = todayEnd;
-	
-			var starting = (parseInt(delHours.start) - 1);
-			var ending = parseInt(delHours.end);
-	
-			$scope.currentlyAvailable = false;
-	
-			if(now >= starting && now <= ending) {
-				$scope.currentlyAvailable = true;
-			}
-			
-			$scope.logIn = layoutMgmt.logIn;
-			$scope.logOut = layoutMgmt.logOut;
-			$scope.signUp = layoutMgmt.signUp;
-			$scope.feedback = layoutMgmt.feedback;
-		});
+		$scope.logIn = layoutMgmt.logIn;
+		$scope.logOut = layoutMgmt.logOut;
+		$scope.signUp = layoutMgmt.signUp;
+		$scope.feedback = layoutMgmt.feedback;
 	});
 
 	$rootScope.$on('customerLoggedIn', function(evt, args) {
@@ -1486,38 +1446,36 @@ app.controller('CheckoutController', function(
 
 	delHoursPromise.then(function(delHours) {
 		var now = new Date().getHours();
-	
-		if(delHours.start > 11) {
-			var todayStart = (parseInt(delHours.start) - 12) + 'pm';
-			var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
-			var earlyAs =  (parseInt(delHours.start) - 13) + 'pm';
-		} else {
-			var todayStart = parseInt(delHours.start) + 'am';
-			var todayEnd = parseInt(delHours.end) + 'am';
-			var earlyAs =  (parseInt(delHours.start) - 1) + 'am';
-		}
-
-		$scope.earlyAs = earlyAs;
-	
-		$scope.todayStart = todayStart;
-		$scope.todayEnd = todayEnd;
-	
-		if(delHours.end > 11) {
-			var todayEnd = (parseInt(delHours.end) - 12) + 'pm';
-		} else {
-			var todayEnd = parseInt(delHours.end) + 'am';
-		}
-	
-		$scope.todayEnd = todayEnd;
-	
-		var starting = (parseInt(delHours.start) - 1);
-		var ending = parseInt(delHours.end);
-
 		$scope.currentlyAvailable = false;
+
+		delHours.forEach(function(hours) {
+			if(hours.start > 11) {
+				var todayStart = (parseInt(hours.start) - 12) + 'pm';
+				var todayEnd = (parseInt(hours.end) - 12) + 'pm';
+			} else {
+				var todayStart = parseInt(hours.start) + 'am';
+				var todayEnd = parseInt(hours.end) + 'am';
+			}
+		
+			$scope.todayStart = todayStart;
+			$scope.todayEnd = todayEnd;
+			
+			if(hours.end > 11) {
+				var todayEnd = (parseInt(hours.end) - 12) + 'pm';
+			} else {
+				var todayEnd = parseInt(hours.end) + 'am';
+			}
+			
+			$scope.todayEnd = todayEnd;
+			
+			var starting = (parseInt(hours.start) - 1);
+			var ending = parseInt(hours.end);
+			
+			if(now >= starting && now <= ending) {
+				$scope.currentlyAvailable = true;
+			}
+		});
 	
-		if(now >= starting && now <= ending) {
-			$scope.currentlyAvailable = true;
-		}
 	});
 			
 	// this exists to not process further if checkout is prohibited
@@ -2931,24 +2889,37 @@ app.controller('OrderController', function(
 	$scope.checkout = function(order) {
 		var isProhibited = false;
 
-		var deliveryHours;
-
 		var now = new Date().getHours();
 
 		var delHoursPromise = hoursMgr.getDeliveryHours();
-
+	
 		delHoursPromise.then(function(delHours) {
 			var now = new Date().getHours();
+	
+			delHours.forEach(function(hours) {
+				if(hours.start > 11) {
+					var todayStart = (parseInt(hours.start) - 12) + 'pm';
+					var todayEnd = (parseInt(hours.end) - 12) + 'pm';
+				} else {
+					var todayStart = parseInt(hours.start) + 'am';
+					var todayEnd = parseInt(hours.end) + 'am';
+				}
+			
+				if(hours.end > 11) {
+					var todayEnd = (parseInt(hours.end) - 12) + 'pm';
+				} else {
+					var todayEnd = parseInt(hours.end) + 'am';
+				}
+				
+				var starting = (parseInt(hours.start) - 1);
+				var ending = parseInt(hours.end);
 
-			deliveryHours = {
-				start: (parseInt(delHours.start) - 1),
-				end: parseInt(delHours.end)
-			};
+				if(now < starting || now >= ending) {
+					isProhibited = true;
+				}
 
-			if(now < deliveryHours.start || now >= deliveryHours.end) {
-				isProhibited = true;
-			}
-
+			});
+			
 			// clientConfig.showCheckout just overrides this logic in 
 			// development environments
 			if(clientConfig.showCheckout) {
@@ -2964,6 +2935,7 @@ app.controller('OrderController', function(
 			}
 
 			orderMgmt.checkout(order);
+		
 		});
 	};
 
