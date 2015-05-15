@@ -3008,7 +3008,7 @@ app.controller('OrderController', function(
 						var addRestsFee = 0;
 
 						if(feeData.addRests > 0) {
-							addRestsFee = feeData.addRests * 5;
+							addRestsFee = feeData.addRests * deliveryFeeTiers[3];
 						}
 
 						if(feeData.driveTime <= 450) {
