@@ -2419,6 +2419,8 @@ app.controller('OrderDetailsController', function(
 
 			$scope.orderRestaurants = [];
 
+console.log('$routeParams.id: '+$routeParams.id);
+
 			var r = $http.get('/orders/' + $routeParams.id);
 		
 			r.error(function(err) {
@@ -2466,18 +2468,20 @@ app.controller('OrderDetailsController', function(
 				$scope.gratuity = parseFloat($scope.order.gratuity).toFixed(2);
 				$scope.discount = parseFloat($scope.order.discount).toFixed(2);
 				$scope.total = '$'+parseFloat($scope.order.total).toFixed(2);
-				$scope.order.things.forEach(function(thing) {
-					$scope.getRestaurantName(thing.optionId).then(function(restaurantData) {
-						var restaurant = _.find($scope.orderRestaurants, {name: restaurantData.name});
-						if(! restaurant) {
-							restaurant = {name: restaurantData.name, phone: restaurantData.phone, items: []};
-							$scope.orderRestaurants.push(restaurant);
-						}
-						restaurant.items.push(
-							_.pick(thing, ['quantity', 'name', 'option', 'specInst'])
-						);
+				if($scope.order && $scope.order.things) {
+					$scope.order.things.forEach(function(thing) {
+						$scope.getRestaurantName(thing.optionId).then(function(restaurantData) {
+							var restaurant = _.find($scope.orderRestaurants, {name: restaurantData.name});
+							if(! restaurant) {
+								restaurant = {name: restaurantData.name, phone: restaurantData.phone, items: []};
+								$scope.orderRestaurants.push(restaurant);
+							}
+							restaurant.items.push(
+								_.pick(thing, ['quantity', 'name', 'option', 'specInst'])
+							);
+						});
 					});
-				});
+				}
 
 				var r = $http.get('/customers/' + $scope.order.customerId);
 				

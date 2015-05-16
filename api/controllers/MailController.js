@@ -15,7 +15,7 @@ module.exports = {
 	sendNotifyToOperator: function(req, res) {
 		if(env && env === 'production') {
 			var customerId = req.params.id;
-			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
+			var email = '3072778940@vtext.com, 3072514153@vtext.com, 3072594177@vtext.com, 3072583100@vtext.com';
 			sendMail(email, 'Order Placed!', 'placed', customerId);
 		}
 	},
@@ -103,7 +103,7 @@ function sendMail(email, subject, template, data) {
 			html: ''
 		};
 
-	if(template == 'apply') {
+	if(template === 'apply') {
 		mailOptions = {
 			from: 'Grub2You Careers <careers@grub2you.com>',
 			to: email,
@@ -113,17 +113,16 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
-	if(template == 'placed') {
+	if(template === 'placed') {
 		mailOptions = {
-			from: 'Grub2You Orders <orders@grub2you.com>',
+			from: 'Grub2You <info@grub2you.com>',
 			to: email,
 			subject: subject,
-			text: 'A new order has been placed!',
-			html: 'A new <a href="http://grub2you.com:3001/#/dispatch">order</a> has been placed!'
+			text: 'A new order has been placed!'
 		};
 	}
 
-	if(template == 'order') {
+	if(template === 'order') {
 		mailOptions = {
 			from: 'Grub2You Orders <orders@grub2you.com>',
 			to: email,
@@ -133,7 +132,7 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
-	if(template == 'feedback') {
+	if(template === 'feedback') {
 		mailOptions = {
 			from: 'Grub2You Feedback <info@grub2you.com>',
 			to: email,
@@ -143,7 +142,7 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
-	if(template == 'signup') {
+	if(template === 'signup') {
 		mailOptions = {
 			from: 'Grub2You <info@grub2you.com>',
 			to: email,
@@ -162,7 +161,7 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
-	if(template == 'update') {
+	if(template === 'update') {
 		mailOptions = {
 			from: 'Grub2You <info@grub2you.com>',
 			to: email,
@@ -171,7 +170,7 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
-	if(template == 'failed') {
+	if(template === 'failed') {
 		mailOptions = {
 			from: 'Grub2You <info@grub2you.com>',
 			to: email,
@@ -180,7 +179,20 @@ function sendMail(email, subject, template, data) {
 		};
 	}
 
+	console.log('   ');
+	console.log('********** start mailOptions **********');
+	console.log(mailOptions);
+	console.log('********** end mailOptions **********');
+	console.log('   ');
+
 	transporter.sendMail(mailOptions, function(err, info) {
+		if(info) {
+			console.log('   ');
+			console.log('********** start response info **********');
+			console.log(info);
+			console.log('********** end response info **********');
+			console.log('   ');
+		}
 
 		if(err) {
 			console.log('mailFail:');
