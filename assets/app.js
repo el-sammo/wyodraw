@@ -2419,8 +2419,6 @@ app.controller('OrderDetailsController', function(
 
 			$scope.orderRestaurants = [];
 
-console.log('$routeParams.id: '+$routeParams.id);
-
 			var r = $http.get('/orders/' + $routeParams.id);
 		
 			r.error(function(err) {
