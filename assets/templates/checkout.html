@@ -50,7 +50,9 @@
 			</div>
 			<div class="row" ng-show="!validCode">
 				<div class="col-md-12">
-					<span class="error">The promo code entered was not found. Please try again.</span>
+					<span ng-show="reason === 'expired'" class="error">The promo code has expired. Please try again.</span>
+					<span ng-show="reason === 'invalid'" class="error">The promo code entered was not found. Please try again.</span>
+					<span ng-show="reason === 'redeemed'" class="error">Sneaky you - this promo code has been redeemed already! Please try again.</span>
 				</div>
 			</div>
 			<div class="row" ng-show="validCode && codeEffect">

@@ -657,6 +657,77 @@ app.factory('delFeeMgmt', function($rootScope, $http) {
 });
 
 
+app.factory('promoMgmt', function($rootScope, $http) {
+	var service = {
+		getPromo: function(currentFee, promoCode, customerId) {
+			var cheatData = promoCode+' tab tab tab space space space '+customerId;
+			return p = $http.get('/orders/customerByPromoCode/' + cheatData).then(function(res) {
+				var custRedemptions = res.data.length;
+				return p = $http.get('/promos/byName/' + promoCode).then(function(res) {
+					if(res.data.length > 0) {
+						var promoData = res.data[0];
+
+						if(custRedemptions >= parseInt(promoData.uses)) {
+							return {success: false, reason: 'redeemed'};
+						} else {
+							var todayYear = new Date().getFullYear();
+							var todayMonth = new Date().getMonth() + 1;
+							var todayDate = new Date().getDate();
+		
+							if(todayMonth < 10) {
+								todayMonth = '0'+todayMonth;
+							}
+		
+							if(todayDate < 10) {
+								todayDate = '0'+todayDate;
+							}
+		
+							var today = todayYear+''+todayMonth+''+todayDate;
+	
+							var promoExpPcs = promoData.expires.split('-');
+							var promoExpMonth = promoExpPcs[0];
+							var promoExpDate = promoExpPcs[1];
+							var promoExpYear = promoExpPcs[2];
+	
+							if(parseInt(promoExpMonth) < 10) {
+								promoExpMonth = '0'+parseInt(promoExpMonth);
+							}
+		
+							if(parseInt(promoExpDate) < 10) {
+								promoExpDate = '0'+parseInt(promoExpDate);
+							}
+		
+							var promoExp = promoExpYear+''+promoExpMonth+''+promoExpDate;
+	
+							var thisPromo = promoData;
+							var changeAmount;
+	
+							if(parseInt(today) > parseInt(promoExp)) {
+								return {success: false, reason: 'expired'};
+							} else {
+								if(thisPromo.effect == 'reduce') {
+									changeAmount = parseFloat(currentFee) - parseFloat(thisPromo.amount);
+								}
+						
+								if(thisPromo.effect == 'replace') {
+									changeAmount = thisPromo.amount;
+								}
+					
+								return {effect: thisPromo.effect, amount: changeAmount, success: true};
+							}
+						}
+					} else {
+						return {success: false, reason: 'invalid'};
+					}
+				});
+			});
+		}
+	}
+
+	return service;
+});
+
+
 app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig, areaMgmt) {
 	var service = {
 		getDeliveryHours: function() {
@@ -1435,7 +1506,7 @@ app.controller('CheckoutController', function(
 	$scope, $modalInstance, $http, $rootScope, $location,
 	$timeout, args, messenger, accountMgmt, layoutMgmt,
 	clientConfig, payMethodMgmt, delFeeMgmt, $window,
-	deviceMgr, hoursMgr, bigScreenWidth
+	deviceMgr, hoursMgr, bigScreenWidth, promoMgmt
 ) {
 
 //	if(!$scope.order || !$scope.order.customerId) {
@@ -1548,29 +1619,6 @@ app.controller('CheckoutController', function(
 		$scope.customer = res.data;
 	});
 
-	$scope.getPromo = function(currentFee, promoCode) {
-		var newFee;
-
-		return p = $http.get('/promos/byName/' + promoCode).then(function(res) {
-			if(res.data.length > 0) {
-				var thisPromo = res.data[0];
-				var changeAmount;
-	
-				if(thisPromo.effect == 'reduce') {
-					changeAmount = parseFloat(currentFee) - parseFloat(thisPromo.amount);
-				}
-	
-				if(thisPromo.effect == 'replace') {
-					changeAmount = thisPromo.amount;
-				}
-
-				return {effect: thisPromo.effect, amount: changeAmount, success: true};
-			} else {
-				return {success: false};
-			}
-		});
-	};
-
 	$scope.updateTotal = function() {
 		var total = (parseFloat($scope.order.subtotal) + parseFloat($scope.order.tax)).toFixed(2);
 		var gratuity = 0;
@@ -1585,7 +1633,7 @@ app.controller('CheckoutController', function(
 		}
 
 		if($scope.promo) {
-			var p = $scope.getPromo(promo, $scope.promo);
+			var p = promoMgmt.getPromo(promo, $scope.promo, $scope.customer.id);
 
 			p.then(function(feeData) {
 				if(feeData.success) {
@@ -1603,6 +1651,7 @@ app.controller('CheckoutController', function(
 					$scope.currentTotal = currentTotal;
 				} else {
 					$scope.validCode = false;
+					$scope.reason = feeData.reason;
 
 					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
 					$scope.currentTotal = currentTotal;

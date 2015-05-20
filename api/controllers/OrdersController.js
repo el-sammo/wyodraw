@@ -19,7 +19,7 @@ module.exports = {
   },
 
 	byCustomerId: function(req, res) {
-		Orders.find({'customerId': req.params.id, 'orphaned': false}).sort({updatedAt: 'desc'}).then(function(results) {
+		Orders.find({customerId: req.params.id, orphaned: false}).sort({updatedAt: 'desc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);
@@ -30,6 +30,19 @@ module.exports = {
 
 	bySessionId: function(req, res) {
 		Orders.findBySessionId(req.params.id).sort({updatedAt: 'desc'}).then(function(results) {
+			res.send(JSON.stringify(results));
+		}).catch(function(err) {
+      res.json({error: 'Server error'}, 500);
+      console.error(err);
+      throw err;
+		});
+  },
+
+	customerByPromoCode: function(req, res) {
+		var dataPcs = req.params.id.split(' tab tab tab space space space ');
+		var promo = dataPcs[0];
+		var customerId = dataPcs[1];
+		Orders.find({customerId: customerId, promo: promo}).sort({updatedAt: 'desc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);
