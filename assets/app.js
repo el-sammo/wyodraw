@@ -659,67 +659,9 @@ app.factory('delFeeMgmt', function($rootScope, $http) {
 
 app.factory('promoMgmt', function($rootScope, $http) {
 	var service = {
-		getPromo: function(currentFee, promoCode, customerId) {
-			var cheatData = promoCode+' tab tab tab space space space '+customerId;
-			return p = $http.get('/orders/customerByPromoCode/' + cheatData).then(function(res) {
-				var custRedemptions = res.data.length;
-				return p = $http.get('/promos/byName/' + promoCode).then(function(res) {
-					if(res.data.length > 0) {
-						var promoData = res.data[0];
-
-						if(custRedemptions >= parseInt(promoData.uses)) {
-							return {success: false, reason: 'redeemed'};
-						} else {
-							var todayYear = new Date().getFullYear();
-							var todayMonth = new Date().getMonth() + 1;
-							var todayDate = new Date().getDate();
-		
-							if(todayMonth < 10) {
-								todayMonth = '0'+todayMonth;
-							}
-		
-							if(todayDate < 10) {
-								todayDate = '0'+todayDate;
-							}
-		
-							var today = todayYear+''+todayMonth+''+todayDate;
-	
-							var promoExpPcs = promoData.expires.split('-');
-							var promoExpMonth = promoExpPcs[0];
-							var promoExpDate = promoExpPcs[1];
-							var promoExpYear = promoExpPcs[2];
-	
-							if(parseInt(promoExpMonth) < 10) {
-								promoExpMonth = '0'+parseInt(promoExpMonth);
-							}
-		
-							if(parseInt(promoExpDate) < 10) {
-								promoExpDate = '0'+parseInt(promoExpDate);
-							}
-		
-							var promoExp = promoExpYear+''+promoExpMonth+''+promoExpDate;
-	
-							var thisPromo = promoData;
-							var changeAmount;
-	
-							if(parseInt(today) > parseInt(promoExp)) {
-								return {success: false, reason: 'expired'};
-							} else {
-								if(thisPromo.effect == 'reduce') {
-									changeAmount = parseFloat(currentFee) - parseFloat(thisPromo.amount);
-								}
-						
-								if(thisPromo.effect == 'replace') {
-									changeAmount = thisPromo.amount;
-								}
-					
-								return {effect: thisPromo.effect, amount: changeAmount, success: true};
-							}
-						}
-					} else {
-						return {success: false, reason: 'invalid'};
-					}
-				});
+		getPromo: function(currentDelFee, promoCode, customerId) {
+			return $http.post('/promos/getPromo', {
+				currentDelFee: currentDelFee, promoCode: promoCode, customerId: customerId
 			});
 		}
 	}
@@ -736,6 +678,19 @@ app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig, areaMgmt) 
 
 			return $http.get('/areas/byName/' + areaName).then(function(res) {
 				return getHours(res.data[0]);
+			}).catch(function(err) {
+				console.log('hoursMgr: areas ajax failed');
+				console.error(err);
+				$q.reject(err);
+			});
+		},
+
+		getAllHours: function() {
+			var area = areaMgmt.getArea();
+			var areaName = area.name;
+
+			return $http.get('/areas/byName/' + areaName).then(function(res) {
+				return res.data[0].hours;
 			}).catch(function(err) {
 				console.log('hoursMgr: areas ajax failed');
 				console.error(err);
@@ -1622,9 +1577,9 @@ app.controller('CheckoutController', function(
 	$scope.updateTotal = function() {
 		var total = (parseFloat($scope.order.subtotal) + parseFloat($scope.order.tax)).toFixed(2);
 		var gratuity = 0;
-		var promo = delFeeMgmt[0];
+		var currentDelFee = delFeeMgmt[0];
 		if($scope.order.deliveryFee) {
-			promo = $scope.order.deliveryFee;
+			currentDelFee = $scope.order.deliveryFee;
 		}
 		var currentTotal;
 
@@ -1633,33 +1588,32 @@ app.controller('CheckoutController', function(
 		}
 
 		if($scope.promo) {
-			var p = promoMgmt.getPromo(promo, $scope.promo, $scope.customer.id);
-
-			p.then(function(feeData) {
+			var promoCode = $scope.promo;
+			promoMgmt.getPromo(currentDelFee, promoCode, $scope.customer.id).then(function(feeDataObj) {
+				var feeData = feeDataObj.data;
 				if(feeData.success) {
 					$scope.validCode = true;
 					$scope.promoAmount = feeData.amount;
-					promo = feeData.amount;
+					var newDelFee = $scope.promoAmount;
 
 					if(feeData.effect == 'reduce') {
-						$scope.codeEffect = 'Your delivery fee has been reduced by $' + (parseFloat($scope.order.deliveryFee) - parseFloat(promo)).toFixed(2) + '!';
+						$scope.codeEffect = 'Your delivery fee has been reduced by $' + (parseFloat($scope.order.deliveryFee) - parseFloat(newDelFee)).toFixed(2) + '!';
 					} else {
-						$scope.codeEffect = 'Your delivery fee has been reduced to $' + (parseFloat(promo)).toFixed(2) + '!';
+						$scope.codeEffect = 'Your delivery fee has been reduced to $' + (parseFloat(newDelFee)).toFixed(2) + '!';
 					}
 
-					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
+					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(newDelFee)).toFixed(2);
 					$scope.currentTotal = currentTotal;
 				} else {
 					$scope.validCode = false;
 					$scope.reason = feeData.reason;
 
-					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
+					currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(currentDelFee)).toFixed(2);
 					$scope.currentTotal = currentTotal;
 				}
 			});
 		} else {
-
-			currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(promo)).toFixed(2);
+			currentTotal = (parseFloat(total) + parseFloat(gratuity) + parseFloat(currentDelFee)).toFixed(2);
 			$scope.currentTotal = currentTotal;
 		}
 	}
@@ -1671,156 +1625,110 @@ app.controller('CheckoutController', function(
 		$scope.order.specDelInstr = $scope.specDelInstr;
 		$scope.order.areaId = $rootScope.areaId;
 		$scope.order.paymentInitiatedAt = new Date().getTime();
+		
+		if(!$scope.gratuity) {
+			$scope.gratuity = 0;
+		}
+
+		if(!$scope.promo) {
+			$scope.promo = 'nopromocodespecified';
+		}
+
+		if(!$scope.specDelInstr) {
+			$scope.specDelInstr = 'nospecdelinstrspecified';
+		}
 
 		if($scope.selMethod == 'cash') {
-			$scope.order.orderStatus = 5;
-			$scope.order.paymentAcceptedAt = new Date().getTime();
-
-			if($scope.gratuity) {
-				$scope.order.gratuity = $scope.gratuity.toFixed(2);
-			}
-
-			if($scope.promo && $scope.validCode) {
-				$scope.order.promo = $scope.promo;
-			}
-
-			$scope.order.total = $scope.currentTotal;
-
-			if($scope.promoAmount) {
-				$scope.order.discount = (parseFloat($scope.order.deliveryFee) - parseFloat($scope.promoAmount)).toFixed(2);
-			}
-
-			$scope.order.paymentMethods = 'cash';
-
-			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
-
-			// if orders ajax fails...
-			p.error(function(err) {
-				console.log('OrderMgmtController: checkout-orderUpdate ajax failed');
-				console.error(err);
-				$modalInstance.dismiss('cancel');
-			});
-									
-			// if orders ajax succeeds...
-			p.then(function(res) {
-				$rootScope.$broadcast('orderChanged');
-				// notify operator
-				$http.post('/mail/sendNotifyToOperator/'+$scope.order.customerId);
-				// notify customer
-				$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
-				$modalInstance.dismiss('done');
-				if(deviceMgr.isBigScreen()) {
-					$window.location.href = '/app/order/' + $scope.order.id;
-					messenger.show('Your order has been received.', 'Success!');
+			$http.post('/checkout/processCashPayment', {
+				order: $scope.order,
+				gratuity: $scope.gratuity,
+				promoCode: $scope.promo,
+				specDelInstr: $scope.specDelInstr
+			}).then(function(res) {
+				if(res.data.success) {
+					if(res.data.msg === 'order-put-cash') {
+						if(order) {
+							order.orderStatus = 5;
+							order.paymentAcceptedAt = new Date().getTime() + 250000;
+							console.log('backup order update for order: '+res.data.orderId);
+							console.log(order);
+							$http.put('/orders/' + order.id, order);
+						} else {
+							console.log('backup order update failed');
+						}
+					}
+					$rootScope.$broadcast('orderChanged');
+					// notify operator
+					$http.post('/mail/sendNotifyToOperator/'+$scope.order.customerId);
+					// notify customer
+					$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
+					$modalInstance.dismiss('done');
+					if(deviceMgr.isBigScreen()) {
+						$window.location.href = '/app/order/' + $scope.order.id;
+						messenger.show('Your order has been received.', 'Success!');
+					} else {
+						$window.location.href = '/app/orderSmall/' + $scope.order.id;
+					}
 				} else {
-					$window.location.href = '/app/orderSmall/' + $scope.order.id;
+					$scope.paymentFailed = true;
+					var failMsg = 'Application error.';
+					$scope.failMsg = failMsg;
 				}
 			});
 		} else {
-			$scope.order.orderStatus = parseInt(2);
-
-			var p = $http.put('/orders/' + $scope.order.id, $scope.order);
-
-			// if orders ajax fails...
-			p.error(function(err) {
-				console.log('OrderMgmtController: checkout-orderStatusUpdate ajax failed');
-				console.error(err);
-				$modalInstance.dismiss('cancel');
-			});
-									
-			// if orders ajax succeeds...
-			p.then(function(res) {
-				var r = $http.post('/checkout/processPayment', {customer: $scope.customer, paymentMethodId: $scope.selMethod, amount: $scope.currentTotal});
-		
-				// if payment ajax fails...
-				r.error(function(err) {
-					$scope.order.orderStatus = parseInt(3);
-					$scope.order.paymentMethods = $scope.selMethod;
-					$scope.paymentFailed = true;
-
-					// send an aggressive alert to op/mngr notifying of payment failure
-					$http.post('/mail/sendFailToOperator/'+$scope.order.id);
-
-					var z = $http.put('/orders/' + $scope.order.id, $scope.order);
-				
-					// if orders ajax fails...
-					z.error(function(err) {
-						console.log('OrderMgmtController: post checkout-updateOrder ajax failed');
-						// console.error(err);
-					});
-				});
-										
-				// if payment ajax succeeds...
-				r.then(function(res) {
-					if(res.data.success) {
-						$scope.order.orderStatus = parseInt(5);
-						$scope.order.paymentAcceptedAt = new Date().getTime();
-
-						if($scope.gratuity) {
-							$scope.order.gratuity = $scope.gratuity.toFixed(2);
+			$http.post('/checkout/processCCPayment', {
+				order: $scope.order,
+				paymentMethodId: $scope.selMethod,
+				gratuity: $scope.gratuity,
+				promoCode: $scope.promo,
+				specDelInstr: $scope.specDelInstr
+			}).then(function(res) {
+				if(res.data.success) {
+					if(res.data.msg === 'order-put-with-approval') {
+						if(order) {
+							order.orderStatus = 5;
+							order.paymentAcceptedAt = new Date().getTime() + 250000;
+							console.log('backup order update for order: '+res.data.orderId);
+							console.log(order);
+							$http.put('/orders/' + order.id, order);
+						} else {
+							console.log('backup order update failed');
 						}
-			
-						if($scope.promo && $scope.validCode) {
-							$scope.order.promo = $scope.promo;
-						}
-			
-						$scope.order.total = $scope.currentTotal;
-			
-						if($scope.promoAmount) {
-							$scope.order.discount = (parseFloat($scope.order.deliveryFee) - parseFloat($scope.promoAmount)).toFixed(2);
-						}
-
-						$scope.order.paymentMethods = $scope.selMethod;
-
-						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
-				
-						// if orders ajax fails...
-						s.error(function(err) {
-							console.log('OrderMgmtController: checkout-updateOrder ajax failed');
-							console.error(err);
-							$modalInstance.dismiss('cancel');
-						});
-												
-						// if orders ajax succeeds...
-						s.then(function(res) {
-							$rootScope.$broadcast('orderChanged');
-							// notify operator
-							$http.post('/mail/sendNotifyToOperator/'+$scope.order.customerId);
-							// notify customer
-							$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
-							$modalInstance.dismiss('done');
-
-							var redirectTo = '/orderSmall/' + $scope.order.id;
-							if(deviceMgr.isBigScreen()) {
-								redirectTo = '/order/' + $scope.order.id;
-							}
-
-							$location.path(redirectTo);
-							messenger.show('Your order has been received.', 'Success!');
-						});
-					} else {
-						$scope.order.orderStatus = parseInt(4);
-						$scope.order.paymentMethods = $scope.selMethod;
-
-						var s = $http.put('/orders/' + $scope.order.id, $scope.order);
-				
-						// send an aggressive alert to op/mngr notifying of payment failure
-						$http.post('/mail/sendFailToOperator/'+$scope.order.id);
-
-						// if orders ajax fails...
-						s.error(function(err) {
-							console.log('OrderMgmtController: checkout-updateOrder ajax failed');
-							console.error(err);
-							$modalInstance.dismiss('cancel');
-						});
-												
-						// if orders ajax succeeds...
-						s.then(function(res) {
-							console.log('payment process FAILED');
-							$scope.paymentFailed = true;
-						});
 					}
-				});
+					$rootScope.$broadcast('orderChanged');
+					// notify operator
+					$http.post('/mail/sendNotifyToOperator/'+$scope.order.customerId);
+					// notify customer
+					$http.post('/mail/sendOrderToCustomer/'+$scope.order.customerId);
+					$modalInstance.dismiss('done');
+
+					var redirectTo = '/orderSmall/' + $scope.order.id;
+					if(deviceMgr.isBigScreen()) {
+						redirectTo = '/order/' + $scope.order.id;
+					}
+
+					$location.path(redirectTo);
+					messenger.show('Your order has been received.', 'Success!');
+				} else {
+					console.log('   ');
+					console.log('   ');
+					console.log('   ');
+					console.log('paymentFailure:');
+					console.log('   ');
+					console.log(res.data.msg+' for order '+res.data.orderId);
+					console.log('   ');
+					console.log('   ');
+					console.log('   ');
+					$scope.paymentFailed = true;
+					var failMsg = 'Payment error.';
+					if(res.data.msg === 'order-put-with-failure') {
+						failMsg = 'Payment failed.';
+					}
+					if(res.data.msg === 'order-put-with-no-processing') {
+						failMsg = 'Payment processing error.';
+					}
+					$scope.failMsg = failMsg;
+				}
 			});
 		}
 	}
@@ -2306,25 +2214,50 @@ app.controller('TesterController', function($scope, $http, $rootScope, $q, teste
 ///
 // Controllers: About
 ///
-app.controller('AboutController', function($scope, $http, $routeParams, $rootScope, delFeeMgmt) {
+app.controller('AboutController', function(
+	$scope, $http, $routeParams, $rootScope, 
+	delFeeMgmt, hoursMgr
+) {
 	var areaId = $rootScope.areaId;
 
-	var p = $http.get('/areas/' + areaId);
+	var dayMap = [
+		'Sunday',
+		'Monday',
+		'Tuesday',
+		'Wednesday',
+		'Thursday',
+		'Friday',
+		'Saturday',
+	];
 
-	$scope.tierOne = '$' + delFeeMgmt[0];
-	$scope.tierTwo = '$' + delFeeMgmt[1];
-	$scope.tierThree = '$' + delFeeMgmt[2];
-	$scope.addRestaurant = '$' + (delFeeMgmt[3]).toFixed(2);
+	var delHoursPromise = hoursMgr.getAllHours();
+	
+	delHoursPromise.then(function(delHours) {
+		var hoursArr = [];
+		var counter = 0;
+		delHours.forEach(function(day) {
+			var windows = [];
+			day.forEach(function(thisWindow) {
+				windows.push(thisWindow.start, thisWindow.end);
+			});
+			hoursArr.push({'dotw': dayMap[counter], windows: windows});
+			counter ++;
+		});
 
-	p.error(function(err) {
-		console.log('AboutController: areas ajax failed');
-		console.error(err);
+		$scope.days = hoursArr;
+
+		$scope.tierOne = '$' + delFeeMgmt[0];
+		$scope.tierTwo = '$' + delFeeMgmt[1];
+		$scope.tierThree = '$' + delFeeMgmt[2];
+		$scope.addRestaurant = '$' + (delFeeMgmt[3]).toFixed(2);
+	
+		$http.get('/areas/' + areaId).then(function(res) {
+			$scope.area = res.data;
+		}).catch(function(err) {
+			console.log('AboutController: areas ajax failed');
+			console.error(err);
+		});
 	});
-
-	p.then(function(res) {
-		$scope.area = res.data;
-	});
-
 });
 
 
@@ -2456,6 +2389,10 @@ app.controller('OrderDetailsController', function(
 ) {
 
 	function refreshData() {
+		// assure that the page is still the same
+		if(!location.pathname.includes('order')) {
+			return;
+		}
 		var sessionPromise = sessionMgr.getSession();
 
 		sessionPromise.then(function(sessionData) {
