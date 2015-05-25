@@ -1649,7 +1649,7 @@ app.controller('CheckoutController', function(
 					if(res.data.msg === 'order-put-cash') {
 						if(order) {
 							order.orderStatus = 5;
-							order.paymentAcceptedAt = new Date().getTime() + 250000;
+							order.paymentAcceptedAt = new Date().getTime();
 							console.log('backup order update for order: '+res.data.orderId);
 							console.log(order);
 							$http.put('/orders/' + order.id, order);
@@ -1687,7 +1687,7 @@ app.controller('CheckoutController', function(
 					if(res.data.msg === 'order-put-with-approval') {
 						if(order) {
 							order.orderStatus = 5;
-							order.paymentAcceptedAt = new Date().getTime() + 250000;
+							order.paymentAcceptedAt = new Date().getTime();
 							console.log('backup order update for order: '+res.data.orderId);
 							console.log(order);
 							$http.put('/orders/' + order.id, order);

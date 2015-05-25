@@ -49,7 +49,7 @@ function captureCashTransaction(req, res, self) {
 	order.orderStatus = 5;
 	order.paymentMethods = 'cash';
 	order.paymentInitiatedAt = new Date().getTime();
-	order.paymentAcceptedAt = new Date().getTime() + 250000;
+	order.paymentAcceptedAt = new Date().getTime();
 
 	if(promoCode === 'nopromocodespecified') {
 		var newTotal = (parseFloat(currentTotal) + parseFloat(gratuity));
@@ -184,7 +184,7 @@ function captureCCTransaction(req, res, self) {
 						}
 						var dirResPcs = response.directResponse.split(',');
 						if(dirResPcs[3] == 'This transaction has been approved.') {
-							order.paymentAcceptedAt = new Date().getTime() + 250000;
+							order.paymentAcceptedAt = new Date().getTime();
 							order.orderStatus = 5;
 
 							Orders.update(order.id, order).then(function(data) {
@@ -271,7 +271,7 @@ function captureCCTransaction(req, res, self) {
 								}
 								var dirResPcs = response.directResponse.split(',');
 								if(dirResPcs[3] == 'This transaction has been approved.') {
-									order.paymentAcceptedAt = new Date().getTime() + 250000;
+									order.paymentAcceptedAt = new Date().getTime();
 									order.orderStatus = 5;
 		
 									Orders.update(order.id, order).then(function(data) {
