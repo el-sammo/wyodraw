@@ -168,8 +168,9 @@ function captureCCTransaction(req, res, self) {
 							console.log('err:');
 							console.log(err.message);
 							
+							// TODO: fix this
 							// send an aggressive alert to op/mngr notifying of payment failure
-							$http.post('/mail/sendFailToOperator/'+$scope.order.id);
+							// $http.post('/mail/sendFailToOperator/'+$scope.order.id);
 
 							order.orderStatus = 4;
 
@@ -255,8 +256,9 @@ function captureCCTransaction(req, res, self) {
 									console.log('err:');
 									console.log(err.message);
 									
+									// TODO: fix this
 									// send an aggressive alert to op/mngr notifying of payment failure
-									$http.post('/mail/sendFailToOperator/'+$scope.order.id);
+									// $http.post('/mail/sendFailToOperator/'+$scope.order.id);
 		
 									order.orderStatus = 4;
 		
