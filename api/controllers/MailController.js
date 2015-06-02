@@ -23,7 +23,10 @@ module.exports = {
 	sendFailToOperator: function(req, res) {
 		if(env && env === 'production') {
 			var email = 'sam.barrett@gmail.com, rebecca.l.barrett@gmail.com, rickrsgood@yahoo.com, sam.adamson@grub2you.com';
-			var orderId = req.params.id;
+			var orderId = 'order_id_not_passed';
+			if(req.params.id) {
+				orderId = req.params.id;
+			}
 			sendMail(email, 'Payment Failed!', 'failed', orderId);
 		}
 	},
