@@ -2390,7 +2390,8 @@ app.controller('OrderDetailsController', function(
 
 	function refreshData() {
 		// assure that the page is still the same
-		if(!location.pathname.includes('order')) {
+		// must use pathname on https sites
+		if(!location.pathname.match('order')) {
 			return;
 		}
 		var sessionPromise = sessionMgr.getSession();
