@@ -1625,25 +1625,29 @@ app.controller('CheckoutController', function(
 		$scope.order.specDelInstr = $scope.specDelInstr;
 		$scope.order.areaId = $rootScope.areaId;
 		$scope.order.paymentInitiatedAt = new Date().getTime();
+
+		var thisGratuity = 0;
+		var thisPromoCode = 'nopromocodespecified';
+		var thisSpecDelInstr = 'nospecdelinstrspecified';
 		
-		if(!$scope.gratuity) {
-			$scope.gratuity = 0;
+		if($scope.gratuity) {
+			thisGratuity = $scope.gratuity;
 		}
 
-		if(!$scope.promo) {
-			$scope.promo = 'nopromocodespecified';
+		if($scope.promo) {
+			thisPromoCode = $scope.promo;
 		}
 
-		if(!$scope.specDelInstr) {
-			$scope.specDelInstr = 'nospecdelinstrspecified';
+		if($scope.specDelInstr) {
+			thisSpecDelInstr = $scope.specDelInstr;
 		}
 
 		if($scope.selMethod == 'cash') {
 			$http.post('/checkout/processCashPayment', {
 				order: $scope.order,
-				gratuity: $scope.gratuity,
-				promoCode: $scope.promo,
-				specDelInstr: $scope.specDelInstr
+				gratuity: thisGratuity,
+				promoCode: thisPromoCode,
+				specDelInstr: thisSpecDelInstr
 			}).then(function(res) {
 				if(res.data.success) {
 					if(res.data.msg === 'order-put-cash') {
@@ -1679,9 +1683,9 @@ app.controller('CheckoutController', function(
 			$http.post('/checkout/processCCPayment', {
 				order: $scope.order,
 				paymentMethodId: $scope.selMethod,
-				gratuity: $scope.gratuity,
-				promoCode: $scope.promo,
-				specDelInstr: $scope.specDelInstr
+				gratuity: thisGratuity,
+				promoCode: thisPromoCode,
+				specDelInstr: thisSpecDelInstr
 			}).then(function(res) {
 				if(res.data.success) {
 					if(res.data.msg === 'order-put-with-approval') {
@@ -3065,15 +3069,7 @@ app.controller('OrderController', function(
 		return $q(function(resolve, reject) {
 			var deliveryFeeTiers = delFeeMgmt;
 	
-			var t = $http.get('/customers/' + customerId);
-					
-			t.error(function(err) {
-				console.log('OrderController: calculateDeliveryFee-customer ajax failed');
-				console.error(err);
-				resolve(deliveryFeeTiers[0]);
-			});
-					
-			t.then(function(res) {
+			$http.get('/customers/' + customerId).then(function(res) {
 				var customer = res.data;
 	
 				var promises = [];
@@ -3100,53 +3096,53 @@ app.controller('OrderController', function(
 
 					resolve({driveTime: mostDriveTime, addRests: addRests});
 				});
+			}).catch(function(err) {
+				console.log('OrderController: calculateDeliveryFee-customer ajax failed');
+				console.error(err);
+				resolve(deliveryFeeTiers[0]);
 			});
 		});
 	};
 
 	$scope.getDriveTime = function(thing, customer) {
 		return $q(function(resolve, reject) {
-			var v = $http.get('/restaurants/' + thing.restaurantId);
-					
-			v.error(function(err) {
-				console.log('OrderController: calculateDeliveryFee-gDT-thingRest ajax failed');
-				console.error(err);
-			});
-	
-			// TODO turn debug off / on
-			var debug = false;
-	
-			if(debug) {
-				var rotatorMin = 250;
-				var rotatorMax = 1280;
-				return Math.floor(Math.random() * (rotatorMax - rotatorMin + 1)) + rotatorMin;
-			}
-					
-			v.then(function(res) {
+			$http.get('/restaurants/' + thing.restaurantId).then(function(res) {
 				var addresses = res.data.addresses;
 				var delivery = customer.addresses.primary;
-				return $http.get('/distances/calc', {
-					params: {
-						origins: [
-							'\''+addresses[0].streetNumber+' '+addresses[0].streetName+' '+addresses[0].city+' '+addresses[0].state+' '+addresses[0].zip+'\''
-						].join('|'),
-						destinations: [
-							'\''+delivery.streetNumber+' '+delivery.streetName+' '+delivery.city+' '+delivery.state+' '+delivery.zip+'\''
-						].join('+')
-					}
-				});
-			}).then(function(res) {
-				var data = res.data;
-				data.rows.forEach(function(row) {
-					row.elements.forEach(function(element) {
-						if(element.status == 'NOT_FOUND') {
-							resolve(parseInt(5));
-						} else {
-							var duration = element.duration.value;
-							resolve(duration);
+				var addsLength = addresses.length;
+				var scope = {};
+				scope.durArray = []
+
+				addresses.forEach(function(address) {
+					$http.get('/distances/calc', {
+						params: {
+							origins: [
+								'\''+address.streetNumber+' '+address.streetName+' '+address.city+' '+address.state+' '+address.zip+'\''
+							].join('|'),
+							destinations: [
+								'\''+delivery.streetNumber+' '+delivery.streetName+' '+delivery.city+' '+delivery.state+' '+delivery.zip+'\''
+							].join('+')
+						}
+					}).then(function(res) {
+						var data = res.data;
+						var nearest = 0;
+						data.rows.forEach(function(row) {
+							row.elements.forEach(function(element) {
+								if(element.status == 'NOT_FOUND') {
+									resolve(parseInt(5));
+								} else {
+									var duration = element.duration.value;
+									scope.durArray.push(duration);
+								}
+							});
+						});
+						if(scope.durArray.length == addsLength) {
+							scope.durArray.sort();
+							resolve(scope.durArray[0]);
 						}
 					});
 				});
+				return;
 			}).catch(function(err) {
 				console.error(err);
 				resolve(150);
