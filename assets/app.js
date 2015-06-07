@@ -1129,7 +1129,8 @@ app.controller('SignUpController', function(
 			username: $scope.username,
 			password: $scope.password,
 			phone: $scope.phone,
-			email: $scope.email
+			email: $scope.email,
+			sawBevTour: false
 		}
 
 		$http.post(
