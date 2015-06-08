@@ -79,6 +79,8 @@ input.error {
 	font-size: 16pt;
 }
 
+/** Google Maps **/
+.angular-google-map-container { height: 400px; }
 
 /** Custom CSS **/
 

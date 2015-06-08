@@ -15,23 +15,47 @@
 // (if you're using LESS with the built-in default config, you'll want
 //  to change `assets/styles/importer.less` instead.)
 var cssFilesToInject = [
-  'styles/**/*.css'
+	// 'styles/**/*.css'
+	'index.css'
 ];
 
 
 // Client-side javascript files to inject in order
 // (uses Grunt-style wildcard/glob/splat expressions)
 var jsFilesToInject = [
-  
-  // Load sails.io before everything else
-  'js/dependencies/sails.io.js',
+	
+	// Load sails.io before everything else
+	// 'js/dependencies/sails.io.js',
 
-  // Dependencies like jQuery, or Angular are brought in here
-  'js/dependencies/**/*.js',
+	// Dependencies like jQuery, or Angular are brought in here
+	// 'js/dependencies/**/*.js',
 
-  // All of the rest of your client-side js files
-  // will be injected here in no particular order.
-  'js/**/*.js'
+	// All of the rest of your client-side js files
+	// will be injected here in no particular order.
+	// 'js/**/*.js'
+	
+	'packages/angular-bootstrap/ui-bootstrap-tpls.min.js',
+	'packages/angular-payments/lib/angular-payments.min.js',
+	'packages/angular-google-maps/dist/angular-google-maps.min.js',
+	'packages/holderjs/holder.js',
+	'packages/moment/moment.js',
+	'packages/bluebird/bluebird.js',
+	'packages/lodash/lodash.min.js',
+	'app.js',
+	'local.js',
+	// 'datatables.js',
+
+	// Analytics
+	'packages/angulartics/dist/angulartics.min.js',
+	'packages/angulartics/dist/angulartics-ga.min.js',
+
+	// Other local files
+	'directives/**/*.js',
+	'services/**/*.js',
+	'controllers/**/*.js',
+
+	// Routes
+	'app.routes.js',
 ];
 
 
@@ -45,7 +69,7 @@ var jsFilesToInject = [
 // templates get spit out to the same file.  Be sure and check out `tasks/README.md`
 // for information on customizing and installing new tasks.
 var templateFilesToInject = [
-  'templates/**/*.html'
+  // 'templates/**/*.html'
 ];
 
 
