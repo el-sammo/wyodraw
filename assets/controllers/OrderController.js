@@ -144,10 +144,8 @@
 					}
 		
 					if(customer.taxExempt) {
-						console.log('should be tax exempt');
 						order.taxExempt = true;
 					} else {
-						console.log('should NOT be tax exempt');
 						tax = (Math.round((subtotal * taxRate) * 100) / 100);
 					}
 		
@@ -270,9 +268,7 @@
 				}
 	
 				if(customer.taxExempt) {
-					console.log('should be tax exempt');
 				} else {
-					console.log('should NOT be tax exempt');
 					tax = (Math.round((subtotal * taxRate) * 100) / 100);
 				}
 	
