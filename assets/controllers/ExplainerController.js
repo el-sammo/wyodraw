@@ -9,7 +9,7 @@
 
 	app.controller('ExplainerController', function(
 		$scope, args, $http, $routeParams, $modal, orderMgmt,
-		$rootScope, sessionMgr, $q, layoutMgmt, delFeeMgmt,
+		$rootScope, $q, layoutMgmt, delFeeMgmt,
 		clientConfig
 	) {
 

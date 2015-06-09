@@ -49,6 +49,6 @@
 	// Event-Based Services Loader
 	///
 
-	app.controller('LoadServices', function(errMgr, fakeAuth, sessionMgr) {});
+	app.controller('LoadServices', function(errMgr, fakeAuth) {});
 
 }());

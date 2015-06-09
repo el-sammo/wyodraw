@@ -11,9 +11,9 @@
 	app.controller('LayoutController', function(
 		navMgr, pod, $scope,
 		$http, $routeParams, $modal, layoutMgmt,
-		$rootScope, sessionMgr, hoursMgr
+		$rootScope, hoursMgr, customerMgmt
 	) {
-		var sessionPromise = sessionMgr.getSession();
+		var sessionPromise = customerMgmt.getSession();
 
 		$scope.showMenu = false;
 

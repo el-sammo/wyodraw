@@ -8,10 +8,9 @@
 	///
 
 	app.controller('OrderController', function(
-		navMgr, pod, $scope,
-		$http, $routeParams, $modal, orderMgmt,
-		$rootScope, sessionMgr, $q, layoutMgmt,
-		clientConfig, delFeeMgmt, hoursMgr
+		navMgr, pod, $scope, $http, $routeParams, $modal, orderMgmt,
+		$rootScope, $q, layoutMgmt, clientConfig, delFeeMgmt,
+		hoursMgr, customerMgmt
 	) {
 		// TODO
 		// put this in a config? or what?
@@ -95,7 +94,7 @@
 		};
 
 		$scope.updateOrder = function() {
-			var sessionPromise = sessionMgr.getSession();
+			var sessionPromise = customerMgmt.getSession();
 		
 			sessionPromise.then(function(sessionData) {
 				if(sessionData.order) {
@@ -109,73 +108,233 @@
 		};
 
 		$scope.updateTotals = function(order) {
-			var things;
-			if(order.things) {
-				things = order.things;
-			} else {
-				things = [];
-			}
+			var customer = {};
+			if(order.customerId) {
+				customerMgmt.getCustomer(order.customerId).then(function(customer) {
+					customer = customer;
 
-			var subtotal = 0;
-			var tax = 0;
-			// TODO this should be configged on the area level
-			var taxRate = .05;
-			var multiplier = 100;
-			var deliveryFee = 0;
-			var discount = 0;
-			var gratuity = 0;
-			var total = 0;
-
-			if(things.length > 0) {
-				things.forEach(function(thing) {
-					var lineTotal;
-		
-					if(thing.quantity && thing.quantity > 1) {
-						lineTotal = parseFloat(thing.price) * thing.quantity;
+					var things;
+					if(order.things) {
+						things = order.things;
 					} else {
-						lineTotal = parseFloat(thing.price);
+						things = [];
 					}
-					subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
-				});
-			}
-
-			tax = (Math.round((subtotal * taxRate) * 100) / 100);
-
-			if(order.discount) {
-				discount = parseFloat(order.discount);
-			}
-
-			if(order.gratuity) {
-				gratuity = parseFloat(order.gratuity);
-			}
-
-			var sessionPromise = sessionMgr.getSession();
-
-			sessionPromise.then(function(sessionData) {
-				if(sessionData.order && sessionData.order.things) {
-					var deliveryFeeTiers = delFeeMgmt;
-					deliveryFee = deliveryFeeTiers[0];
-			
-					if(sessionData.customerId) {
-						var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
-			
-						deliveryFeePromise.then(function(feeData) {
-							var addRestsFee = 0;
-
-							if(feeData.addRests > 0) {
-								addRestsFee = feeData.addRests * deliveryFeeTiers[3];
-							}
-
-							if(feeData.driveTime <= 450) {
-								deliveryFee = deliveryFeeTiers[0];
-							} else if(feeData.driveTime <= 720) {
-								deliveryFee = deliveryFeeTiers[1];
+		
+					var subtotal = 0;
+					var tax = 0;
+					// TODO this should be configged on the area level
+					var taxRate = .05;
+					var multiplier = 100;
+					var deliveryFee = 0;
+					var discount = 0;
+					var gratuity = 0;
+					var total = 0;
+		
+					if(things.length > 0) {
+						things.forEach(function(thing) {
+							var lineTotal;
+				
+							if(thing.quantity && thing.quantity > 1) {
+								lineTotal = parseFloat(thing.price) * thing.quantity;
 							} else {
-								deliveryFee = deliveryFeeTiers[2];
+								lineTotal = parseFloat(thing.price);
 							}
-
-							deliveryFee = deliveryFee + addRestsFee;
+							subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
+						});
+					}
+		
+					if(customer.taxExempt) {
+						console.log('should be tax exempt');
+						order.taxExempt = true;
+					} else {
+						console.log('should NOT be tax exempt');
+						tax = (Math.round((subtotal * taxRate) * 100) / 100);
+					}
+		
+					if(order.discount) {
+						discount = parseFloat(order.discount);
+					}
+		
+					if(order.gratuity) {
+						gratuity = parseFloat(order.gratuity);
+					}
+		
+					var sessionPromise = customerMgmt.getSession();
+		
+					sessionPromise.then(function(sessionData) {
+						if(sessionData.order && sessionData.order.things) {
+							var deliveryFeeTiers = delFeeMgmt;
+							deliveryFee = deliveryFeeTiers[0];
+					
+							if(sessionData.customerId) {
+								var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
+					
+								deliveryFeePromise.then(function(feeData) {
+									var addRestsFee = 0;
+		
+									if(feeData.addRests > 0) {
+										addRestsFee = feeData.addRests * deliveryFeeTiers[3];
+									}
+		
+									if(feeData.driveTime <= 450) {
+										deliveryFee = deliveryFeeTiers[0];
+									} else if(feeData.driveTime <= 720) {
+										deliveryFee = deliveryFeeTiers[1];
+									} else {
+										deliveryFee = deliveryFeeTiers[2];
+									}
+		
+									deliveryFee = deliveryFee + addRestsFee;
+									
+									total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
+								
+									$scope.subtotal = subtotal.toFixed(2);
+									$scope.tax = tax.toFixed(2);
+									$scope.deliveryFee = deliveryFee.toFixed(2);
+									$scope.discount = discount.toFixed(2);
+									$scope.gratuity = gratuity.toFixed(2);
+									$scope.total = total.toFixed(2);
+								
+									order.subtotal = subtotal;
+									order.tax = tax;
+									order.deliveryFee = $scope.deliveryFee;
+									order.discount = discount;
+									order.total = total;
+								
+									var p = $http.put('/orders/' + order.id, order);
+										
+									// if orders ajax fails...
+									p.error(function(err) {
+										console.log('OrderController: updateOrder ajax failed');
+										console.error(err);
+									});
+								});
+							} else {
+								total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 							
+								$scope.subtotal = subtotal.toFixed(2);
+								$scope.tax = tax.toFixed(2);
+								$scope.deliveryFee = deliveryFee.toFixed(2);
+								$scope.discount = discount.toFixed(2);
+								$scope.gratuity = gratuity.toFixed(2);
+								$scope.total = total.toFixed(2);
+							
+								order.subtotal = subtotal;
+								order.tax = tax;
+								order.deliveryFee = $scope.deliveryFee;
+								order.discount = discount;
+								order.total = total;
+							
+								var p = $http.put('/orders/' + order.id, order);
+									
+								// if orders ajax fails...
+								p.error(function(err) {
+									console.log('OrderController: updateOrder ajax failed');
+									console.error(err);
+								});
+							}
+						}
+					});
+				}).catch(function(err) {
+					console.log('customer ajax failed');
+				});
+			} else {
+				var things;
+				if(order.things) {
+					things = order.things;
+				} else {
+					things = [];
+				}
+	
+				var subtotal = 0;
+				var tax = 0;
+				// TODO this should be configged on the area level
+				var taxRate = .05;
+				var multiplier = 100;
+				var deliveryFee = 0;
+				var discount = 0;
+				var gratuity = 0;
+				var total = 0;
+	
+				if(things.length > 0) {
+					things.forEach(function(thing) {
+						var lineTotal;
+			
+						if(thing.quantity && thing.quantity > 1) {
+							lineTotal = parseFloat(thing.price) * thing.quantity;
+						} else {
+							lineTotal = parseFloat(thing.price);
+						}
+						subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
+					});
+				}
+	
+				if(customer.taxExempt) {
+					console.log('should be tax exempt');
+				} else {
+					console.log('should NOT be tax exempt');
+					tax = (Math.round((subtotal * taxRate) * 100) / 100);
+				}
+	
+				if(order.discount) {
+					discount = parseFloat(order.discount);
+				}
+	
+				if(order.gratuity) {
+					gratuity = parseFloat(order.gratuity);
+				}
+	
+				var sessionPromise = customerMgmt.getSession();
+	
+				sessionPromise.then(function(sessionData) {
+					if(sessionData.order && sessionData.order.things) {
+						var deliveryFeeTiers = delFeeMgmt;
+						deliveryFee = deliveryFeeTiers[0];
+				
+						if(sessionData.customerId) {
+							var deliveryFeePromise = $scope.calculateDeliveryFee(sessionData.customerId, things);
+				
+							deliveryFeePromise.then(function(feeData) {
+								var addRestsFee = 0;
+	
+								if(feeData.addRests > 0) {
+									addRestsFee = feeData.addRests * deliveryFeeTiers[3];
+								}
+	
+								if(feeData.driveTime <= 450) {
+									deliveryFee = deliveryFeeTiers[0];
+								} else if(feeData.driveTime <= 720) {
+									deliveryFee = deliveryFeeTiers[1];
+								} else {
+									deliveryFee = deliveryFeeTiers[2];
+								}
+	
+								deliveryFee = deliveryFee + addRestsFee;
+								
+								total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
+							
+								$scope.subtotal = subtotal.toFixed(2);
+								$scope.tax = tax.toFixed(2);
+								$scope.deliveryFee = deliveryFee.toFixed(2);
+								$scope.discount = discount.toFixed(2);
+								$scope.gratuity = gratuity.toFixed(2);
+								$scope.total = total.toFixed(2);
+							
+								order.subtotal = subtotal;
+								order.tax = tax;
+								order.deliveryFee = $scope.deliveryFee;
+								order.discount = discount;
+								order.total = total;
+							
+								var p = $http.put('/orders/' + order.id, order);
+									
+								// if orders ajax fails...
+								p.error(function(err) {
+									console.log('OrderController: updateOrder ajax failed');
+									console.error(err);
+								});
+							});
+						} else {
 							total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
 						
 							$scope.subtotal = subtotal.toFixed(2);
@@ -198,41 +357,17 @@
 								console.log('OrderController: updateOrder ajax failed');
 								console.error(err);
 							});
-						});
-					} else {
-						total = (Math.round((subtotal + tax + deliveryFee - discount + gratuity) * 100)/100);
-					
-						$scope.subtotal = subtotal.toFixed(2);
-						$scope.tax = tax.toFixed(2);
-						$scope.deliveryFee = deliveryFee.toFixed(2);
-						$scope.discount = discount.toFixed(2);
-						$scope.gratuity = gratuity.toFixed(2);
-						$scope.total = total.toFixed(2);
-					
-						order.subtotal = subtotal;
-						order.tax = tax;
-						order.deliveryFee = $scope.deliveryFee;
-						order.discount = discount;
-						order.total = total;
-					
-						var p = $http.put('/orders/' + order.id, order);
-							
-						// if orders ajax fails...
-						p.error(function(err) {
-							console.log('OrderController: updateOrder ajax failed');
-							console.error(err);
-						});
+						}
 					}
-				}
-			});
+				});
+			}
 		};
 
 		$scope.calculateDeliveryFee = function(customerId, things) {
 			var deliveryFeeTiers = delFeeMgmt;
 	
-			return $http.get('/customers/' + customerId).then(function(res) {
+			return customerMgmt.getCustomer(customerId).then(function(customer) {
 				var driveTimePromise;
-				var customer = res.data;
 	
 				var promises = [];
 				var rests = [];

@@ -8,8 +8,8 @@
 	///
 
 	app.controller('AccountController', function(
-		$scope, $http, messenger, $rootScope, sessionMgr,
-		$window, payMethodMgmt, layoutMgmt
+		$scope, $http, messenger, $rootScope,
+		$window, payMethodMgmt, layoutMgmt, customerMgmt
 	) {
 
 		$scope.addPM = payMethodMgmt.modals.add;
@@ -17,7 +17,7 @@
 
 		$scope.logOut = layoutMgmt.logOut;
 
-		var sessionPromise = sessionMgr.getSession();
+		var sessionPromise = customerMgmt.getSession();
 
 		sessionPromise.then(function(sessionData) {
 			if(!sessionData.customerId) {
@@ -26,15 +26,14 @@
 			}
 
 			var customerId = sessionData.customerId;
-			var p = $http.get('/customers/' + customerId);
-		
-			p.error(function(err) {
-				console.log('AccountController: customers ajax failed');
-				console.error(err);
-			});
-		
-			p.then(function(res) {
-				$scope.customer = res.data;
+
+			customerMgmt.getCustomer(customerId).then(function(customer) {
+				$scope.customer = customer;
+				var taxExempt = '';
+				if(customer.taxExempt) {
+					var taxExempt = 'Tax Exempt';
+				}
+				$scope.taxExempt = taxExempt;
 			});
 		
 			var r = $http.get('/orders/byCustomerId/' + customerId);

@@ -4,7 +4,7 @@
 	var app = angular.module('app');
 
 	app.controller('OrderMgmtController', function(
-		args, $scope, $modalInstance, $http, $rootScope, sessionMgr, $q
+		$q, args, $scope, $modalInstance, $http, $rootScope, customerMgmt
 	) {
 		$scope.item = args.item;
 		$scope.thing = args.thing;
@@ -22,7 +22,7 @@
 		}
 
 		$scope.addItemOption = function() {
-			var sessionPromise = sessionMgr.getSession();
+			var sessionPromise = customerMgmt.getSession();
 		
 			sessionPromise.then(function(sessionData) {
 
@@ -164,7 +164,7 @@
 		$scope.addBevOption = function() {
 			console.log('$scope.addBevOption() called');
 
-			var sessionPromise = sessionMgr.getSession();
+			var sessionPromise = customerMgmt.getSession();
 		
 			sessionPromise.then(function(sessionData) {
 
@@ -290,7 +290,7 @@
 		};
 
 		$scope.removeThing = function() {
-			var sessionPromise = sessionMgr.getSession();
+			var sessionPromise = customerMgmt.getSession();
 		
 			sessionPromise.then(function(sessionData) {
 				sessionData || (sessionData = {});
@@ -352,7 +352,7 @@
 		$scope.removeBevThing = function() {
 			console.log('$scope.removeBevThing() called');
 			return;
-			var sessionPromise = sessionMgr.getSession();
+			var sessionPromise = customerMgmt.getSession();
 		
 			sessionPromise.then(function(sessionData) {
 				sessionData || (sessionData = {});

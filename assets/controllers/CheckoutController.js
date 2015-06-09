@@ -8,7 +8,7 @@
 		$timeout, args, messenger, layoutMgmt,
 		clientConfig, payMethodMgmt, delFeeMgmt, $window,
 		deviceMgr, hoursMgr, bigScreenWidth, promoMgmt,
-		orderMgmt
+		orderMgmt, customerMgmt
 	) {
 
 	//	if(!$scope.order || !$scope.order.customerId) {
@@ -87,7 +87,7 @@
 			}).catch(function(err) {
 				if(err.duplicateCustomerProfile && err.duplicateCustomerProfileId > 0) {
 					$scope.customer.aNetProfileId = err.duplicateCustomerProfileId;
-					$http.put('/customers/' + $scope.customer.id, $scope.customer).then($scope.addPM);
+					customerMgmt.updateCustomer($scope.customer).then($scope.addPM);
 				}
 				if(err.duplicatePaymentProfile) {
 					if($($window).width() > bigScreenWidth) {
@@ -101,8 +101,8 @@
 			});
 		};
 
-		$http.get('/customers/' + $scope.order.customerId).then(function(res) {
-			var foundCustomer = res.data;
+		customerMgmt.getCustomer($scope.order.customerId).then(function(customer) {
+			var foundCustomer = angular.copy(customer);
 			var paymentMethods = foundCustomer.paymentMethods || [];
 
 			paymentMethods.forEach(function(payMethod) {
@@ -191,6 +191,7 @@
 		$scope.updateTotal();
 
 		$scope.checkout = function() {
+			$scope.processing = true;
 			$scope.paymentFailed = false;
 			$scope.order.specDelInstr = $scope.specDelInstr;
 			$scope.order.areaId = $rootScope.areaId;
@@ -219,6 +220,7 @@
 					promoCode: thisPromoCode,
 					specDelInstr: thisSpecDelInstr
 				}).then(function(res) {
+					$scope.processing = false;
 					if(res.data.success) {
 						if(res.data.msg === 'order-put-cash') {
 							if(order) {
@@ -257,6 +259,7 @@
 					promoCode: thisPromoCode,
 					specDelInstr: thisSpecDelInstr
 				}).then(function(res) {
+					$scope.processing = false;
 					if(res.data.success) {
 						if(res.data.msg === 'order-put-with-approval') {
 							if(order) {

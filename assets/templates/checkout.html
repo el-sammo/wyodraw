@@ -117,10 +117,16 @@
 </div>
 <div class="modal-footer">
 	<div ng-show="selMethod !== 'newCard'">
-		<button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
+		<button
+			type="button" class="btn btn-primary pull-left" ng-click="$close('discard')"
+			ng-class="{disabled: processing}"
+		>
 			<i class="fa fa-reply"></i> &nbsp; Go Back
 		</button>
-		<button type="button" class="btn btn-success pull-right" ng-click="checkout()" ng-disabled="!selMethod">
+		<button
+		 	type="button" class="btn btn-success pull-right" ng-click="checkout()" ng-disabled="!selMethod"
+			ng-class="{disabled: processing}"
+		>
 			<i class="fa fa-lock"></i> &nbsp; Checkout
 		</button>
 	</div>

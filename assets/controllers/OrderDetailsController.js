@@ -12,9 +12,9 @@
 	});
 
 	app.controller('OrderDetailsController', function(
-		$scope, $http, $routeParams, $modal, $timeout, $rootScope,
-		orderMgmt, signupPrompter, sessionMgr, $q, $sce,
-		querystring, configMgr, $window
+		$window, $scope, $http, $routeParams, $modal, $timeout,
+		$rootScope, $q, $sce, orderMgmt, signupPrompter,
+		querystring, configMgr, customerMgmt
 	) {
 
 		function refreshData() {
@@ -23,7 +23,7 @@
 			if(!location.pathname.match('order')) {
 				return;
 			}
-			var sessionPromise = sessionMgr.getSession();
+			var sessionPromise = customerMgmt.getSession();
 
 			sessionPromise.then(function(sessionData) {
 				/*
@@ -97,15 +97,8 @@
 						});
 					}
 
-					var r = $http.get('/customers/' + $scope.order.customerId);
-					
-					r.error(function(err) {
-						console.log('OrderDetailsController: customer ajax failed');
-						console.log(err);
-					});
-					
-					r.then(function(res) {
-						$scope.customer = res.data;
+					customerMgmt.getCustomer($scope.order.customerId).then(function(customer) {
+						$scope.customer = customer;
 						$scope.fName = $scope.customer.fName;
 						$scope.lName = $scope.customer.lName;
 						$scope.phone = $scope.customer.phone;

@@ -9,10 +9,16 @@
 	</form>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
+	<button
+		type="button" class="btn btn-primary pull-left" ng-click="$close('discard')"
+		ng-class="{disabled: processing}"
+	>
     <i class="fa fa-reply"></i> &nbsp; Go Back
   </button>
-  <button type="button" class="btn btn-success pull-right" ng-click="addPaymentMethod()">
+	<button
+		type="button" class="btn btn-success pull-right" ng-click="addPaymentMethod()"
+		ng-class="{disabled: processing}"
+	>
     <i class="fa fa-plus"></i> &nbsp; Add Method
   </button>
 </div>

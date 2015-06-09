@@ -8,7 +8,7 @@
 	///
 
 	app.factory('signupPrompter', function signupPrompterFactory(
-		sessionMgr, layoutMgmt
+		customerMgmt, layoutMgmt
 	) {
 		var hasPrompted = false;
 		var service = {
@@ -16,7 +16,7 @@
 				if(hasPrompted) return;
 				hasPrompted = true;
 
-				sessionMgr.getSession().then(function(sessionData) {
+				customerMgmt.getSession().then(function(sessionData) {
 					if(sessionData.customerId) return;
 					layoutMgmt.signUp();
 				});
@@ -28,7 +28,7 @@
 	app.controller('SignUpController', function(
 		$scope, $modalInstance, $http,
 		$rootScope, $window, clientConfig,
-		layoutMgmt
+		layoutMgmt, customerMgmt
 	) {
 
 		$scope.haveAccount = function() {
@@ -180,26 +180,19 @@
 				sawBevTour: false
 			}
 
-			$http.post(
-				'/customers/create', customer
-			).success(function(data, status, headers, config) {
-			// if customers ajax succeeds...
-				if(status >= 400) {
-					$modalInstance.dismiss('done');
-					$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
-				} else if(status == 200) {
-					$modalInstance.dismiss('done');
-					$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
-					$http.post('/mail/sendConfirmationToCustomer/'+data.id);
-				} else {
-					$modalInstance.dismiss('done');
-					$scope.submit({username: customer.username, password: customer.password, customerId: data.id});
-				}
-			}).error(function(err) {
+			customerMgmt.createCustomer(customer).then(function(customerData) {
+				$modalInstance.dismiss('done');
+				$scope.submit({
+					username: customer.username,
+					password: customer.password,
+					customerId: customerData.id
+				});
+				$http.post('/mail/sendConfirmationToCustomer/' + customerData.id);
+			}).catch(function(err) {
 				// if customers ajax fails...
-					console.log('LayoutMgmtController: customer-create ajax failed');
-					console.error(err);
-					$modalInstance.dismiss('cancel');
+				console.log('LayoutMgmtController: customer-create ajax failed');
+				console.error(err);
+				$modalInstance.dismiss('cancel');
 			});
 		};
 

@@ -4,7 +4,8 @@
 	var app = angular.module('app');
 
 	app.controller('AccountEditController', function(
-		navMgr, messenger, pod, customerSchema, $scope, $http, $routeParams, $rootScope
+		$scope, $http, $routeParams, $rootScope, navMgr, messenger, 
+		pod, customerSchema, customerMgmt
 	) {
 		navMgr.protect(function() { return $scope.form.$dirty; });
 		pod.podize($scope);
@@ -12,10 +13,8 @@
 		$scope.customerSchema = customerSchema;
 		$scope.editMode = true;
 
-		$http.get(
-			'/customers/' + $routeParams.id
-		).success(function(data, status, headers, config) {
-			$scope.customer = customerSchema.populateDefaults(data);
+		customerMgmt.getCustomer($routeParams.id).then(function(customer) {
+			$scope.customer = customerSchema.populateDefaults(customer);
 		});
 
 		$scope.save = function save(customer, options) {
@@ -24,13 +23,8 @@
 			// TODO
 			// clean phone; integers only
 
-			$http.put(
-				'/customers/' + customer.id, customer
-			).success(function(data, status, headers, config) {
-				if(status >= 400) return;
-
+			customerMgmt.updateCustomer(customer).then(function() {
 				messenger.show('Your account has been updated.', 'Success!');
-
 				$scope.form.$setPristine();
 			});
 		};

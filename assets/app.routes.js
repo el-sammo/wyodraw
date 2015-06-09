@@ -49,11 +49,6 @@
 			templateUrl: '/templates/account.html'
 		});
 
-		$routeProvider.when('/account/add', {
-			controller: 'AccountAddController',
-			templateUrl: '/templates/accountForm.html'
-		});
-
 		$routeProvider.when('/account/edit/:id', {
 			controller: 'AccountEditController',
 			templateUrl: '/templates/accountForm.html'

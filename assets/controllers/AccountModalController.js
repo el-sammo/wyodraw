@@ -15,6 +15,8 @@
 		$scope.payMethod = {};
 
 		$scope.addPaymentMethod = function() {
+			$scope.processing = true;
+
 			var paymentData = {
 				cardNumber: $scope.payMethod.cardNumber.toString(),
 				expirationDate: $scope.payMethod.year + '-' + $scope.payMethod.month,
@@ -22,6 +24,7 @@
 			};
 
 			payMethodMgmt.addPM(paymentData).then(function(customer){
+				$scope.processing = false;
 				messenger.show('The payment method has been added.', 'Success!');
 				$modalInstance.dismiss('done');
 

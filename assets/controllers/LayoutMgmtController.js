@@ -10,7 +10,7 @@
 	app.controller('LayoutMgmtController', function(
 		$scope, $modalInstance,	$http,
 		$rootScope, $window, layoutMgmt,
-		messenger, deviceMgr
+		messenger, deviceMgr, customerMgmt
 	) {
 
 		var p = $http.get('/areas/');
@@ -70,23 +70,12 @@
 		}
 
 		$scope.logOut = function() {
-			$http.post('/customers/logout').success(function(data, status, headers, config) {
-			// if customers ajax succeeds...
-				if(status >= 400) {
-					$modalInstance.dismiss('done');
-					$window.location.href = '/';
-				} else if(status == 200) {
-					$modalInstance.dismiss('done');
-					$window.location.href = '/';
-				} else {
-					$modalInstance.dismiss('done');
-					$window.location.href = '/';
-				}
-			}).error(function(err) {
-				// if customers ajax fails...
-					console.log('LayoutMgmtController: logOut ajax failed');
-					console.error(err);
-					$modalInstance.dismiss('cancel');
+			customerMgmt.logout().then(function() {
+				$modalInstance.dismiss('done');
+				$window.location.href = '/';
+			}).catch(function(err) {
+				$modalInstance.dismiss('cancel');
+				$window.location.href = '/';
 			});
 		}
 

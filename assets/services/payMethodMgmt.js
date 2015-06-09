@@ -10,11 +10,11 @@
 	app.factory('payMethodMgmt', payMethodMgmt);
 
 	payMethodMgmt.inject = [
-		'$rootScope', '$q', '$http', '$modal', 'sessionMgr'
+		'$rootScope', '$q', '$http', '$modal', 'customerMgmt'
 	];
 	
 	function payMethodMgmt(
-		$rootScope, $q, $http, $modal, sessionMgr
+		$rootScope, $q, $http, $modal, customerMgmt
 	) {
 		var service = {
 			modals: {
@@ -50,7 +50,7 @@
 			addPM: function(paymentData) {
 				var scope = {};
 
-				return sessionMgr.getSession().then(function(sessionData) {
+				return customerMgmt.getSession().then(function(sessionData) {
 					if(!sessionData.customerId) {
 						// TODO Handle condition (or delete this section if it makes
 						// the most sense)
@@ -58,10 +58,10 @@
 					}
 
 					scope.customerId = sessionData.customerId;
-					return $http.get('/customers/' + scope.customerId);
+					return customerMgmt.getCustomer(scope.customerId);
 
-				}).then(function(res) {
-					scope.customer = res.data;
+				}).then(function(customer) {
+					scope.customer = customer;
 			
 					if(scope.customer.aNetProfileId) {
 						return;
@@ -72,8 +72,7 @@
 					}).then(function(res) {
 						scope.customer.aNetProfileId = res.data.customerProfileId;
 
-						return $http.put('/customers/' + scope.customer.id, scope.customer);
-						// assuming that customers update was successful - no catch for ajax failure
+						return customerMgmt.updateCustomer(scope.customer);
 					});
 					// assuming that createANet was successful - no catch for aNet failure
 
@@ -96,8 +95,7 @@
 						cvv2: res.data.cvv2
 					});
 
-					return $http.put('/customers/' + scope.customer.id, scope.customer);
-					// assuming that customers update was successful - no catch for ajax failure
+					return customerMgmt.updateCustomer(scope.customer);
 
 				}).then(function(res) {
 					return scope.customer;
