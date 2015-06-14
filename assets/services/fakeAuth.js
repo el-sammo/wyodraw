@@ -3,7 +3,13 @@
 
 	var app = angular.module('app');
 
-	app.factory('fakeAuth', function($rootScope, $http, clientConfig, areaMgmt) {
+	app.factory('fakeAuth', service);
+	
+	service.$inject = [
+		'$rootScope', '$http', 'clientConfig', 'areaMgmt'
+	];
+	
+	function service($rootScope, $http, clientConfig, areaMgmt) {
 		areaMgmt.getArea();
 
 		var corporate = {
@@ -20,6 +26,6 @@
 		$rootScope.corporate = corporate;
 
 		return {};
-	});
+	}
 
 }());

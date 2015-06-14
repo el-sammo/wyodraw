@@ -3,7 +3,13 @@
 
 	var app = angular.module('app');
 
-	app.factory('promoMgmt', function($rootScope, $http) {
+	app.factory('promoMgmt', service);
+	
+	service.$inject = [
+		'$rootScope', '$http'
+	];
+	
+	function service($rootScope, $http) {
 		var service = {
 			getPromo: function(currentDelFee, promoCode, customerId) {
 				return $http.post('/promos/getPromo', {
@@ -13,6 +19,6 @@
 		}
 
 		return service;
-	});
+	}
 
 }());

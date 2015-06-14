@@ -3,7 +3,14 @@
 
 	var app = angular.module('app');
 
-	app.controller('OrderMgmtController', function(
+	app.controller('OrderMgmtController', controller);
+	
+	controller.$inject = [
+		'$q', 'args', '$scope', '$modalInstance', '$http', '$rootScope',
+		'customerMgmt'
+	];
+
+	function controller(
 		$q, args, $scope, $modalInstance, $http, $rootScope, customerMgmt
 	) {
 		$scope.item = args.item;
@@ -457,6 +464,6 @@
 			});
 		}
 
-	});
+	}
 
 }());

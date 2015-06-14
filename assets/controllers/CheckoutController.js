@@ -3,7 +3,17 @@
 
 	var app = angular.module('app');
 
-	app.controller('CheckoutController', function(
+	app.controller('CheckoutController', controller);
+	
+	controller.$inject = [
+		'$scope', '$modalInstance', '$http', '$rootScope', '$location',
+		'$timeout', 'args', 'messenger', 'layoutMgmt',
+		'clientConfig', 'payMethodMgmt', 'delFeeMgmt', '$window',
+		'deviceMgr', 'hoursMgr', 'bigScreenWidth', 'promoMgmt',
+		'orderMgmt', 'customerMgmt'
+	];
+
+	function controller(
 		$scope, $modalInstance, $http, $rootScope, $location,
 		$timeout, args, messenger, layoutMgmt,
 		clientConfig, payMethodMgmt, delFeeMgmt, $window,
@@ -309,6 +319,6 @@
 				});
 			}
 		}
-	});
+	}
 
 }());

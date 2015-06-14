@@ -9,7 +9,7 @@
 
 	app.factory('payMethodMgmt', payMethodMgmt);
 
-	payMethodMgmt.inject = [
+	payMethodMgmt.$inject = [
 		'$rootScope', '$q', '$http', '$modal', 'customerMgmt'
 	];
 	

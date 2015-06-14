@@ -7,7 +7,13 @@
 	// Slug Management
 	///
 
-	app.factory('slugMgr', function(
+	app.factory('slugMgr', service);
+	
+	service.$inject = [
+		'$rootScope', '$http', '$q'
+	];
+	
+	function service(
 		$rootScope, $http, $q
 	) {
 		var slug;
@@ -46,6 +52,6 @@
 		};
 
 		return service;
-	});
+	}
 
 }());

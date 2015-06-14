@@ -15,7 +15,11 @@
 	 *   <input ng-show="! myVal" focus-on="! myVal">
 	 *
 	 */
-	app.directive('focusOn',function($timeout) {
+	app.directive('focusOn', focusOn);
+	
+	focusOn.$inject = ['$timeout'];
+	
+	function focusOn($timeout) {
 		return {
 			restrict: 'A',
 			link: function($scope, element, attr) {
@@ -27,6 +31,6 @@
 				});
 			}
 		}
-	});
+	}
 
 }());

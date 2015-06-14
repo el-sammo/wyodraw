@@ -7,7 +7,15 @@
 	// Explainer Controller
 	///
 
-	app.controller('ExplainerController', function(
+	app.controller('ExplainerController', controller);
+	
+	controller.$inject = [
+		'$scope', 'args', '$http', '$routeParams', '$modal', 'orderMgmt',
+		'$rootScope', '$q', 'layoutMgmt', 'delFeeMgmt',
+		'clientConfig'
+	];
+
+	function controller(
 		$scope, args, $http, $routeParams, $modal, orderMgmt,
 		$rootScope, $q, layoutMgmt, delFeeMgmt,
 		clientConfig
@@ -60,6 +68,6 @@
 		$scope.tierTwoFee = '$' + (delFeeMgmt[1]).toFixed(2);
 		$scope.tierThreeFee = '$' + (delFeeMgmt[2]).toFixed(2);
 
-	});
+	}
 
 }());

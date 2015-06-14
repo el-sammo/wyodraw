@@ -7,7 +7,13 @@
 	// User Messaging
 	///
 
-	app.factory('messenger', function messengerFactory($rootScope) {
+	app.factory('messenger', service);
+	
+	service.$inject = [
+		'$rootScope'
+	];
+	
+	function service($rootScope) {
 		var service = {
 			show: function(msg, title) {
 				$rootScope.$broadcast('userMessage', {
@@ -17,9 +23,16 @@
 			}
 		};
 		return service;
-	});
+	}
 
-	app.controller('MessageController', function($scope) {
+
+	app.controller('MessageController', controller);
+	
+	controller.$inject = [
+		'$scope'
+	];
+
+	function controller($scope) {
 		$scope.alertType = 'info';
 
 		$scope.close = function() {
@@ -31,7 +44,7 @@
 			$scope.title = args.title;
 			$scope.userMessage = args.message;
 		});
-	});
+	}
 
 
 }());

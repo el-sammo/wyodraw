@@ -6,7 +6,14 @@
 	///
 	// Controllers: Careers
 	///
-	app.controller('CareersController', function(
+	app.controller('CareersController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$rootScope', 'careersMgmt',
+		'seo'
+	];
+
+	function controller(
 		$scope, $http, $routeParams, $rootScope, careersMgmt, seo
 	) {
 		seo.setPage('careers');
@@ -26,6 +33,6 @@
 			$scope.area = res.data;
 		});
 
-	});
+	}
 
 }());

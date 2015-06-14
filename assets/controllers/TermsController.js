@@ -6,7 +6,13 @@
 	///
 	// Controllers: Terms
 	///
-	app.controller('TermsController', function($scope, $http, $routeParams, $rootScope) {
-	});
+	app.controller('TermsController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$rootScope'
+	];
+
+	function controller($scope, $http, $routeParams, $rootScope) {
+	}
 
 }());

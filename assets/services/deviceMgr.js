@@ -10,7 +10,14 @@
 
 	app.constant('bigScreenWidth', 1179);
 
-	app.factory('deviceMgr', function($window, bigScreenWidth) {
+
+	app.factory('deviceMgr', service);
+	
+	service.$inject = [
+		'$window', 'bigScreenWidth'
+	];
+	
+	function service($window, bigScreenWidth) {
 		var service = {
 			getWindowWidth: function() {
 				return $($window).width();
@@ -23,9 +30,16 @@
 		};
 
 		return service;
-	});
+	}
 
-	app.directive('smallScreen', function($window, deviceMgr) {
+
+	app.directive('smallScreen', smallScreen);
+	
+	smallScreen.$inject = [
+		'$window', 'deviceMgr'
+	];
+	
+	function smallScreen($window, deviceMgr) {
 		return function ($scope, element, args) {
 			$scope.$watch(deviceMgr.getWindowWidth, function(width) {
 				if(deviceMgr.isBigScreen()) {
@@ -38,9 +52,16 @@
 				$scope.$apply();
 			});
 		}
-	});
+	}
 
-	app.directive('bigScreen', function($window, bigScreenWidth) {
+
+	app.directive('bigScreen', bigScreen);
+	
+	bigScreen.$inject = [
+		'$window', 'bigScreenWidth'
+	];
+	
+	function bigScreen($window, bigScreenWidth) {
 		return function ($scope, element, args) {
 			$scope.$watch(deviceMgr.getWindowWidth, function(width) {
 				if(! deviceMgr.isBigScreen()) {
@@ -53,9 +74,16 @@
 				$scope.$apply();
 			});
 		}
-	});
+	}
 
-	app.directive('manageHeight', function($window, bigScreenWidth) {
+
+	app.directive('manageHeight', manageHeight);
+	
+	manageHeight.$inject = [
+		'$window', 'bigScreenWidth'
+	];
+	
+	function manageHeight($window, bigScreenWidth) {
 		function getWindowHeight() {
 			return $($window).height();
 		}
@@ -101,6 +129,6 @@
 				$scope.$apply();
 			});
 		}
-	});
+	}
 
 }());

@@ -3,7 +3,13 @@
 
 	var app = angular.module('app');
 
-	app.factory('areaMgmt', function($rootScope) {
+	app.factory('areaMgmt', service);
+	
+	service.$inject = [
+		'$rootScope'
+	];
+
+	function service($rootScope) {
 		var service = {
 			getArea: function() {
 				/**
@@ -65,6 +71,6 @@
 		};
 
 		return service;
-	});
+	}
 
 }());

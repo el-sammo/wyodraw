@@ -7,7 +7,13 @@
 	// Order Management
 	///
 
-	app.factory('orderMgmt', function($modal, $rootScope, $http) {
+	app.factory('orderMgmt', service);
+	
+	service.$inject = [
+		'$modal', '$rootScope', '$http'
+	];
+	
+	function service($modal, $rootScope, $http) {
 		var service = {
 			checkout: function(order) {
 				$modal.open({
@@ -110,6 +116,6 @@
 			}
 		};
 		return service;
-	});
+	}
 
 }());

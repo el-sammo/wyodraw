@@ -6,7 +6,13 @@
 	///
 	// Controllers: Privacy
 	///
-	app.controller('PrivacyController', function($scope, $http, $routeParams, $rootScope) {
-	});
+	app.controller('PrivacyController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$rootScope'
+	];
+
+	function controller($scope, $http, $routeParams, $rootScope) {
+	}
 
 }());

@@ -7,7 +7,13 @@
 	// Signup
 	///
 
-	app.factory('signupPrompter', function signupPrompterFactory(
+	app.factory('signupPrompter', service);
+	
+	service.$inject = [
+		'customerMgmt', 'layoutMgmt'
+	];
+	
+	function service(
 		customerMgmt, layoutMgmt
 	) {
 		var hasPrompted = false;
@@ -23,9 +29,18 @@
 			}
 		};
 		return service;
-	});
+	}
 
-	app.controller('SignUpController', function(
+
+	app.controller('SignUpController', controller);
+	
+	controller.$inject = [
+		'$scope', '$modalInstance', '$http',
+		'$rootScope', '$window', 'clientConfig',
+		'layoutMgmt', 'customerMgmt'
+	];
+
+	function controller(
 		$scope, $modalInstance, $http,
 		$rootScope, $window, clientConfig,
 		layoutMgmt, customerMgmt
@@ -219,5 +234,5 @@
 			});
 		};
 
-	});
+	}
 }());

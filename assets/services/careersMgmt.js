@@ -7,7 +7,13 @@
 	// Careers Management
 	///
 
-	app.factory('careersMgmt', function($modal, $rootScope) {
+	app.factory('careersMgmt', service);
+	
+	service.$inject = [
+		'$modal', '$rootScope'
+	];
+	
+	function service($modal, $rootScope) {
 		var service = {
 			apply: function(position) {
 				$modal.open({
@@ -25,9 +31,17 @@
 			}
 		};
 		return service;
-	});
+	}
 
-	app.controller('CareersMgmtController', function(
+
+	app.controller('CareersMgmtController', controller);
+	
+	controller.$inject = [
+		'args', '$scope', '$modalInstance', '$http', '$rootScope',
+		'messenger'
+	];
+
+	function controller(
 		args, $scope, $modalInstance, $http, $rootScope, messenger
 	) {
 		$scope.apply = function() {
@@ -60,6 +74,6 @@
 				$modalInstance.dismiss('cancel');
 			});
 		};
-	});
+	}
 
 }());

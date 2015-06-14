@@ -6,7 +6,13 @@
 	///
 	// Controllers: Contact
 	///
-	app.controller('ContactController', function($scope, $http, $routeParams, $rootScope) {
+	app.controller('ContactController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$rootScope'
+	];
+
+	function controller($scope, $http, $routeParams, $rootScope) {
 		var areaId = $rootScope.areaId;
 
 		var p = $http.get('/areas/' + areaId);
@@ -20,6 +26,6 @@
 			$scope.area = res.data;
 		});
 
-	});
+	}
 
 }());

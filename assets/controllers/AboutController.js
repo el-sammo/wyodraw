@@ -6,7 +6,14 @@
 	///
 	// Controllers: About
 	///
-	app.controller('AboutController', function(
+	app.controller('AboutController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$rootScope', 
+		'delFeeMgmt', 'hoursMgr'
+	];
+
+	function controller(
 		$scope, $http, $routeParams, $rootScope, 
 		delFeeMgmt, hoursMgr
 	) {
@@ -50,6 +57,6 @@
 				console.error(err);
 			});
 		});
-	});
+	}
 
 }());

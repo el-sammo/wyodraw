@@ -7,7 +7,15 @@
 	// OrderController
 	///
 
-	app.controller('OrderController', function(
+	app.controller('OrderController', controller);
+	
+	controller.$inject = [
+		'navMgr', 'pod', '$scope', '$http', '$routeParams', '$modal', 'orderMgmt',
+		'$rootScope', '$q', 'layoutMgmt', 'clientConfig', 'delFeeMgmt',
+		'hoursMgr', 'customerMgmt'
+	];
+
+	function controller(
 		navMgr, pod, $scope, $http, $routeParams, $modal, orderMgmt,
 		$rootScope, $q, layoutMgmt, clientConfig, delFeeMgmt,
 		hoursMgr, customerMgmt
@@ -442,6 +450,6 @@
 			});
 		};
 		$scope.updateOrder();
-	});
+	}
 
 }());

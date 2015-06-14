@@ -7,7 +7,13 @@
 	// Error management
 	///
 
-	app.factory('errMgr', function errMgrFactory($modal, $rootScope) {
+	app.factory('errMgr', service);
+	
+	service.$inject = [
+		'$modal', '$rootScope'
+	];
+	
+	function service($modal, $rootScope) {
 		var service = {
 			show: function(message, title) {
 				$modal.open({
@@ -31,10 +37,17 @@
 		});
 
 		return service;
-	});
+	}
 
-	app.controller('ErrController', function($scope, options) {
+
+	app.controller('ErrController', controller);
+	
+	controller.$inject = [
+		'$scope', 'options'
+	];
+
+	function controller($scope, options) {
 		$scope.options = options;
-	});
+	}
 
 }());

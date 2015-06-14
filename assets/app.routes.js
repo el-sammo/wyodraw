@@ -7,7 +7,13 @@
 	// Routes
 	///
 
-	app.config(function($routeProvider, $locationProvider) {
+	app.config(config);
+	
+	config.$inject = [
+		'$routeProvider', '$locationProvider'
+	];
+	
+	function config($routeProvider, $locationProvider) {
 		///
 		// Tester Page
 		///
@@ -155,6 +161,6 @@
 		///
 		
 		$locationProvider.html5Mode(true);
-	});
+	}
 
 }());

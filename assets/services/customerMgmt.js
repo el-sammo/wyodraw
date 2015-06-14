@@ -7,7 +7,13 @@
 	// Account Management
 	///
 
-	app.factory('customerMgmt', function(
+	app.factory('customerMgmt', service);
+	
+	service.$inject = [
+		'$http', '$q', '$sce', 'configMgr', 'querystring'
+	];
+	
+	function service(
 		$http, $q, $sce, configMgr, querystring
 	) {
 		var customer;
@@ -148,6 +154,6 @@
 		};
 
 		return service;
-	});
+	}
 
 }());

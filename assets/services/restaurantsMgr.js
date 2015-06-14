@@ -3,7 +3,13 @@
 
 	var app = angular.module('app');
 
-	app.factory('restaurantsMgr', function(
+	app.factory('restaurantsMgr', service);
+	
+	service.$inject = [
+		'$http', '$q', '$rootScope'
+	];
+	
+	function service(
 		$http, $q, $rootScope
 	) {
 		var deferred;
@@ -64,6 +70,6 @@
 		};
 
 		return service;
-	});
+	}
 
 }());

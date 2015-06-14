@@ -3,7 +3,11 @@
 
 	var app = angular.module('app');
 
-	app.factory('customerSchema', function() {
+	app.factory('customerSchema', service);
+	
+	service.$inject = [ ];
+	
+	function service() {
 		function nameTransform(customer) {
 			if(! customer || ! customer.fName || customer.name.length < 1) {
 				return 'customer-name';
@@ -77,6 +81,6 @@
 		};
 
 		return service;
-	});
+	}
 
 }());

@@ -7,7 +7,11 @@
 	// Configuration managements
 	///
 		
-	app.factory('configMgr', function configMgrFactory() {
+	app.factory('configMgr', service);
+	
+	service.$inject = [ ];
+	
+	function service() {
 		var service = {
 			config: {
 				vendors: {
@@ -18,6 +22,6 @@
 			},
 		};
 		return service;
-	});
+	}
 
 }());

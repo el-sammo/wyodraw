@@ -15,7 +15,7 @@
 
 	app.config(appConfig);
 
-	appConfig.inject = [
+	appConfig.$inject = [
 		'$httpProvider',
 		'$analyticsProvider',
 		'uiGmapGoogleMapApiProvider',
@@ -49,6 +49,10 @@
 	// Event-Based Services Loader
 	///
 
-	app.controller('LoadServices', function(errMgr, fakeAuth) {});
+	app.controller('LoadServices', controller);
+	
+	controller.$inject = ['errMgr', 'fakeAuth'];
+
+	function controller(errMgr, fakeAuth) {}
 
 }());

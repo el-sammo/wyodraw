@@ -7,7 +7,13 @@
 	// Authentication Management
 	///
 
-	app.factory('layoutMgmt', function layoutMgmtFactory(
+	app.factory('layoutMgmt', service);
+	
+	service.$inject = [
+		'$modal', '$rootScope', '$http'
+	];
+	
+	function service(
 		$modal, $rootScope, $http
 	) {
 		var service = {
@@ -41,6 +47,6 @@
 			}
 		};
 		return service;
-	});
+	}
 
 }());

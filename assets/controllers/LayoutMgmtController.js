@@ -7,7 +7,15 @@
 	// Layout Management
 	///
 
-	app.controller('LayoutMgmtController', function(
+	app.controller('LayoutMgmtController', controller);
+	
+	controller.$inject = [
+		'$scope', '$modalInstance',	'$http',
+		'$rootScope', '$window', 'layoutMgmt',
+		'messenger', 'deviceMgr', 'customerMgmt'
+	];
+
+	function controller(
 		$scope, $modalInstance,	$http,
 		$rootScope, $window, layoutMgmt,
 		messenger, deviceMgr, customerMgmt
@@ -95,6 +103,6 @@
 			});
 		}
 
-	});
+	}
 
 }());

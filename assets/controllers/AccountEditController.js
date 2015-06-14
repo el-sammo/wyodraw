@@ -3,7 +3,14 @@
 
 	var app = angular.module('app');
 
-	app.controller('AccountEditController', function(
+	app.controller('AccountEditController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$rootScope', 'navMgr', 'messenger', 
+		'pod', 'customerSchema', 'customerMgmt'
+	];
+
+	function controller(
 		$scope, $http, $routeParams, $rootScope, navMgr, messenger, 
 		pod, customerSchema, customerMgmt
 	) {
@@ -32,6 +39,6 @@
 		$scope.cancel = function cancel() {
 			navMgr.cancel('/app/account/' +$routeParams.id);
 		};
-	});
+	}
 
 }());

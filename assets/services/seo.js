@@ -7,7 +7,12 @@
 	// Search Engine Optimization
 	///
 
-	app.service('seo', function() {
+	app.service('seo', service);
+	
+	service.$inject = [
+	];
+	
+	function service() {
 		var pages = {
 			default: {
 				title: 'Restaurant Delivery',
@@ -60,10 +65,17 @@
 		};
 		service.reset();
 		return service;
-	});
+	}
 
-	app.controller('SeoController', function($scope, seo) {
+
+	app.controller('SeoController', controller);
+	
+	controller.$inject = [
+		'$scope', 'seo'
+	];
+
+	function controller($scope, seo) {
 		$scope.seo = seo;
-	});
+	}
 
 }());

@@ -7,7 +7,13 @@
 	// Form Pods
 	///
 
-	app.factory('pod', function podFactory(errMgr, $modal) {
+	app.factory('pod', service);
+	
+	service.$inject = [
+		'errMgr', '$modal'
+	];
+	
+	function service(errMgr, $modal) {
 		///
 		// Event handlers
 		///
@@ -114,9 +120,16 @@
 			}
 		};
 		return service;
-	});
+	}
 
-	app.controller('PodController', function(args, $scope, $modalInstance) {
+
+	app.controller('PodController', controller);
+	
+	controller.$inject = [
+		'args', '$scope', '$modalInstance'
+	];
+
+	function controller(args, $scope, $modalInstance) {
 		$scope.list = args.list;
 		$scope.idx = args.idx;
 
@@ -124,6 +137,6 @@
 			list.splice(idx, 1);
 			$modalInstance.dismiss('done');
 		};
-	});
+	}
 
 }());

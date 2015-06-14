@@ -7,7 +7,12 @@
 	// Querystring builder
 	///
 		
-	app.factory('querystring', function querystringFactory() {
+	app.factory('querystring', service);
+	
+	service.$inject = [
+	];
+	
+	function service() {
 		var service = {
 			stringify: function(query, noEncode) {
 				var items = [];
@@ -22,6 +27,6 @@
 			}
 		};
 		return service;
-	});
+	}
 
 }());

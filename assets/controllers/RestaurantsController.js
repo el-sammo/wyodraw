@@ -7,11 +7,26 @@
 	// Controllers: Restaurants
 	///
 
-	app.config(function(httpInterceptorProvider) {
+	app.config(config);
+	
+	config.$inject = [
+		'httpInterceptorProvider'
+	];
+	
+	function config(httpInterceptorProvider) {
 		httpInterceptorProvider.register(/^\/restaurants/);
-	});
+	}
 
-	app.controller('RestaurantsController', function(
+
+	app.controller('RestaurantsController', controller);
+	
+	controller.$inject = [
+		'$rootScope', '$scope', '$http', '$routeParams', '$modal', '$location',
+		'$window', '$q', 'uiGmapGoogleMapApi', 'orderMgmt', 'signupPrompter',
+		'deviceMgr', 'slugMgr', 'restaurantsMgr', 'seo'
+	];
+
+	function controller(
 		$rootScope, $scope, $http, $routeParams, $modal, $location, $window, $q,
 		uiGmapGoogleMapApi, orderMgmt, signupPrompter, deviceMgr, slugMgr, 
 		restaurantsMgr, seo
@@ -174,6 +189,6 @@
 		$scope.showRestaurant = function(id) {
 			$scope.restaurantId = id;
 		};
-	});
+	}
 
 }());

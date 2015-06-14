@@ -7,7 +7,13 @@
 	// Tester Management
 	///
 
-	app.factory('testerMgmt', function($modal, $rootScope) {
+	app.factory('testerMgmt', service);
+	
+	service.$inject = [
+		'$modal', '$rootScope'
+	];
+	
+	function service($modal, $rootScope) {
 		var service = {
 			apply: function(position) {
 				$modal.open({
@@ -25,9 +31,17 @@
 			}
 		};
 		return service;
-	});
+	}
 
-	app.controller('TesterMgmtController', function(
+
+	app.controller('TesterMgmtController', controller);
+	
+	controller.$inject = [
+		'args', '$scope', '$modalInstance', '$http', '$rootScope',
+		'messenger'
+	];
+
+	function controller(
 		args, $scope, $modalInstance, $http, $rootScope, messenger
 	) {
 
@@ -61,6 +75,6 @@
 				$modalInstance.dismiss('cancel');
 			});
 		};
-	});
+	}
 
 }());

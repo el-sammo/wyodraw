@@ -7,7 +7,14 @@
 	// Controllers: Account
 	///
 
-	app.controller('AccountController', function(
+	app.controller('AccountController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', 'messenger', '$rootScope',
+		'$window', 'payMethodMgmt', 'layoutMgmt', 'customerMgmt'
+	];
+
+	function controller(
 		$scope, $http, messenger, $rootScope,
 		$window, payMethodMgmt, layoutMgmt, customerMgmt
 	) {
@@ -60,6 +67,6 @@
 		$rootScope.$on('customerChanged', function(evt, customer) {
 			$scope.customer = customer;
 		});
-	});
+	}
 
 }());

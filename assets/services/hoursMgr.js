@@ -3,7 +3,13 @@
 
 	var app = angular.module('app');
 
-	app.factory('hoursMgr', function($rootScope, $http, $q, clientConfig, areaMgmt) {
+	app.factory('hoursMgr', service);
+	
+	service.$inject = [
+		'$rootScope', '$http', '$q', 'clientConfig', 'areaMgmt'
+	];
+	
+	function service($rootScope, $http, $q, clientConfig, areaMgmt) {
 		var service = {
 			getDeliveryHours: function() {
 				var area = areaMgmt.getArea();
@@ -39,6 +45,6 @@
 		};
 
 		return service;
-	});
+	}
 
 }());

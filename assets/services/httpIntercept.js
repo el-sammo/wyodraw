@@ -8,7 +8,11 @@
 	///
 
 	app.provider('httpInterceptor', function() {
-		this.$get = function($q, $location, $rootScope) {
+		this.$get = provider;
+		
+		provider.$inject = ['$q', '$location', '$rootScope'];
+
+		function provider($q, $location, $rootScope) {
 			var service = {
 				responseError: function(response) {
 					defaultLocation = new RegExp('^' + $location.host() + ':?[0-9]*$');
@@ -31,7 +35,7 @@
 				}
 			};
 			return service;
-		};
+		}
 
 		var registration = [];
 		var defaultLocation;
@@ -96,8 +100,13 @@
 		}
 	});
 
-	app.config(function($httpProvider) {
+
+	app.config(config);
+
+	config.$inject = ['$httpProvider'];
+
+	function config($httpProvider) {
 		$httpProvider.interceptors.push('httpInterceptor');
-	});
+	}
 
 }());

@@ -8,7 +8,15 @@
 	///
 
 
-	app.controller('LayoutController', function(
+	app.controller('LayoutController', controller);
+	
+	controller.$inject = [
+		'navMgr', 'pod', '$scope',
+		'$http', '$routeParams', '$modal', 'layoutMgmt',
+		'$rootScope', 'hoursMgr', 'customerMgmt'
+	];
+
+	function controller(
 		navMgr, pod, $scope,
 		$http, $routeParams, $modal, layoutMgmt,
 		$rootScope, hoursMgr, customerMgmt
@@ -43,6 +51,6 @@
 			$rootScope.$broadcast('orderChanged');
 		});
 
-	});
+	}
 
 }());

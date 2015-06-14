@@ -3,7 +3,14 @@
 
 	var app = angular.module('app');
 
-	app.controller('AccountModalController', function(
+	app.controller('AccountModalController', controller);
+	
+	controller.$inject = [
+		'$window', '$rootScope', '$scope', '$modalInstance', 'args', 'messenger',
+		'payMethodMgmt'
+	];
+
+	function controller(
 		$window, $rootScope, $scope, $modalInstance, args, messenger,
 		payMethodMgmt
 	) {
@@ -42,6 +49,6 @@
 			$modalInstance.dismiss('done');
 		};
 
-	});
+	}
 
 }());

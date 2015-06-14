@@ -7,11 +7,26 @@
 	// Controller: Order
 	///
 
-	app.config(function(httpInterceptorProvider) {
-		httpInterceptorProvider.register(/^\/order/);
-	});
+	app.config(config);
 
-	app.controller('OrderDetailsController', function(
+	config.$inject = [
+		'httpInterceptorProvider'
+	];
+
+	function config(httpInterceptorProvider) {
+		httpInterceptorProvider.register(/^\/order/);
+	}
+
+
+	app.controller('OrderDetailsController', controller);
+	
+	controller.$inject = [
+		'$window', '$scope', '$http', '$routeParams', '$modal', '$timeout',
+		'$rootScope', '$q', '$sce', 'orderMgmt', 'signupPrompter',
+		'querystring', 'configMgr', 'customerMgmt'
+	];
+
+	function controller(
 		$window, $scope, $http, $routeParams, $modal, $timeout,
 		$rootScope, $q, $sce, orderMgmt, signupPrompter,
 		querystring, configMgr, customerMgmt
@@ -171,6 +186,6 @@
 				});
 			});
 		};
-	});
+	}
 
 }());

@@ -7,7 +7,13 @@
 	// Navbar Management
 	///
 
-	app.factory('navMgr', function navMgrFactory(
+	app.factory('navMgr', service);
+	
+	service.$inject = [
+		'$rootScope', '$location', '$window', '$modal'
+	];
+	
+	function service(
 		$rootScope, $location, $window, $modal
 	) {
 		var service = {
@@ -66,7 +72,7 @@
 		};
 
 		return service;
-	});
+	}
 
 
 }());

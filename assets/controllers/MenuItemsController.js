@@ -7,7 +7,14 @@
 	// Menu Items
 	///
 
-	app.controller('MenuItemsController', function(
+	app.controller('MenuItemsController', controller);
+	
+	controller.$inject = [
+		'$scope', '$http', '$routeParams', '$q', 'orderMgmt', 'slugMgr',
+		'restaurantsMgr', 'seo'
+	];
+
+	function controller(
 		$scope, $http, $routeParams, $q, orderMgmt, slugMgr,
 		restaurantsMgr, seo
 	) {
@@ -91,6 +98,6 @@
 			$scope.displayMenu = menu;
 			showMenu(menu.id);
 		});
-	});
+	}
 
 }());
