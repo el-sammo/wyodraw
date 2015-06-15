@@ -33,7 +33,7 @@
 			var m = d.getMinutes(); 
 			var s = d.getSeconds(); 
 	
-			var openSecs = parseInt(menu.availStart);
+			var openSecs = parseInt(menu.availStart) - 3600;
 			var closeSecs = parseInt(menu.availEnd);
 	
 			var hSecs = parseInt(h) * 3600;
@@ -55,7 +55,7 @@
 						var m = d.getMinutes(); 
 						var s = d.getSeconds(); 
 	
-						var openSecs = parseInt(restaurant.hours[n].open);
+						var openSecs = parseInt(restaurant.hours[n].open) - 3600;
 						var closeSecs = parseInt(restaurant.hours[n].close);
 			
 						var hSecs = parseInt(h) * 3600;
