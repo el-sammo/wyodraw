@@ -21,6 +21,63 @@
 		$scope.quantity = 1;
 		$scope.selOption = '';
 
+		$scope.currentlyAvailable = true;
+		$scope.currentlyAvailableReason = 'na';
+
+		$http.get('/menus/' + $scope.item.menuId).then(function(menu) {
+
+			var menu = menu.data;
+
+			var d = new Date();
+			var h = d.getHours(); 
+			var m = d.getMinutes(); 
+			var s = d.getSeconds(); 
+	
+			var openSecs = parseInt(menu.availStart);
+			var closeSecs = parseInt(menu.availEnd);
+	
+			var hSecs = parseInt(h) * 3600;
+			var mSecs = parseInt(m) * 60;
+			var sSecs = parseInt(s);
+	
+			var nowSecs = (hSecs + mSecs + sSecs);
+
+			if(nowSecs >= openSecs && nowSecs < closeSecs && menu.active) {
+				$http.get('/menus/' + $scope.item.menuId).then(function(menu) {
+					var menu = menu.data;
+	
+					$http.get('/restaurants/' + menu.restaurantId).then(function(restaurant) {
+						var restaurant = restaurant.data;
+	
+						var d = new Date();
+						var n = d.getDay(); 
+						var h = d.getHours(); 
+						var m = d.getMinutes(); 
+						var s = d.getSeconds(); 
+	
+						var openSecs = parseInt(restaurant.hours[n].open);
+						var closeSecs = parseInt(restaurant.hours[n].close);
+			
+						var hSecs = parseInt(h) * 3600;
+						var mSecs = parseInt(m) * 60;
+						var sSecs = parseInt(s);
+			
+						var nowSecs = (hSecs + mSecs + sSecs);
+	
+						if(nowSecs >= openSecs && nowSecs < closeSecs && restaurant.active) {
+						} else {
+							$scope.currentlyAvailable = false;
+							$scope.currentlyAvailableReason = 'restaurant';
+						}
+			
+					});
+				});
+			} else {
+				$scope.currentlyAvailable = false;
+				$scope.currentlyAvailableReason = 'menu';
+			}
+		});
+		
 		$scope.orderCompleted = false;
 
 		// If there's only one option, auto-choose it

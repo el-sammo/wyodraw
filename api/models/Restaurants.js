@@ -22,7 +22,11 @@ module.exports = {
       required: true
 		},
 		featured: {
-      type: 'string',
+      type: 'boolean',
+      required: true
+    },
+		active: {
+      type: 'boolean',
       required: true
 		}
   },

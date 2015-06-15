@@ -140,51 +140,6 @@
 
 		$scope.imageUrl = '/images/';
 
-		$scope.restaurantOpen = function(restaurant) {
-			var d = new Date();
-			var n = d.getDay(); 
-			var h = d.getHours(); 
-			var m = d.getMinutes(); 
-			var s = d.getSeconds(); 
-
-			var openSecs = parseInt(restaurant.hours[n].open);
-			var closeSecs = parseInt(restaurant.hours[n].close);
-
-			var hSecs = parseInt(h) * 3600;
-			var mSecs = parseInt(m) * 60;
-			var sSecs = parseInt(s);
-
-			var nowSecs = (hSecs + mSecs + sSecs);
-
-			if(nowSecs >= openSecs & nowSecs < closeSecs) {
-				return true;
-			}
-
-			return false;
-		};
-
-		$scope.menuOpen = function(menu) {
-			var d = new Date();
-			var h = d.getHours(); 
-			var m = d.getMinutes(); 
-			var s = d.getSeconds(); 
-
-			var openSecs = parseInt(menu.availStart);
-			var closeSecs = parseInt(menu.availEnd);
-
-			var hSecs = parseInt(h) * 3600;
-			var mSecs = parseInt(m) * 60;
-			var sSecs = parseInt(s);
-
-			var nowSecs = (hSecs + mSecs + sSecs);
-
-			if(nowSecs >= openSecs & nowSecs < closeSecs) {
-				return true;
-			}
-
-			return false;
-		};
-
 		// retrieve and display restaurant data (including menus)
 		$scope.showRestaurant = function(id) {
 			$scope.restaurantId = id;
