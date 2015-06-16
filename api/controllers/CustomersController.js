@@ -20,6 +20,14 @@ var Authorize = require('auth-net-types');
 var _AuthorizeCIM = require('auth-net-cim');
 var AuthorizeCIM = new _AuthorizeCIM(sails.config.authorizeNet);
 
+var geocoderProvider = 'google';
+var httpAdapter = 'http';
+var extra = {
+//	apiKey: 'AIzaSyCmRFaH2ROz5TueD8XapBCTAdBppUir_Bs', 
+//	formatter: null         // 'gpx', 'string', ... 
+};
+var geocoder = require('node-geocoder')(geocoderProvider, httpAdapter, extra);
+
 module.exports = {
   createANet: function(req, res) {
 		console.log('createANet() called with: '+req.body.customerId);
@@ -36,6 +44,14 @@ module.exports = {
 
 		if(req.body && req.body.customerProfileId && req.body.cardNumber && req.body.expirationDate) {
 			return createCustomerPaymentProfile(req, res);
+		}
+	},
+
+	getCoords: function(req, res) {
+    var isAjax = req.headers.accept.match(/application\/json/);
+
+		if(req.params && req.params.id) {
+			return getAddressCoords(req, res);
 		}
 	},
 
@@ -426,3 +442,18 @@ function createCustomerPaymentProfile(req, res, self) {
   };
 }
 
+function getAddressCoords(req, res, self) {
+	var addressString = req.params.id;
+
+	return geocoder.geocode(addressString).then(function(data) {
+		var lat = data[0].latitude;
+		var long = data[0].longitude;
+		var gPID = data[0].extra.googlePlaceId;
+
+		return res.send(JSON.stringify({success: true, lat: lat, long: long, gPID: gPID}));
+	}).catch(function(err) {
+		console.log('geocode failure');
+		console.log(err);
+		return res.send(JSON.stringify({success: false, lat: '', long: '', gPID: ''}));
+	});
+}
