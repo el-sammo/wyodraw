@@ -31,7 +31,8 @@
 		"then-redis": "*",
 		"connect-mongo": "*",
 		"auth-net-types": "*",
-		"auth-net-cim": "*"
+		"auth-net-cim": "*",
+		"node-geocoder": "*"
   },
   "scripts": {
     "start": "node app.js",

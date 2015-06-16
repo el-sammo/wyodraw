@@ -39,21 +39,32 @@
 			},
 
 			createCustomer: function(customerData) {
-//				var geo = getGeo(customerData);
-//				return;
-				var url = '/customers/create';
-				return $http.post(url, customerData).success(
-					function(data, status, headers, config) {
-						if(status >= 400) {
-							return $q.reject(data);
+				var address = customerData.addresses.primary;
+	
+				var addressString = address.streetNumber+' '+address.streetName+' '+address.city+' '+address.state+' '+address.zip;
+				
+				return $http.get('/customers/getCoords/'+addressString).then(function(response) {
+					var geo = {};
+					geo.latitude = response.data.lat;
+					geo.longitude = response.data.long;
+					geo.googlePlaceId = response.data.gPID;
+
+					customerData.geo = geo;
+
+					var url = '/customers/create';
+					return $http.post(url, customerData).success(
+						function(data, status, headers, config) {
+							if(status >= 400) {
+								return $q.reject(data);
+							}
+							mergeIntoCustomer(data, true);
+							return customer;
 						}
-						mergeIntoCustomer(data, true);
-						return customer;
-					}
-				).catch(function(err) {
-					console.log('POST ' + url + ': ajax failed');
-					console.error(err);
-					return $q.reject(err);
+					).catch(function(err) {
+						console.log('POST ' + url + ': ajax failed');
+						console.error(err);
+						return $q.reject(err);
+					});
 				});
 			},
 
@@ -128,29 +139,6 @@
 			angular.forEach(data, function(val, key) {
 				customer[key] = val;
 			});
-		};
-
-		function getGeo(customerData) {
-			console.log('getGeo() called with:');
-			console.log(customerData);
-			
-			$sce.trustAsResourceUrl(
-				'https://maps.googleapis.com/maps/api/geocode/json?address=' + querystring.stringify({
-					key: configMgr.config.vendors.googleMaps.key,
-					q: ([
-						customerData.addresses.primary.streetNumber,
-						customerData.addresses.primary.streetName,
-						customerData.addresses.primary.city,
-						customerData.addresses.primary.state,
-						customerData.addresses.primary.zip
-					].join('+'))
-				})
-			).then(function(response) {
-				console.log('response:');
-				console.log(response);
-			});
-
-			return;
 		};
 
 		return service;
