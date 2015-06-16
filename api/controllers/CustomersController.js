@@ -22,10 +22,7 @@ var AuthorizeCIM = new _AuthorizeCIM(sails.config.authorizeNet);
 
 var geocoderProvider = 'google';
 var httpAdapter = 'http';
-var extra = {
-//	apiKey: 'AIzaSyCmRFaH2ROz5TueD8XapBCTAdBppUir_Bs', 
-//	formatter: null         // 'gpx', 'string', ... 
-};
+var extra = {};
 var geocoder = require('node-geocoder')(geocoderProvider, httpAdapter, extra);
 
 module.exports = {
