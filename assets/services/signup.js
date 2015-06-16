@@ -196,6 +196,7 @@
 			}
 
 			customerMgmt.createCustomer(customer).then(function(customerData) {
+				var customerData = customerData.data;
 				$modalInstance.dismiss('done');
 				$scope.submit({
 					username: customer.username,
