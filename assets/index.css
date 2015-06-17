@@ -437,6 +437,12 @@ td {
 	color: white;
 }
 
+.marker-labels {
+	font-size: 12px;
+	font-weight: 400;
+	color: red;
+}
+
 .orderHistoryLink {
 }
 

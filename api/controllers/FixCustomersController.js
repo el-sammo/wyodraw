@@ -35,6 +35,17 @@ module.exports = {
 				addGeoLocation(customer);
 			});
 		});
+  },
+
+  addRestGeo: function(req, res) {
+		console.log('addRestGeo() called');
+    var isAjax = req.headers.accept.match(/application\/json/);
+
+		Restaurants.find({geoAdded: false}).then(function(res) {
+			res.forEach(function(restaurant) {
+				addRestGeoLocation(restaurant);
+			});
+		});
   }
 
 };
@@ -45,7 +56,7 @@ function addGeoLocation(customer) {
 
 	var geo = {}
 	geocoder.geocode(addressString).then(function(data) {
-		geo.lat = data[0].latitude;
+		geo.latitude = data[0].latitude;
 		geo.longitude = data[0].longitude;
 		geo.googlePlaceId = data[0].extra.googlePlaceId;
 
@@ -55,6 +66,42 @@ function addGeoLocation(customer) {
 			console.log('updated:', customer.id);
 			if(err) {
 				console.error(err);
+			}
+		});
+	});
+}
+
+function addRestGeoLocation(restaurant) {
+	var newAddresses = [];
+	restaurant.addresses.forEach(function(address) {
+		var addressString = address.streetNumber+' '+address.streetName+' '+address.city+' '+address.state+' '+address.zip;
+
+		geocoder.geocode(addressString).then(function(data) {
+			var thisAddress = {};
+			var geo = {}
+
+			geo.latitude = data[0].latitude;
+			geo.longitude = data[0].longitude;
+			geo.googlePlaceId = data[0].extra.googlePlaceId;
+
+			thisAddress.streetNumber = address.streetNumber;
+			thisAddress.streetName = address.streetName;
+			thisAddress.city = address.city;
+			thisAddress.state = address.state;
+			thisAddress.zip = address.zip;
+			thisAddress.geo = geo;
+	
+			newAddresses.push(thisAddress);
+			if(newAddresses.length == restaurant.addresses.length) {
+				restaurant.addresses = newAddresses;
+				restaurant.geoAdded = true;
+				
+				Restaurants.update(restaurant.id, restaurant).exec(function(err, restaurants) {
+					console.log('updated:', restaurant.name);
+					if(err) {
+						console.error(err);
+					}
+				});
 			}
 		});
 	});
