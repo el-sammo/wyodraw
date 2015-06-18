@@ -54,7 +54,24 @@
 				var completedHistory = [];
 				res.data.forEach(function(order) {
 					if(order.orderStatus > 4) {
-						order.updatedAt = order.updatedAt.substr(0,10);
+
+						var d = new Date(order.paymentAcceptedAt);
+
+						var orderYear = d.getFullYear();
+						var orderMonth = d.getMonth() + 1;
+						var orderDate = d.getDate();
+
+						if(orderMonth < 10) {
+							orderMonth = '0'+orderMonth;
+						}
+
+						if(orderDate < 10) {
+							orderDate = '0'+orderDate;
+						}
+
+						var completedDate = orderYear+'-'+orderMonth+'-'+orderDate;
+
+						order.orderDate = completedDate;
 						order.total = parseFloat(order.total).toFixed(2);
 						completedHistory.push(order);
 					}
