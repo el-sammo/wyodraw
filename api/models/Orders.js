@@ -24,6 +24,10 @@ module.exports = {
 		sessionId: {
       type: 'string',
       required: false
+		},
+		discount: {
+      type: 'float',
+      required: false
 		}
   },
 
