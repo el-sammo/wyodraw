@@ -11,16 +11,19 @@
 	
 	controller.$inject = [
 		'$scope', '$http', 'messenger', '$rootScope',
-		'$window', 'payMethodMgmt', 'layoutMgmt', 'customerMgmt'
+		'$window', 'payMethodMgmt', 'layoutMgmt', 'customerMgmt',
+		'accountMgmt'
 	];
 
 	function controller(
 		$scope, $http, messenger, $rootScope,
-		$window, payMethodMgmt, layoutMgmt, customerMgmt
+		$window, payMethodMgmt, layoutMgmt, customerMgmt,
+		accountMgmt
 	) {
 
 		$scope.addPM = payMethodMgmt.modals.add;
 		$scope.removePM = payMethodMgmt.modals.remove;
+		$scope.changeAddress = accountMgmt.modals.changeAddress;
 
 		$scope.logOut = layoutMgmt.logOut;
 
