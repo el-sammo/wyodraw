@@ -108,7 +108,7 @@ function sendMail(email, subject, template, data) {
 
 	if(template === 'apply') {
 		mailOptions = {
-			from: 'Grub2You Careers <careers@grub2you.com>',
+			from: 'Grub2You <info@grub2you.com>',
 			to: email,
 			subject: subject,
 			text: 'Thanks for applying for the role of '+data.position+', '+data.fName+'.  A Grub2You team member will contact you soon!',
@@ -127,7 +127,7 @@ function sendMail(email, subject, template, data) {
 
 	if(template === 'order') {
 		mailOptions = {
-			from: 'Grub2You Orders <orders@grub2you.com>',
+			from: 'Grub2You <info@grub2you.com>',
 			to: email,
 			subject: subject,
 			text: 'Thanks for ordering with Grub2You!, '+data.fName+'.  A Grub2You team member will deliver your order very soon!',
@@ -137,7 +137,7 @@ function sendMail(email, subject, template, data) {
 
 	if(template === 'feedback') {
 		mailOptions = {
-			from: 'Grub2You Feedback <info@grub2you.com>',
+			from: 'Grub2You <info@grub2you.com>',
 			to: email,
 			subject: subject,
 			text: 'Feedback has been received: '+data,

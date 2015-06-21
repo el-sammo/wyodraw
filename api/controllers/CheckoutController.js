@@ -55,7 +55,7 @@ function captureCashTransaction(req, res, self) {
 		var newTotal = (parseFloat(currentTotal) + parseFloat(gratuity));
 		order.total = newTotal;
 	
-		Orders.update(order.id, order).then(function(data) {
+		return Orders.update(order.id, order).then(function(data) {
 			return res.json({success: true, msg: 'complete', orderId: order.id});
 		}).catch(function(err) {
 			console.log('captureCashTransaction orders-put failed');
@@ -74,7 +74,7 @@ function captureCashTransaction(req, res, self) {
 			newTotal = (parseFloat(currentTotal) + parseFloat(gratuity) - parseFloat(discount));
 			order.total = newTotal;
 			
-			Orders.update(order.id, order).then(function(data) {
+			return Orders.update(order.id, order).then(function(data) {
 				return res.json({success: true, msg: 'complete', orderId: order.id});
 			}).catch(function(err) {
 				console.log('captureCashTransaction orders-put failed');

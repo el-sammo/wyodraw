@@ -7,11 +7,12 @@
 	
 	controller.$inject = [
 		'$q', 'args', '$scope', '$modalInstance', '$http', '$rootScope',
-		'customerMgmt'
+		'customerMgmt', 'clientConfig'
 	];
 
 	function controller(
-		$q, args, $scope, $modalInstance, $http, $rootScope, customerMgmt
+		$q, args, $scope, $modalInstance, $http, $rootScope,
+		customerMgmt, clientConfig
 	) {
 		$scope.item = args.item;
 		$scope.thing = args.thing;
@@ -43,7 +44,7 @@
 		
 				var nowSecs = (hSecs + mSecs + sSecs);
 	
-				if(nowSecs >= openSecs && nowSecs < closeSecs && menu.active) {
+				if((nowSecs >= openSecs && nowSecs < closeSecs && menu.active) || clientConfig.menuAvail) {
 					$http.get('/menus/' + $scope.item.menuId).then(function(menu) {
 						var menu = menu.data;
 		
@@ -65,7 +66,7 @@
 				
 							var nowSecs = (hSecs + mSecs + sSecs);
 		
-							if(nowSecs >= openSecs && nowSecs < closeSecs && restaurant.active) {
+							if((nowSecs >= openSecs && nowSecs < closeSecs && restaurant.active) || clientConfig.restAvail) {
 							} else {
 								$scope.currentlyAvailable = false;
 								$scope.currentlyAvailableReason = 'restaurant';
