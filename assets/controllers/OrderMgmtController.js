@@ -14,6 +14,7 @@
 		$q, args, $scope, $modalInstance, $http, $rootScope,
 		customerMgmt, clientConfig
 	) {
+
 		$scope.item = args.item;
 		$scope.thing = args.thing;
 		$scope.bev = args.bev;
@@ -25,7 +26,7 @@
 		$scope.currentlyAvailable = true;
 		$scope.currentlyAvailableReason = 'na';
 		
-		if($scope.item || $scope.bev) {
+		if($scope.item) {
 			$http.get('/menus/' + $scope.item.menuId).then(function(menu) {
 	
 				var menu = menu.data;
@@ -215,6 +216,10 @@
 					url = '/orders/' + order.id;
 				}
 
+				if(!order.sawBevTour) {
+					order.sawBevTour = false;
+				}
+
 				buildOrder(order).then(function(order) {
 					$http[method](url, order).then(function(res) {
 						$rootScope.$broadcast('orderChanged');
@@ -229,7 +234,6 @@
 		};
 
 		$scope.addBevOption = function() {
-			console.log('$scope.addBevOption() called');
 
 			var sessionPromise = customerMgmt.getSession();
 		
@@ -255,7 +259,7 @@
 					newBevThing(selectedBevOption).then(function(bevThingToAdd) {
 						var isDuplicate = false;
 						existingBevThings.forEach(function(existingBevThing) {
-							if(existingBevThing.optionId.localeCompare(bevThingToAdd.bevOptionId)) return;
+							if(existingBevThing.optionId.localeCompare(bevThingToAdd.optionId)) return;
 							isDuplicate = true;
 							mergeBevThings(existingBevThing, bevThingToAdd);
 						});
@@ -344,6 +348,8 @@
 				}
 
 				buildOrder(order).then(function(order) {
+					order.sawBevTour = true;
+
 					$http[method](url, order).then(function(res) {
 						$rootScope.$broadcast('orderChanged');
 						$modalInstance.dismiss('done');
@@ -417,49 +423,48 @@
 		};
 
 		$scope.removeBevThing = function() {
-			console.log('$scope.removeBevThing() called');
-			return;
+
 			var sessionPromise = customerMgmt.getSession();
 		
 			sessionPromise.then(function(sessionData) {
 				sessionData || (sessionData = {});
 				sessionData.order || (sessionData.order = {});
-				sessionData.order.things || (sessionData.order.things = []);
+				sessionData.order.bevThings || (sessionData.order.bevThings = []);
 
-				var things = sessionData.order.things;
+				var bevThings = sessionData.order.bevThings;
 
 				var holdingMap = [];
 
-				things.forEach(function(thing) {
-					if(!thing.optionId.localeCompare($scope.thing.optionId)) {
-						thing.quantity = (parseInt(thing.quantity) - parseInt($scope.quantity));
-						if(thing.quantity > 0) {
+				bevThings.forEach(function(bevThing) {
+					if(!bevThing.optionId.localeCompare($scope.bevThing.optionId)) {
+						bevThing.quantity = (parseInt(bevThing.quantity) - parseInt($scope.quantity));
+						if(bevThing.quantity > 0) {
 							holdingMap.push({
-								'name': thing.name,
-								'option': thing.option,
-								'optionId': thing.optionId,
-								'price': thing.price,
-								'quantity': thing.quantity,
-								'specInst': thing.specInst,
-								'restaurantName': thing.restaurantName,
-								'restaurantId': thing.restaurantId
+								'name': bevThing.name,
+								'option': bevThing.option,
+								'optionId': bevThing.optionId,
+								'price': bevThing.price,
+								'quantity': bevThing.quantity,
+								'specInst': bevThing.specInst,
+								'restaurantName': bevThing.restaurantName,
+								'restaurantId': bevThing.restaurantId
 							});
 						}
 					} else {
 						holdingMap.push({
-							'name': thing.name,
-							'option': thing.option,
-							'optionId': thing.optionId,
-							'price': thing.price,
-							'quantity': thing.quantity,
-							'specInst': thing.specInst,
-							'restaurantName': thing.restaurantName,
-							'restaurantId': thing.restaurantId
+							'name': bevThing.name,
+							'option': bevThing.option,
+							'optionId': bevThing.optionId,
+							'price': bevThing.price,
+							'quantity': bevThing.quantity,
+							'specInst': bevThing.specInst,
+							'restaurantName': bevThing.restaurantName,
+							'restaurantId': bevThing.restaurantId
 						});
 					}
 				});
 		
-				sessionData.order.things = holdingMap;
+				sessionData.order.bevThings = holdingMap;
 		
 				var r = $http.put('/orders/' + sessionData.order.id, sessionData.order);
 		

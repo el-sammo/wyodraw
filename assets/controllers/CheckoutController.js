@@ -125,9 +125,7 @@
 			$scope.checkoutPaymentMethods = paymentMethods;
 
 			$scope.customer = foundCustomer;
-	//		TODO: debug code (cheating)
-	//		$scope.sawBevTour = foundCustomer.sawBevTour;
-			$scope.sawBevTour = true;
+			$scope.sawBevTour = $scope.order.sawBevTour;
 
 			var bevs = [];
 			$http.get('/bevs/byAreaId/' + foundCustomer.areaId).then(function(res) {
@@ -200,6 +198,14 @@
 
 		$scope.updateTotal();
 
+		$scope.bevClose = function() {
+			$scope.sawBevTour = true;
+		};
+
+		$scope.bevShow = function() {
+			$scope.sawBevTour = false;
+		};
+
 		$scope.checkout = function() {
 			$scope.processing = true;
 			$scope.paymentFailed = false;
@@ -224,6 +230,8 @@
 			}
 
 			if($scope.selMethod == 'cash') {
+				console.log('cash transaction');
+				return;
 				$http.post('/checkout/processCashPayment', {
 					order: $scope.order,
 					gratuity: thisGratuity,
@@ -262,6 +270,8 @@
 					}
 				});
 			} else {
+				console.log('cc transaction');
+				return;
 				$http.post('/checkout/processCCPayment', {
 					order: $scope.order,
 					paymentMethodId: $scope.selMethod,

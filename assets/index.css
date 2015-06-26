@@ -713,6 +713,13 @@ td {
 	position: relative;
 }
 
+.orderBevsLink {
+	font-size: 14px;
+	font-weight: 700;
+	color: red;
+	cursor: pointer;
+}
+
 /** Carousel **/
 #slides_control > div {
 	top: 20px;

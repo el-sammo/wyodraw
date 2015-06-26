@@ -97,6 +97,7 @@
 					$scope.gratuity = parseFloat($scope.order.gratuity).toFixed(2);
 					$scope.discount = parseFloat($scope.order.discount).toFixed(2);
 					$scope.total = '$'+parseFloat($scope.order.total).toFixed(2);
+					$scope.bevThings = $scope.order.bevThings;
 					if($scope.order && $scope.order.things) {
 						$scope.order.things.forEach(function(thing) {
 							$scope.getRestaurantName(thing.optionId).then(function(restaurantData) {

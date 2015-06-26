@@ -164,6 +164,7 @@ module.exports = {
 				sessionData.order.sessionId = req.sessionID;
 				sessionData.order.orderStatus = parseInt(1);
 				sessionData.order.orphaned = false;
+				sessionData.order.sawBevTour = false;
 				return Orders.create(sessionData.order).then(function(order) {
 					_.extend(sessionData.order, order);
 					return;

@@ -1,5 +1,5 @@
 			<div class="row" ng-controller="OrderController" id="orderPanel" manage-height="order">
-				<div class="col-md-12" ng-show="things.length > 0 && orderStatus < 5">
+				<div class="col-md-12" ng-show="(things.length > || bevThings.length > 0) && orderStatus < 5">
 					<div class="row" id="thingRow" ng-repeat="thing in things">
 						<div class="col-md-12">
 							<span class="pull-left" ng-show="thing.quantity < 2">{{thing.name}}</span>
@@ -10,6 +10,16 @@
 							<span class="pull-left" ng-show="thing.specInst.length > 0">({{thing.option}} - {{thing.specInst}})</span>
 							<span class="pull-left" ng-show="thing.specInst.length < 1">({{thing.option}})</span>
 							<span class="removeFromOrderSmall pull-right" ng-init="thingId = thing.optionId" ng-click="removeItem(thing)">Remove</span>
+						</div>
+					</div>
+					<div class="row" id="thingRow" ng-repeat="bevThing in bevThings">
+						<div class="col-md-12">
+							<span class="pull-left" ng-show="bevThing.quantity < 2">{{bevThing.name}}</span>
+							<span class="pull-left" ng-show="bevThing.quantity > 1">{{bevThing.name}} <strong>({{bevThing.quantity}})</strong></span>
+							<span class="pull-right" ng-show="bevThing.quantity < 2 || !bevThing.quantity">{{bevThing.price}}</span>
+							<span class="pull-right" ng-show="bevThing.quantity > 1">{{(bevThing.quantity * bevThing.price).toFixed(2)}}</span>
+							<br/>
+							<span class="removeFromOrderSmall pull-right" ng-init="bevThingId = bevThing.optionId" ng-click="removeBevItem(bevThing)">Remove</span>
 						</div>
 					</div>
 					<div class="row" id="subtotalRow">

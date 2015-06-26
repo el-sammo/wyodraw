@@ -53,10 +53,16 @@
 					<div class="col-md-12">
 						<div class="row" ng-repeat="item in restaurant.items">
 							<div class="col-md-11 col-md-offset-1">
-								<span class="orderDetailsItemInfo">{{item.quantity}} {{item.name}} - {{item.option}}<br/></span>
+								<span class="orderDetailsItemInfo"><b>{{item.quantity}}</b> {{item.name}} - {{item.option}}<br/></span>
 								<span class="orderDetailsItemInfo">{{item.specInst}}<br/></span>
 							</div>
 						</div>
+					</div>
+					<br/>
+				</div>
+				<div class="row" ng-repeat="bev in bevThings">
+					<div class="col-md-11 col-md-offset-1">
+						<span class="orderDetailsItemInfo"><b>{{bev.quantity}}</b> {{bev.option}} {{bev.name}}<br/></span>
 					</div>
 					<br/>
 				</div>

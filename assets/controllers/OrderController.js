@@ -37,6 +37,7 @@
 		$scope.clientConfig = clientConfig;
 
 		$scope.removeItem = orderMgmt.remove;
+		$scope.removeBevItem = orderMgmt.removeBev;
 
 		$scope.delFeeExp = orderMgmt.delFeeExp;
 
@@ -110,6 +111,7 @@
 					$scope.orderStatus = parseInt(order.orderStatus);
 					$scope.order = order;
 					$scope.things = order.things;
+					$scope.bevThings = order.bevThings;
 					$scope.updateTotals(order);
 				}
 			});
@@ -126,6 +128,13 @@
 						things = order.things;
 					} else {
 						things = [];
+					}
+		
+					var bevThings;
+					if(order.bevThings) {
+						bevThings = order.bevThings;
+					} else {
+						bevThings = [];
 					}
 		
 					var subtotal = 0;
@@ -146,6 +155,19 @@
 								lineTotal = parseFloat(thing.price) * thing.quantity;
 							} else {
 								lineTotal = parseFloat(thing.price);
+							}
+							subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
+						});
+					}
+		
+					if(bevThings.length > 0) {
+						bevThings.forEach(function(bevThing) {
+							var lineTotal;
+				
+							if(bevThing.quantity && bevThing.quantity > 1) {
+								lineTotal = parseFloat(bevThing.price) * bevThing.quantity;
+							} else {
+								lineTotal = parseFloat(bevThing.price);
 							}
 							subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
 						});
@@ -252,6 +274,13 @@
 					things = [];
 				}
 	
+				var bevThings;
+				if(order.bevThings) {
+					bevThings = order.bevThings;
+				} else {
+					bevThings = [];
+				}
+	
 				var subtotal = 0;
 				var tax = 0;
 				// TODO this should be configged on the area level
@@ -270,6 +299,19 @@
 							lineTotal = parseFloat(thing.price) * thing.quantity;
 						} else {
 							lineTotal = parseFloat(thing.price);
+						}
+						subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
+					});
+				}
+	
+				if(bevThings.length > 0) {
+					bevThings.forEach(function(bevThing) {
+						var lineTotal;
+			
+						if(bevThing.quantity && bevThing.quantity > 1) {
+							lineTotal = parseFloat(bevThing.price) * bevThing.quantity;
+						} else {
+							lineTotal = parseFloat(bevThing.price);
 						}
 						subtotal = (Math.round((subtotal + lineTotal) * 100)/100);
 					});

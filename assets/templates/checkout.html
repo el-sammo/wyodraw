@@ -1,6 +1,11 @@
-<div class="modal-header">
+<div class="modal-header" ng-show="sawBevTour">
   <h3 class="modal-title" id="nav-away-modal-title">
 		Checkout
+  </h3>
+</div>
+<div class="modal-header" ng-show="!sawBevTour">
+  <h3 class="modal-title" id="nav-away-modal-title">
+		Thirsty?
   </h3>
 </div>
 <div class="modal-body">
@@ -83,6 +88,12 @@
 						>
 					</div>
 				</div>
+				<br/>
+				<div class="row">
+					<div class="col-md-12">
+						<span class="orderBevsLink" ng-click="bevShow()">Click here to add beverages</span>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div ng-show="!sawBevTour">
@@ -116,7 +127,7 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<div ng-show="selMethod !== 'newCard'">
+	<div ng-show="selMethod !== 'newCard' && sawBevTour">
 		<button
 			type="button" class="btn btn-primary pull-left" ng-click="$close('discard')"
 			ng-class="{disabled: processing}"
@@ -128,6 +139,13 @@
 			ng-class="{disabled: processing}"
 		>
 			<i class="fa fa-lock"></i> &nbsp; Checkout
+		</button>
+	</div>
+	<div ng-show="selMethod !== 'newCard' && !sawBevTour">
+		<button
+		 	type="button" class="btn btn-success pull-right" ng-click="bevClose()"
+		>
+			Done with Beverages
 		</button>
 	</div>
 	<div ng-show="selMethod === 'newCard'">
