@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="app">
-	<head ng-controller="SeoController">
-		<title ng-bind="seo.title()">Grub2You - Restaurant Delivery</title>
-		<meta name="description" content="{{ seo.description() }}">
-		<meta name="keywords" content="{{ seo.keywords() }}">
-		<meta name="google-site-verification" content="kH3EtrAIRJF9-8H79GhBCEkn7IWNMYR291GAoH6iZ54" />
+	<head>
+		<title>Cards</title>
 
 		<!-- Viewport mobile tag for sensible mobile support -->
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -77,14 +74,20 @@
 <script src="/directives/holderJs.js"></script>
 <script src="/services/accountMgmt.js"></script>
 <script src="/services/areaMgmt.js"></script>
+<script src="/services/betMgmt.js"></script>
+<script src="/services/boardMgmt.js"></script>
+<script src="/services/buttonMgmt.js"></script>
 <script src="/services/careersMgmt.js"></script>
+<script src="/services/chipMgmt.js"></script>
 <script src="/services/configMgr.js"></script>
 <script src="/services/customerMgmt.js"></script>
 <script src="/services/customerSchema.js"></script>
+<script src="/services/deckMgmt.js"></script>
 <script src="/services/delFeeMgmt.js"></script>
 <script src="/services/deviceMgr.js"></script>
 <script src="/services/errMgr.js"></script>
 <script src="/services/fakeAuth.js"></script>
+<script src="/services/handMgmt.js"></script>
 <script src="/services/hoursMgr.js"></script>
 <script src="/services/httpIntercept.js"></script>
 <script src="/services/layoutMgmt.js"></script>
@@ -92,17 +95,18 @@
 <script src="/services/navMgr.js"></script>
 <script src="/services/orderMgmt.js"></script>
 <script src="/services/payMethodMgmt.js"></script>
+<script src="/services/playerMgmt.js"></script>
 <script src="/services/pod.js"></script>
+<script src="/services/potMgmt.js"></script>
 <script src="/services/promoMgmt.js"></script>
 <script src="/services/querystring.js"></script>
 <script src="/services/restaurantsMgr.js"></script>
 <script src="/services/seo.js"></script>
-<script src="/services/sessionMgr.js"></script>
 <script src="/services/signup.js"></script>
 <script src="/services/slugMgr.js"></script>
+<script src="/services/tableMgmt.js"></script>
 <script src="/services/testerMgmt.js"></script>
 <script src="/controllers/AboutController.js"></script>
-<script src="/controllers/AccountAddController.js"></script>
 <script src="/controllers/AccountController.js"></script>
 <script src="/controllers/AccountEditController.js"></script>
 <script src="/controllers/AccountModalController.js"></script>
@@ -116,6 +120,7 @@
 <script src="/controllers/OrderController.js"></script>
 <script src="/controllers/OrderDetailsController.js"></script>
 <script src="/controllers/OrderMgmtController.js"></script>
+<script src="/controllers/PokerController.js"></script>
 <script src="/controllers/PrivacyController.js"></script>
 <script src="/controllers/RestaurantsController.js"></script>
 <script src="/controllers/TermsController.js"></script>

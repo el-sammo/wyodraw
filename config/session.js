@@ -70,8 +70,8 @@ module.exports.session = {
   adapter: 'mongo',
   host: 'localhost',
   port: 27017,
-  db: 'grub2you',
-  collection: 'g2uSessions',
+  db: 'poker',
+  collection: 'pokerSessions',
 
   /***************************************************************************
   *                                                                          *
