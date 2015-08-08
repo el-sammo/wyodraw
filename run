@@ -6,7 +6,7 @@ popd > /dev/null
 
 cd $SCRIPTPATH
 
-LOG="$SCRIPTPATH/../logs/g2u.log"
+LOG="$SCRIPTPATH/../logs/g2u_dev.log"
 MIN_UPTIME=15000
 SPIN_SLEEP_TIME=0
 APPLICATION_PATH="app.js"
