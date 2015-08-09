@@ -53,6 +53,7 @@ module.exports = {
 	},
 
   login: function(req, res) {
+		console.log('login() called @ CustomersController');
     var isAjax = req.headers.accept.match(/application\/json/);
 
     if(req.session.isAuthenticated) {

@@ -138,8 +138,8 @@ footer {
 */
 
 .navbar.navbar-fixed-bottom {
-	background-color: #FF9800;
-	min-height: 30px!important;
+	background-color: black;
+	min-height: 20px!important;
 }
 
 .navbar.navbar-fixed-bottom .container {
@@ -155,6 +155,7 @@ footer {
 	font-weight: 600;
 	font-style: normal;
 	text-decoration: none!important;
+	cursor: pointer;
 }
 
 td {
@@ -844,14 +845,14 @@ td {
 }
 
 #fms-headbar.visible-lg-inline {
-	background-color: #FF9800;
-	height: 120px;
+	background-color: black;
+	height: 40px;
 	border: 0;
 }
 
 #fms-headbar.visible-md-inline {
-	background-color: #FF9800;
-	height: 60px;
+	background-color: black;
+	height: 20px;
 	border: 0;
 }
 
@@ -887,7 +888,7 @@ td {
 }
 
 .navbar-fixed-fix {
-	height: 60px;
+	height: 6px;
 }
 
 #fms-messenger .alert {

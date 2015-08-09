@@ -38,10 +38,9 @@
 				return getPlayerPromise;
 			},
 
-			createPlayer: function() {
-				playerAttrs = {name: 'joe'};
+			createPlayer: function(playerData) {
 				var url = '/players/create';
-				return $http.post(url, playerAttrs).success(
+				return $http.post(url, playerData).success(
 					function(data, status, headers, config) {
 						if(status >= 400) {
 							return $q.reject(data);
@@ -72,6 +71,42 @@
 					return $q.reject(err);
 				});
 			},
+
+			// TODO: This probably can be replaced with client-side only code
+			logout: function() {
+				var url = '/players/logout';
+				return $http.get(url).success(
+					function(data, status, headers, config) {
+						if(status >= 400) {
+							return $q.reject(data);
+						}
+						mergeIntoPlayer({}, true);
+						// TODO - Clear session also
+					}
+				).catch(function(err) {
+					console.log('GET ' + url + ': ajax failed');
+					console.error(err);
+					return $q.reject(err);
+				});
+			},
+
+			getSession: function() {
+				var url = '/players/session';
+				return $http.get(url).then(function(sessionRes) {
+					if(! (sessionRes && sessionRes.data)) {
+						return $q.reject(sessionRes);
+					}
+					return sessionRes.data;
+
+				}).catch(function(err) {
+					console.log('GET ' + url + ': ajax failed');
+					console.error(err);
+					$q.reject(err);
+				});
+			}
+
+			// TODO - Get player by username
+			// :split services/signup.js
 
 		};
 

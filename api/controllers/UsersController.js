@@ -16,6 +16,7 @@ var view = 'login';
 
 module.exports = {
   login: function(req, res) {
+		console.log('login() called @ UsersController');
     var isAjax = req.headers.accept.match(/application\/json/);
 
     if(req.session.isAuthenticated) {

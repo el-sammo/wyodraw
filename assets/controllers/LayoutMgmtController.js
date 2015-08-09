@@ -12,39 +12,20 @@
 	controller.$inject = [
 		'$scope', '$modalInstance',	'$http',
 		'$rootScope', '$window', 'layoutMgmt',
-		'messenger', 'deviceMgr', 'customerMgmt'
+		'messenger', 'deviceMgr', 'playerMgmt'
 	];
 
 	function controller(
 		$scope, $modalInstance,	$http,
 		$rootScope, $window, layoutMgmt,
-		messenger, deviceMgr, customerMgmt
+		messenger, deviceMgr, playerMgmt
 	) {
-
-		var p = $http.get('/areas/');
 
 		$scope.badCreds = false;
 							
-		// if areas ajax fails...
-		p.error(function(err) {
-			console.log('layoutMgmt: areas ajax failed');
-			console.error(err);
-		});
-									
-		// if areas ajax succeeds...
-		p.then(function(res) {
-			$scope.areas = res.data;
-		});
-
-		$scope.areaName = $rootScope.areaName;
 		$scope.accessAccount = $rootScope.accessAccount;
 
 		$scope.credentials = {};
-
-		$scope.required = function(field) {
-			if(! $scope.submitted || field) return;
-			return 'error';
-		};
 
 		$scope.noAccount = function() {
 			$modalInstance.dismiss('cancel');
@@ -52,19 +33,19 @@
 		};
 
 		$scope.submit = function(credentials) {
+			console.log('credentials:');
+			console.log(credentials);
 			$http.post(
-				'/login', credentials
+				'/players/login', credentials
 			).success(function(data, status, headers, config) {
 				// if login ajax succeeds...
-				if(status >= 400) {
-					$rootScope.$broadcast('customerLoggedIn', data.customerId);
-					$modalInstance.dismiss('done');
-				} else if(status == 200) {
-					$rootScope.$broadcast('customerLoggedIn', data.customerId);
+				if(status == 200) {
+					$rootScope.$broadcast('playerLoggedIn', data.playerId);
 					$modalInstance.dismiss('done');
 				} else {
-					$rootScope.$broadcast('customerLoggedIn', data.customerId);
-					$modalInstance.dismiss('done');
+					console.log('login error: '+status);
+					console.log('data:');
+					console.log(data);
 				}
 			}).error(function(err) {
 				console.log('we were NOT successful here - 1');
@@ -78,12 +59,12 @@
 		}
 
 		$scope.logOut = function() {
-			customerMgmt.logout().then(function() {
+			playerMgmt.logout().then(function() {
 				$modalInstance.dismiss('done');
-				$window.location.href = '/';
+				$window.location.href = '/app/poker';
 			}).catch(function(err) {
 				$modalInstance.dismiss('cancel');
-				$window.location.href = '/';
+				$window.location.href = '/app/poker';
 			});
 		}
 

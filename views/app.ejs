@@ -53,7 +53,7 @@
 	<!-- /Small Navbar -->
 </div>
 
-<div ng-controller="MessageController" id="fms-messenger">
+<div ng-controller="MessageController" id="fms-messenger" ng-cloak>
   <alert type="{{alertType}}" ng-show="userMessage" close="close()">
     <strong ng-show="title">{{title}}&nbsp;</strong>
     {{userMessage}}
@@ -68,6 +68,7 @@
 
 <nav class="navbar navbar-default navbar-fixed-bottom" ng-controller="LayoutController">
 	<div class="container">
+		<span class="footerLink" ng-click="logOut()">Log Out</span>
 	</div>
 </nav>
 

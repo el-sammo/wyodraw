@@ -43,7 +43,7 @@
 		// Account
 		///
 
-		$routeProvider.when('/:id', {
+		$routeProvider.when('/poker', {
 			controller: 'PokerController',
 			templateUrl: '/templates/poker.html'
 		});

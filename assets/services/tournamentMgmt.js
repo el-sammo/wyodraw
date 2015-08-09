@@ -4,10 +4,10 @@
 	var app = angular.module('app');
 
 	///
-	// Deck Management
+	// Tournament Management
 	///
 
-	app.factory('deckMgmt', service);
+	app.factory('tournamentMgmt', service);
 	
 	service.$inject = [
 		'$http', '$q', '$sce', 'configMgr', 'querystring'
@@ -16,38 +16,38 @@
 	function service(
 		$http, $q, $sce, configMgr, querystring
 	) {
-		var deck;
-		var getDeckPromise;
+		var tournament;
+		var getTournamentPromise;
 
 		var service = {
-			getDeck: function(deckId) {
-				if(getDeckPromise) {
-					return getDeckPromise;
+			getTournament: function(tournamentId) {
+				if(getTournamentPromise) {
+					return getTournamentPromise;
 				}
 
-				var url = '/decks/' + deckId;
-				getDeckPromise = $http.get(url).then(function(res) {
-					mergeIntoDeck(res.data);
-					return deck;
+				var url = '/tournaments/' + tournamentId;
+				getTournamentPromise = $http.get(url).then(function(res) {
+					mergeIntoTournament(res.data);
+					return tournament;
 				}).catch(function(err) {
 					console.log('GET ' + url + ': ajax failed');
 					console.error(err);
 					return $q.reject(err);
 				});
 
-				return getDeckPromise;
+				return getTournamentPromise;
 			},
 
-			createDeck: function(tournamentId, tableId, handId) {
-				var deckAttrs = {tournamentId: tournamentId, tableId: tableId, handId: handId};
-				var url = '/decks/create';
-				return $http.post(url, deckAttrs).success(
+			createTournament: function() {
+				tournamentAttrs = {name: 'joe'};
+				var url = '/tournaments/create';
+				return $http.post(url, tournamentAttrs).success(
 					function(data, status, headers, config) {
 						if(status >= 400) {
 							return $q.reject(data);
 						}
-						mergeIntoDeck(data, true);
-						return deck.cards;
+						mergeIntoTournament(data, true);
+						return tournament;
 					}
 				).catch(function(err) {
 					console.log('POST ' + url + ': ajax failed');
@@ -56,15 +56,15 @@
 				});
 			},
 
-			updateDeck: function(deckData) {
-				var url = '/decks/' + deckData.id;
-				return $http.put(url, deckData).success(
+			updateTournament: function(tournamentData) {
+				var url = '/tournaments/' + tournamentData.id;
+				return $http.put(url, tournamentData).success(
 					function(data, status, headers, config) {
 						if(status >= 400) {
 							return $q.reject(data);
 						}
-						mergeIntoDeck(data, true);
-						return deck;
+						mergeIntoTournament(data, true);
+						return tournament;
 					}
 				).catch(function(err) {
 					console.log('PUT ' + url + ': ajax failed');
@@ -75,21 +75,21 @@
 
 		};
 
-		function mergeIntoDeck(data, replace) {
-			if(! deck) {
-				deck = data;
+		function mergeIntoTournament(data, replace) {
+			if(! tournament) {
+				tournament = data;
 				return;
 			}
 
 			// Delete all original keys
 			if(replace) {
-				angular.forEach(deck, function(val, key) {
-					delete deck[key];
+				angular.forEach(tournament, function(val, key) {
+					delete tournament[key];
 				});
 			}
 
 			angular.forEach(data, function(val, key) {
-				deck[key] = val;
+				tournament[key] = val;
 			});
 		};
 

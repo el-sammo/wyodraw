@@ -10,52 +10,98 @@
 	
 	controller.$inject = [
 		'$scope', '$http', '$routeParams', '$rootScope', 
-		'tableMgmt', 'playerMgmt', 'deckMgmt', 'handMgmt',
-		'boardMgmt', 'chipMgmt', 'potMgmt', 'betMgmt'
+		'signupPrompter', 'playerMgmt', 'tournamentMgmt', 
+		'tableMgmt', 'handMgmt', 'boardMgmt', 'buttonMgmt',
+		'chipMgmt', 'potMgmt', 'betMgmt'
 	];
 
 	function controller(
 		$scope, $http, $routeParams, $rootScope, 
-		tableMgmt, playerMgmt, deckMgmt, handMgmt,
-		boardMgmt, chipMgmt, potMgmt, betMgmt, buttonMgmt
+		signupPrompter, playerMgmt, tournamentMgmt,
+		tableMgmt, handMgmt, boardMgmt, buttonMgmt, 
+		chipMgmt, potMgmt, betMgmt
 	) {
 
-		var urlId = $routeParams.id;
-		var urlData = $routeParams.id.split('-');
+		signupPrompter.prompt();
 
-		if(!urlData || urlData.length < 1) {
-			// need tournament id
-			console.log('missing tournamentId');
-		}
+		$scope.showAvailableTournaments = false;
+		$scope.showAvailableTournamentTables = false;
+		$scope.showCurrentTournamentTable = false;
 
-		if(urlData && urlData.length > 0 && urlData.length < 2) {
-			// need table id
-			console.log('missing tableId');
+		///
+		// Start Debug Code
+		///
 
-			var tournamentId = urlData[0];
-			console.log('tournamentId: '+tournamentId);
-		}
+		$rootScope.tournamentId = '55c609826b21c5d777df761b';
+		$rootScope.tableId = '55c609ae6b21c5d777df761c';
 
-		if(urlData && urlData.length > 1 && urlData.length < 3) {
-			// need hand id
-			console.log('missing handId');
+		///
+		// End Debug Code
+		///
 
-			var tournamentId = urlData[0];
-			var tableId = urlData[1];
+		var getSessionPromise = playerMgmt.getSession();
+		getSessionPromise.then(function(sessionData) {
+			console.log('sessionData:');
+			console.log(sessionData);
 
-			var createHandPromise = handMgmt.createHand(tournamentId, tableId);
-			createHandPromise.then(function(hand) {
+			if(!sessionData.playerId) {
+				signupPrompter.prompt();
+			} else {
+				$rootScope.playerId = sessionData.playerId;
+				$scope.playerId = $rootScope.playerId;
+			}
 
-				var createDeckPromise = deckMgmt.createDeck(tournamentId, tableId, hand.data.id);
-				createDeckPromise.then(function(deck) {
-					console.log('created deck:');
-					console.log(deck.data.cards);
-					return;
+			if(! $rootScope.tournamentId) {
+				// need tournament id
+				console.log('missing tournamentId');
+				$scope.showAvailableTournaments = true;
+			}
+	
+			if(! $rootScope.tableId) {
+				// need table id
+				console.log('missing tableId');
+				$scope.showAvailableTournamentTables = true;
+			}
+	
+			if(! $rootScope.handId) {
+				// need hand id
+				console.log('missing handId');
+	
+				var createHandPromise = handMgmt.createHand($rootScope.tournamentId, $rootScope.tableId);
+				createHandPromise.then(function(hand) {
+					console.log('hand created with id: '+hand.data.id);
+					$rootScope.handId = hand.data.id;
+					$scope.handId = $rootScope.handId;
+	
+					var createDeckPromise = handMgmt.createDeck(hand.data);
+					createDeckPromise.then(function(deck) {
+						console.log('created deck:');
+						console.log(deck.data.cards);
+						$rootScope.deck = deck.data.cards;
+					});
 				});
-			});
-			return;
+			} else {
+				// have hand id
+				console.log('handId found: '+$rootScope.handId);
+
+				var getHandPromise = handMgmt.getHand($rootScope.handId);
+				getHandPromise.then(function(hand) {
+					console.log('hand:');
+					console.log(hand);
+				}).catch(function(err) {
+					console.log('getHandPromise() failed');
+					console.log(err);
+				});
+			}
+		}).catch(function(err) {
+			console.log('playerMgmt.getSession() failed');
+			console.log(err);
+		});
+
+		$scope.tournamentRegister = function(tournamentId, playerId) {
+			console.log('$scope.tournamentRegister() called with tournamentId: '+$scope.tournamentRegister+' and playerId: '+playerId);
 		}
-		return;
+
 	}
 
 }());
