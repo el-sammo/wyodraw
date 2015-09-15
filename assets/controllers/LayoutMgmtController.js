@@ -61,10 +61,10 @@
 		$scope.logOut = function() {
 			playerMgmt.logout().then(function() {
 				$modalInstance.dismiss('done');
-				$window.location.href = '/app/poker';
+				$window.location.href = '/app/tix';
 			}).catch(function(err) {
 				$modalInstance.dismiss('cancel');
-				$window.location.href = '/app/poker';
+				$window.location.href = '/app/tix';
 			});
 		}
 

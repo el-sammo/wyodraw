@@ -43,9 +43,9 @@
 		// Account
 		///
 
-		$routeProvider.when('/poker', {
+		$routeProvider.when('/tix', {
 			controller: 'PokerController',
-			templateUrl: '/templates/poker.html'
+			templateUrl: '/templates/tix.html'
 		});
 
 
