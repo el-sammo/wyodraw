@@ -4,7 +4,7 @@
 	var app = angular.module('app');
 
 	///
-	// Account Management
+	// Customer Management
 	///
 
 	app.factory('customerMgmt', service);

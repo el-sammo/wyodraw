@@ -1,0 +1,31 @@
+<div class="col-md-12">
+	<div class="row" id="championshipViewMain">
+		<div class="col-md-12">
+			<div class="row" id="championshipViewHead">
+				<h1>Watch Your Team Play for the Championship!</h1>
+			</div>
+			<div class="row" id="championshipViewBody">
+				<div class="col-md-12">
+					<div class="row" ng-repeat="pool in championship.pools">
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-12">
+									<h3>{{pool.name}}</h3>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-4">
+									<span class="text-muted">{{championship.date}}</span>
+								</div>
+								<div class="col-md-4">
+									<span class="text-muted">{{championship.location}}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br/>
+		</div>
+	</div>
+</div>

@@ -40,12 +40,22 @@
 
 
 		///
-		// Account
+		// Championship
 		///
 
-		$routeProvider.when('/tix', {
-			controller: 'PokerController',
-			templateUrl: '/templates/tix.html'
+		$routeProvider.when('/championship/:id', {
+			controller: 'ChampionshipViewController',
+			templateUrl: '/templates/championshipView.html'
+		});
+
+
+		///
+		// Home
+		///
+
+		$routeProvider.when('/', {
+			controller: 'HomeController',
+			templateUrl: '/templates/home.html'
 		});
 
 

@@ -12,20 +12,39 @@
 	controller.$inject = [
 		'$scope', '$modalInstance',	'$http',
 		'$rootScope', '$window', 'layoutMgmt',
-		'messenger', 'deviceMgr', 'playerMgmt'
+		'messenger', 'deviceMgr', 'customerMgmt'
 	];
 
 	function controller(
 		$scope, $modalInstance,	$http,
 		$rootScope, $window, layoutMgmt,
-		messenger, deviceMgr, playerMgmt
+		messenger, deviceMgr, customerMgmt
 	) {
+
+		var p = $http.get('/areas/');
 
 		$scope.badCreds = false;
 							
+		// if areas ajax fails...
+		p.error(function(err) {
+			console.log('layoutMgmt: areas ajax failed');
+			console.error(err);
+		});
+									
+		// if areas ajax succeeds...
+		p.then(function(res) {
+			$scope.areas = res.data;
+		});
+
+		$scope.areaName = $rootScope.areaName;
 		$scope.accessAccount = $rootScope.accessAccount;
 
 		$scope.credentials = {};
+
+		$scope.required = function(field) {
+			if(! $scope.submitted || field) return;
+			return 'error';
+		};
 
 		$scope.noAccount = function() {
 			$modalInstance.dismiss('cancel');
@@ -33,19 +52,19 @@
 		};
 
 		$scope.submit = function(credentials) {
-			console.log('credentials:');
-			console.log(credentials);
 			$http.post(
-				'/players/login', credentials
+				'/login', credentials
 			).success(function(data, status, headers, config) {
 				// if login ajax succeeds...
-				if(status == 200) {
-					$rootScope.$broadcast('playerLoggedIn', data.playerId);
+				if(status >= 400) {
+					$rootScope.$broadcast('customerLoggedIn', data.customerId);
+					$modalInstance.dismiss('done');
+				} else if(status == 200) {
+					$rootScope.$broadcast('customerLoggedIn', data.customerId);
 					$modalInstance.dismiss('done');
 				} else {
-					console.log('login error: '+status);
-					console.log('data:');
-					console.log(data);
+					$rootScope.$broadcast('customerLoggedIn', data.customerId);
+					$modalInstance.dismiss('done');
 				}
 			}).error(function(err) {
 				console.log('we were NOT successful here - 1');
@@ -59,12 +78,12 @@
 		}
 
 		$scope.logOut = function() {
-			playerMgmt.logout().then(function() {
+			customerMgmt.logout().then(function() {
 				$modalInstance.dismiss('done');
-				$window.location.href = '/app/tix';
+				$window.location.href = '/';
 			}).catch(function(err) {
 				$modalInstance.dismiss('cancel');
-				$window.location.href = '/app/tix';
+				$window.location.href = '/';
 			});
 		}
 

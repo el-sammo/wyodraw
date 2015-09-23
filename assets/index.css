@@ -407,6 +407,60 @@ td {
 	padding-bottom: 24px;
 }
 
+#homeMain {
+	top: 34px;
+	background-color: #fff;
+	position: relative;
+}
+
+#homeHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#homeBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
+#championshipViewMain {
+	top: 34px;
+	background-color: #fff;
+	position: relative;
+}
+
+#championshipViewHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#championshipViewBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
+#mainMain {
+	/* top: 164px; */
+	background-color: #fff;
+	position: relative;
+}
+
+#mainHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#mainBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
 .daysRowHead {
 	border-bottom: 2px solid black;
 }
