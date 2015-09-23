@@ -21,6 +21,47 @@
 									<span class="text-muted">{{championship.location}}</span>
 								</div>
 							</div>
+							<br/>
+							<div class="row">
+								<div class="col-md-2">
+									<span class="text-muted">Team</span>
+								</div>
+								<div class="col-md-2 col-md-offset-1">
+									<span class="text-muted">Single Ticket Cost</span>
+								</div>
+								<div class="col-md-2 col-md-offset-1">
+									<span class="text-muted">Two Ticket Cost</span>
+								</div>
+								<div class="col-md-2 col-md-offset-1">
+									<span class="text-muted">Four Ticket Cost</span>
+								</div>
+							</div>
+							<div class="row" ng-repeat="entity in pool.entities">
+								<div class="col-md-2">
+									<span class="text-muted">{{entity.entityName}}</span>
+								</div>
+								<div class="col-md-2 col-md-offset-1">
+									<span class="text-muted">
+										<a href="/app/poolEntityReserve/{{pool.id}}-{{entity.entityId}}-1" style="text-decoration: none;">
+											{{(((pool.poolTotal * .8) / (entity.reservations + 1)) / pool.ticketCost).toFixed(2)}}
+										</a>
+									</span>
+								</div>
+								<div class="col-md-2 col-md-offset-1">
+									<span class="text-muted">
+										<a href="/app/poolEntityReserve/{{pool.id}}-{{entity.entityId}}-2" style="text-decoration: none;">
+											{{((pool.poolTotal * .8) / ((entity.entityReservations + 2) * pool.ticketCost)).toFixed(2)}}
+										</a>
+									</span>
+								</div>
+								<div class="col-md-2 col-md-offset-1">
+									<span class="text-muted">
+										<a href="/app/poolEntityReserve/{{pool.id}}-{{entity.entityId}}-4" style="text-decoration: none;">
+											{{((pool.poolTotal * .8) / ((entity.entityReservations + 4) * pool.ticketCost)).toFixed(2)}}
+										</a>
+									</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
