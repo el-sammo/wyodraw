@@ -22,7 +22,6 @@
 		var service = {
 			defaults: {
 				customer: {
-					areaId: '',
 					fName: '',
 					lName: '',
 					addresses: {

@@ -52,22 +52,6 @@
 		};
 
 
-		var b = $http.get('/areas/');
-
-		// if areas ajax fails...
-		b.error(function(err) {
-			console.log('SignUpController: areas ajax failed');
-			console.error(err);
-		});
-		
-		b.then(function(res) {
-			$scope.areas = res.data;
-
-			if($scope.areas && $scope.areas.length === 1) {
-				$scope.selArea = _.first($scope.areas).id;
-			}
-		});
-
 		$scope.validUsername = true;
 
 		$scope.state = clientConfig.defaultState || 'WY';
@@ -170,7 +154,6 @@
 			var addrInfo = splitAddress($scope.address);
 
 			var customer = {
-				areaId: $scope.selArea,
 				fName: $scope.fName,
 				lName: $scope.lName,
 				addresses: {
