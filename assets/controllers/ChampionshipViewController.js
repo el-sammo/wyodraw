@@ -55,6 +55,9 @@
 
 					championshipData.pools = poolData;
 
+					console.log('championshipData:');
+					console.log(championshipData);
+
 					$scope.championship = championshipData;
 				});
 
