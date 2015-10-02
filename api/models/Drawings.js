@@ -5,10 +5,26 @@
 * @docs        :: http://sailsjs.org/#!documentation/models
 */
 
+var tablize = require('sd-datatables');
+
 module.exports = {
 
   attributes: {
-
+    dateStamp: {
+      type: 'integer',
+      required: true
+    },
+    drawDate: {
+      type: 'string',
+      required: true
+    },
+		lotteryId: {
+      type: 'string',
+      required: true
+		}
   }
+  
 };
+
+tablize(module.exports);
 
