@@ -73,16 +73,11 @@
 		$scope.usernameSearch = function() {
 			if($scope.username === '') return;
 
-			var s = $http.get('/customers/byUsername/' + $scope.username);
-						
-			// if customers ajax fails...
-			s.error(function(err) {
+			$http.get('/customers/byUsername/' + $scope.username).then(function(res) {
+				$scope.validUsername = ! (res.data.length > 0);
+			}).catch(function(err) {
 				console.log('layoutMgmt: sut-customersGet ajax failed');
 				console.error(err);
-			});
-		
-			s.then(function(res) {
-				$scope.validUsername = ! (res.data.length > 0);
 			});
 		};
 

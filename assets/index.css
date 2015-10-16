@@ -425,18 +425,36 @@ td {
 	padding-bottom: 24px;
 }
 
-#championshipViewMain {
+#lotteryViewMain {
 	top: 34px;
 	background-color: #fff;
 	position: relative;
 }
 
-#championshipViewHead {
+#lotteryViewHead {
 	text-align: center;
 	border-bottom: 1px solid #C0C2FF;
 }
 
-#championshipViewBody {
+#lotteryViewBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
+#drawingViewMain {
+	top: 34px;
+	background-color: #fff;
+	position: relative;
+}
+
+#drawingViewHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#drawingViewBody {
 	padding-top: 4px;
 	padding-left: 12px;
 	padding-right: 12px;

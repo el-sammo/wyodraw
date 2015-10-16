@@ -40,22 +40,32 @@
 
 
 		///
-		// Championship
-		///
-
-		$routeProvider.when('/championship/:id', {
-			controller: 'ChampionshipViewController',
-			templateUrl: '/templates/championshipView.html'
-		});
-
-
-		///
 		// Home
 		///
 
 		$routeProvider.when('/', {
 			controller: 'HomeController',
 			templateUrl: '/templates/home.html'
+		});
+
+
+		///
+		// Lottery
+		///
+
+		$routeProvider.when('/lottery/:id', {
+			controller: 'LotteryViewController',
+			templateUrl: '/templates/lotteryView.html'
+		});
+
+
+		///
+		// Numbers
+		///
+
+		$routeProvider.when('/numbers/:id', {
+			controller: 'NumberViewController',
+			templateUrl: '/templates/numberView.html'
 		});
 
 

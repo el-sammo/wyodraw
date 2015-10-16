@@ -19,7 +19,7 @@ module.exports = {
   },
 
 	byLotteryId: function(req, res) {
-		Drawings.findByLotteryId(req.params.id).sort({dateStamp: 'asc'}).then(function(results) {
+		Drawings.findByLotteryId(req.params.id).sort({dateStamp: 'desc'}).then(function(results) {
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);

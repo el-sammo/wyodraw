@@ -2,23 +2,15 @@
 	<div class="row" id="homeMain">
 		<div class="col-md-12">
 			<div class="row" id="homeHead">
-				<h1>Watch Your Team Play for the Championship!</h1>
+				<h1>Welcome to WyoDraw's Comprehensive Analysis of the Wyoming state lottery!</h1>
 			</div>
 			<div class="row" id="homeBody">
 				<div class="col-md-12">
-					<div class="row" ng-repeat="championship in championships">
+					<div class="row" ng-repeat="lottery in lotteries">
 						<div class="col-md-12">
 							<div class="row">
 								<div class="col-md-12">
-									<h3><a href="/app/championship/{{championship.id}}" style="text-decoration: none;">{{championship.tagline}}</a></h3>
-								</div>
-							</div>
-							<div class="row">
-								<div class="col-md-4">
-									<span class="text-muted"><a href="/app/championship/{{championship.id}}" style="text-decoration: none;">{{championship.date}}</a></span>
-								</div>
-								<div class="col-md-4">
-									<span class="text-muted"><a href="/app/championship/{{championship.id}}" style="text-decoration: none;">{{championship.location}}</a></span>
+									<h3><a href="/app/lottery/{{lottery.id}}" style="text-decoration: none;">{{lottery.name}}</a></h3>
 								</div>
 							</div>
 						</div>

@@ -13,13 +13,13 @@
 	controller.$inject = [
 		'navMgr', 'pod', '$scope',
 		'$http', '$routeParams', '$modal', 'layoutMgmt',
-		'$rootScope', 'hoursMgr', 'customerMgmt'
+		'$rootScope', 'customerMgmt'
 	];
 
 	function controller(
 		navMgr, pod, $scope,
 		$http, $routeParams, $modal, layoutMgmt,
-		$rootScope, hoursMgr, customerMgmt
+		$rootScope, customerMgmt
 	) {
 		var sessionPromise = customerMgmt.getSession();
 

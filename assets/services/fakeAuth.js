@@ -6,11 +6,10 @@
 	app.factory('fakeAuth', service);
 	
 	service.$inject = [
-		'$rootScope', '$http', 'clientConfig', 'areaMgmt'
+		'$rootScope', '$http', 'clientConfig'
 	];
 	
-	function service($rootScope, $http, clientConfig, areaMgmt) {
-		areaMgmt.getArea();
+	function service($rootScope, $http, clientConfig) {
 
 		var corporate = {
 			phone: '- - -',
