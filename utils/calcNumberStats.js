@@ -1,28 +1,40 @@
 db = new Mongo().getDB('wyodraw');
-var lotteryId = '560d7f94ab3df4645bf6bdc7';
 
+var lotteryId = '560d7f94ab3df4645bf6bdc7';
 var allNumbers = new Array(45);
 
 getDrawBasics(allNumbers, lotteryId);
 
-//	db.COLLECTION.insert(doc);
-
 function getDrawBasics(allNumbers, lotteryId) {
-	var drawTotal = db.drawings.count({lotteryId: lotteryId});
 
-	print('drawTotal: '+drawTotal);
+	var drawTotal = db.drawings.count({lotteryId: lotteryId});
 	
 	//for(number=1; number<=allNumbers.length; number++) {
 	for(number=1; number<=1; number++) {
 		var numBasics = getNumBasics(number);
 		var numFreqTotal = numBasics[0];
 		var numFreqPercent = numFreqTotal / drawTotal;
-		var numPartners = getNumBasics[1];
+		var numPartners = numBasics[1];
 
-		print('numFreqTotal: '+numFreqTotal);
-		print('numFreqPercent: '+numFreqPercent);
-//		print('numPartners:');
-//		printjson(numPartners);
+		var partnersData = [];
+		var starter = 0;
+		var counter = 0;
+		numPartners.forEach(function(numPartner) {
+			if(numPartner > starter) {
+				if(starter > 0) {
+					partnersData.push({partner: starter, count: counter});
+					counter = 0;
+				}
+			}
+			counter ++;
+			starter = numPartner;
+		});
+		partnersData.push({partner: starter, count: counter});
+
+		var numberData = {number: number, freqTotal: numFreqTotal, freqPercent: numFreqPercent, partners: partnersData};
+
+		db.numberstats.insert(numberData);
+
 	};
 
 }
@@ -49,7 +61,6 @@ function getNumBasics(number) {
 	});
 
 	partners.sort(function(a, b){return a-b});
-	printjson(partners);
 
 	return [numTotal, partners];
 
