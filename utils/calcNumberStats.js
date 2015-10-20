@@ -9,11 +9,11 @@ function getDrawBasics(allNumbers, lotteryId) {
 
 	var drawTotal = db.drawings.count({lotteryId: lotteryId});
 	
-	//for(number=1; number<=allNumbers.length; number++) {
-	for(number=1; number<=1; number++) {
+	for(number=1; number<=allNumbers.length; number++) {
+//	for(number=1; number<=1; number++) {
 		var numBasics = getNumBasics(number);
 		var numFreqTotal = numBasics[0];
-		var numFreqPercent = numFreqTotal / drawTotal;
+		var numFreqPercent = (numFreqTotal / drawTotal).toFixed(4);
 		var numPartners = numBasics[1];
 
 		var partnersData = [];
@@ -22,7 +22,8 @@ function getDrawBasics(allNumbers, lotteryId) {
 		numPartners.forEach(function(numPartner) {
 			if(numPartner > starter) {
 				if(starter > 0) {
-					partnersData.push({partner: starter, count: counter});
+					var partnerFreqPercent = (counter / numFreqTotal).toFixed(4);
+					partnersData.push({partner: starter, count: counter, freqPercent: partnerFreqPercent});
 					counter = 0;
 				}
 			}

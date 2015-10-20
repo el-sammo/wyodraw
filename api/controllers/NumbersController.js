@@ -20,8 +20,6 @@ module.exports = {
 
 	allNumbers: function(req, res) {
 		Numbers.find().sort({number: 'asc'}).then(function(results) {
-    	console.log('results:');
-    	console.log(results);
 			res.send(JSON.stringify(results));
 		}).catch(function(err) {
       res.json({error: 'Server error'}, 500);

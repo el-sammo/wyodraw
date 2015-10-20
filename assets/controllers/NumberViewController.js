@@ -21,7 +21,9 @@
 	) {
 
 		var getNumberPromise = numberMgmt.getNumber($routeParams.id);
-		getNumberPromise.then(function(numbersData) {
+		getNumberPromise.then(function(numberData) {
+			console.log('numberData:');
+			console.log(numberData);
 		}).catch(function(err) {
 			console.log('numberMgmt.getNumber() failed');
 			console.log(err);

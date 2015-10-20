@@ -27,7 +27,7 @@
 					return getNumberPromise;
 				}
 
-				var url = '/stats/' + numberId;
+				var url = '/numberstats/byNumber/' + numberId;
 				getNumberPromise = $http.get(url).then(function(res) {
 					return res.data;
 				}).catch(function(err) {
