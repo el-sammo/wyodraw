@@ -13,7 +13,7 @@ function getDrawBasics(allNumbers, lotteryId) {
 //	for(number=1; number<=1; number++) {
 		var numBasics = getNumBasics(number);
 		var numFreqTotal = numBasics[0];
-		var numFreqPercent = (numFreqTotal / drawTotal).toFixed(4);
+		var numFreqPercent = (numFreqTotal / drawTotal * 100).toFixed(2);
 		var numPartners = numBasics[1];
 
 		var partnersData = [];
@@ -22,7 +22,7 @@ function getDrawBasics(allNumbers, lotteryId) {
 		numPartners.forEach(function(numPartner) {
 			if(numPartner > starter) {
 				if(starter > 0) {
-					var partnerFreqPercent = (counter / numFreqTotal).toFixed(4);
+					var partnerFreqPercent = (counter / numFreqTotal * 100).toFixed(2);
 					partnersData.push({partner: starter, count: counter, freqPercent: partnerFreqPercent});
 					counter = 0;
 				}
@@ -30,7 +30,8 @@ function getDrawBasics(allNumbers, lotteryId) {
 			counter ++;
 			starter = numPartner;
 		});
-		partnersData.push({partner: starter, count: counter});
+		var lastPercent = (counter / numFreqTotal * 100).toFixed(2);
+		partnersData.push({partner: starter, count: counter, freqPercent: lastPercent});
 
 		var numberData = {number: number, freqTotal: numFreqTotal, freqPercent: numFreqPercent, partners: partnersData};
 

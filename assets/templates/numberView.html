@@ -1,27 +1,56 @@
+<br/><br/><br/><br/>
 <div class="col-md-12">
-	<div class="row" id="lotteryViewMain">
+	<div class="row" id="numberViewMain">
 		<div class="col-md-12">
-			<div class="row" id="lotteryViewHead">
-				<h1>{{lotteryData.name}}</h1>
-			</div>
-			<div class="row" id="lotteryViewBody">
+			<div class="row" id="numberViewHead" ng-repeat="number in numberData">
 				<div class="col-md-12">
 					<div class="row">
-						<div class="col-md-2">
-							<span class="text-muted">Drawing Date</span>
-						</div>
-						<div class="col-md-5">
-							<span class="text-muted">Numbers Drawn</span>
+						<div clxass="col-md-2">
+							<h1>{{number.number}}</h1>
 						</div>
 					</div>
-					<div class="row" ng-repeat="drawing in drawingsData">
-						<div class="col-md-2">
-							<h5><a href="/app/drawings/{{drawing.id}}" style="text-decoration: none;">{{drawing.drawDate}}</a></h5>
-						</div>
-						<div class="col-md-5">
+					<div class="row" id="numberViewBody">
+						<div class="col-md-12">
 							<div class="row">
-								<div class="col-md-1" ng-repeat="number in drawing.numbers">
-									<h5><a href="/app/numbers/{{number.id}}" style="text-decoration: none;">{{number.number}}</a></h5>
+								<div class="col-md-2">
+									<span class="text-muted">Number Total</span>
+								</div>
+								<div class="col-md-2">
+									<span class="text-muted">Number Frequency</span>
+								</div>
+							</div>
+							<br/>
+							<div class="row">
+								<div class="col-md-2">
+									<span class="text-muted">{{number.freqTotal}}</span>
+								</div>
+								<div class="col-md-2">
+									<span class="text-muted">{{number.freqPercent}}</span>
+								</div>
+							</div>
+							<br/>
+							<br/>
+							<div class="row">
+								<div class="col-md-2">
+									<span class="text-muted">Partner Number</span>
+								</div>
+								<div class="col-md-2">
+									<span class="text-muted">Partner Total</span>
+								</div>
+								<div class="col-md-2">
+									<span class="text-muted">Partner Frequency</span>
+								</div>
+							</div>
+							<br/>
+							<div class="row" ng-repeat="partner in number.partners">
+								<div class="col-md-2">
+									<h5>{{partner.partner}}</h5>
+								</div>
+								<div class="col-md-2">
+									<h5>{{partner.count}}</h5>
+								</div>
+								<div class="col-md-2">
+									<h5>{{partner.freqPercent}}</h5>
 								</div>
 							</div>
 						</div>

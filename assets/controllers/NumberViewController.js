@@ -24,6 +24,7 @@
 		getNumberPromise.then(function(numberData) {
 			console.log('numberData:');
 			console.log(numberData);
+			$scope.numberData = numberData;
 		}).catch(function(err) {
 			console.log('numberMgmt.getNumber() failed');
 			console.log(err);

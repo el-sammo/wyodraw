@@ -461,6 +461,24 @@ td {
 	padding-bottom: 24px;
 }
 
+#numberViewMain {
+	top: 34px;
+	background-color: #fff;
+	position: relative;
+}
+
+#numberViewHead {
+	text-align: center;
+	border-bottom: 1px solid #C0C2FF;
+}
+
+#numberViewBody {
+	padding-top: 4px;
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-bottom: 24px;
+}
+
 #mainMain {
 	/* top: 164px; */
 	background-color: #fff;
