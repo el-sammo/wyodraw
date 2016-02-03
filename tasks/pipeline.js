@@ -41,6 +41,8 @@ var jsFilesToInject = [
 	'packages/moment/moment.js',
 	'packages/bluebird/bluebird.js',
 	'packages/lodash/lodash.min.js',
+	'packages/d3/d3.min.js',
+	'packages/angularD3/angularD3.min.js',
 	'app.js',
 	'local.js',
 	// 'datatables.js',

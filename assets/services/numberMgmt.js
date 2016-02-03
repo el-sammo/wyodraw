@@ -17,6 +17,7 @@
 		$http, $q, $sce, configMgr, querystring
 	) {
 		var getNumberPromise;
+		var getNumberStatsPromise;
 		var getAllNumbersPromise;
 		var getNumbersPromise;
 		var getNumbersByDrawingIdPromise;
@@ -37,6 +38,23 @@
 				});
 
 				return getNumberPromise;
+			},
+
+			getNumberStats: function() {
+				if(getNumberStatsPromise) {
+					return getNumberStatsPromise;
+				}
+
+				var url = '/numberstats/allNumberStats';
+				getNumberStatsPromise = $http.get(url).then(function(res) {
+					return res.data;
+				}).catch(function(err) {
+					console.log('GET ' + url + ': ajax failed');
+					console.error(err);
+					return $q.reject(err);
+				});
+
+				return getNumberStatsPromise;
 			},
 
 			getAllNumbers: function() {

@@ -1,0 +1,35 @@
+{
+  "name": "wyodraw",
+  "description": "a Sails application",
+  "main": "app.js",
+  "authors": [
+    "sbarrett"
+  ],
+  "license": "MIT",
+  "moduleType": [
+    "node"
+  ],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "assets/packages/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-bootstrap-tour": "~0.3.0",
+    "angular-bootstrap": "~0.12.0",
+    "angular-google-maps": "~2.1.2",
+    "angular-payments": "*",
+    "angulartics": "~0.17.2",
+    "holderjs": "~2.4.1",
+    "moment": "~2.8.4",
+    "angularD3": "~0.0.32"
+  },
+  "resolutions": {
+    "d3": "~3.4"
+  }
+}

@@ -20,47 +20,54 @@
 		drawingMgmt, numberMgmt
 	) {
 
-		var getAllNumbersPromise = numberMgmt.getAllNumbers();
-		getAllNumbersPromise.then(function(numbersData) {
-			$scope.numbersData = numbersData;
+		var getNumberStatsPromise = numberMgmt.getNumberStats();
+		getNumberStatsPromise.then(function(numberStats) {
 
-			console.log('$scope.numbersData.length: '+$scope.numbersData.length);
+			$scope.numberStats = numberStats;
 
-			var getSessionPromise = customerMgmt.getSession();
-			getSessionPromise.then(function(sessionData) {
+			var getAllNumbersPromise = numberMgmt.getAllNumbers();
+			getAllNumbersPromise.then(function(numbersData) {
+				$scope.numbersData = numbersData;
 	
-				var getLotteryPromise = lotteryMgmt.getLottery($routeParams.id);
-				getLotteryPromise.then(function(lotteryData) {
+				var getSessionPromise = customerMgmt.getSession();
+				getSessionPromise.then(function(sessionData) {
+		
+					var getLotteryPromise = lotteryMgmt.getLottery($routeParams.id);
+					getLotteryPromise.then(function(lotteryData) {
+		
+						var getDrawingsByLotteryIdPromise = drawingMgmt.getDrawingsByLotteryId(lotteryData.id);
+						getDrawingsByLotteryIdPromise.then(function(drawingsData) {
+		
+							drawingsData.forEach(function(drawing) {
 	
-					var getDrawingsByLotteryIdPromise = drawingMgmt.getDrawingsByLotteryId(lotteryData.id);
-					getDrawingsByLotteryIdPromise.then(function(drawingsData) {
-	
-						drawingsData.forEach(function(drawing) {
-
-							drawing.numbers = [];
-							$scope.numbersData.forEach(function(number) {
-								if(number.drawingId === drawing.id) {
-									drawing.numbers.push(number);
-								}
+								drawing.numbers = [];
+								$scope.numbersData.forEach(function(number) {
+									if(number.drawingId === drawing.id) {
+										drawing.numbers.push(number);
+									}
+								});
 							});
+		
+							$scope.lotteryData = lotteryData;
+							$scope.drawingsData = drawingsData;
+						}).catch(function(err) {
+							console.log('drawingMgmt.getDrawingsByLotteryId() failed');
+							console.log(err);
 						});
-	
-						$scope.lotteryData = lotteryData;
-						$scope.drawingsData = drawingsData;
 					}).catch(function(err) {
-						console.log('drawingMgmt.getDrawingsByLotteryId() failed');
+						console.log('lotteryMgmt.getLottery() failed');
 						console.log(err);
 					});
 				}).catch(function(err) {
-					console.log('lotteryMgmt.getLottery() failed');
+					console.log('customerMgmt.getSession() failed');
 					console.log(err);
 				});
 			}).catch(function(err) {
-				console.log('customerMgmt.getSession() failed');
+				console.log('numbersMgmt.getNumbers() failed');
 				console.log(err);
 			});
 		}).catch(function(err) {
-			console.log('numbersMgmt.getNumbers() failed');
+			console.log('numbersMgmt.getNumberStats() failed');
 			console.log(err);
 		});
 
