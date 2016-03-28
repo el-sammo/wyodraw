@@ -1,0 +1,39 @@
+<br/>
+<br/>
+<div class="row">
+	<div class="col-md-6">
+		<div class="modal-header">
+		  <h3 class="modal-title" id="nav-away-modal-title">
+				Input a Drawing
+			</h3>
+		</div>
+		<div class="modal-body">
+			<form name="createDrawingForm">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="row">
+							<div class="col-md-12">
+								<label for="drawDate">Draw Date</label>
+								<input type="text" name="drawDate" class="form-control" required ng-model="drawDate">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<label for="numbers">Numbers</label>
+								<input type="text" name="numbers" class="form-control" required ng-model="numbers">
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-primary pull-left" ng-click="$close('discard')">
+		    <i class="fa fa-reply"></i> &nbsp; Close
+		  </button>
+			<button type="button" class="btn btn-success pull-right" ng-click="addDrawingData()">
+		    <i class="fa fa-plus"></i> &nbsp; Input Drawing
+			</button>
+		</div>
+	</div>
+</div>

@@ -23,6 +23,19 @@
 		var getNumbersByDrawingIdPromise;
 
 		var service = {
+			addNumber: function(numberData) {
+				var url = '/numbers/create';
+			
+				return $http.post(url, numberData)
+				.then(function(res) {
+					return res.data;
+				}).catch(function(err) {
+					console.log('POST ' + url + ': ajax failed');
+					console.error(err);
+					return $q.reject(err);
+				});
+			},
+
 			getNumber: function(numberId) {
 				if(getNumberPromise) {
 					return getNumberPromise;

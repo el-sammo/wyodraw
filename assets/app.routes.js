@@ -60,6 +60,22 @@
 
 
 		///
+		// Drawing
+		///
+
+		$routeProvider.when('/drawing/:id', {
+			controller: 'DrawingViewController',
+			templateUrl: '/templates/drawingView.html'
+		});
+
+
+		$routeProvider.when('/drawing/add/:id', {
+			controller: 'DrawingAddController',
+			templateUrl: '/templates/drawingAdd.html'
+		});
+
+
+		///
 		// Numbers
 		///
 

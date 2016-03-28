@@ -21,6 +21,19 @@
 		var getDrawingsByLotteryIdPromise;
 
 		var service = {
+			addDrawing: function(drawingData) {
+				var url = '/drawings/create';
+			
+				return $http.post(url, drawingData)
+				.then(function(res) {
+					return res.data;
+				}).catch(function(err) {
+					console.log('POST ' + url + ': ajax failed');
+					console.error(err);
+					return $q.reject(err);
+				});
+			},
+
 			getDrawing: function(drawingId) {
 				if(getDrawingPromise) {
 					return getDrawingPromise;
